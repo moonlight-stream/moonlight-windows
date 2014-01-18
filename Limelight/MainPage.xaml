@@ -20,15 +20,15 @@
             <TextBlock Text="Limelight" Margin="9,-7,0,0" Style="{StaticResource PhoneTextTitle1Style}"/>
         </StackPanel>
         <!--ContentPanel - place additional content here-->
-        <Grid x:Name="ContentPanel" Margin="14,134,10,0">
-            <HyperlinkButton Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="80,118,80,0"/>
-            <HyperlinkButton Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="80,182,80,0"/>
+        <Grid x:Name="ContentPanel" Margin="14,170,10,-36">
+            <HyperlinkButton Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="60,118,42,0" FontWeight="Bold" FontSize="30" Click="HyperlinkButton_Click" Width="354"/>
+            <HyperlinkButton Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="133,201,128,0" FontWeight="Bold" FontSize="30" Click="HyperlinkButton_Click_1"/>
         </Grid>
-        <TextBox x:Name="host_textbox" HorizontalAlignment="Left" Height="72" TextWrapping="Wrap" VerticalAlignment="Top" Width="480" Margin="0,144,0,0" TextChanged="TextBox_TextChanged"/>
-        <RadioButton x:Name="_60fps_button" Content="60 FPS (may increase lag)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="157,458,0,0" GroupName="fps"/>
-        <RadioButton x:Name="_30fps_button" Content="30 FPS" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="28,458,0,0" GroupName="fps" IsChecked="True" Checked="_30fps_button_Checked"/>
-        <RadioButton x:Name="_1080p_button" Content="1080p (may increase lag)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="157,386,0,0" GroupName="pixels"/>
-        <RadioButton x:Name="_720p_button" Content="720p" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="28,386,0,0" Checked="_720p_button_Checked" GroupName="pixels" IsChecked="True"/>
+        <TextBox x:Name="host_textbox" HorizontalAlignment="Left" Height="72" TextWrapping="Wrap" VerticalAlignment="Top" Width="480" Margin="0,144,0,0" TextChanged="TextBox_TextChanged" Text="GeForce PC Host"/>
+        <RadioButton x:Name="_60fps_button" Content="60 FPS (may increase lag)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="159,560,0,0" GroupName="fps" RenderTransformOrigin="0.559,0.464"/>
+        <RadioButton x:Name="_30fps_button" Content="30 FPS" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="34,560,0,0" GroupName="fps" IsChecked="True" Checked="_30fps_button_Checked"/>
+        <RadioButton x:Name="_1080p_button" Content="1080p (may increase lag)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="159,483,0,0" GroupName="pixels"/>
+        <RadioButton x:Name="_720p_button" Content="720p" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="34,483,0,0" Checked="_720p_button_Checked" GroupName="pixels" IsChecked="True"/>
     </Grid>
 
 </phone:PhoneApplicationPage>

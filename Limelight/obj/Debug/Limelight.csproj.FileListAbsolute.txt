@@ -17,3 +17,4 @@ c:\users\michelle\documents\visual studio 2013\Projects\Limelight\Limelight\obj\
 c:\users\michelle\documents\visual studio 2013\Projects\Limelight\Limelight\obj\Debug\Limelight.dll
 c:\users\michelle\documents\visual studio 2013\Projects\Limelight\Limelight\obj\Debug\Limelight.pdb
 c:\users\michelle\documents\visual studio 2013\Projects\Limelight\Limelight\obj\Debug\XapCacheFile.xml
+c:\users\michelle\documents\visual studio 2013\Projects\Limelight\Limelight\obj\Debug\StreamFrame.g.cs

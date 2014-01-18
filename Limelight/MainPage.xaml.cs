@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Windows;
@@ -11,6 +12,9 @@ using Limelight.Resources;
 
 namespace Limelight
 {
+    /// <summary>
+    /// Main class for limelight-windows-phone
+    /// </summary>
     public partial class MainPage : PhoneApplicationPage
     {
         // Constructor
@@ -18,8 +22,6 @@ namespace Limelight
         {
             InitializeComponent();
 
-            // Sample code to localize the ApplicationBar
-            //BuildLocalizedApplicationBar();
         }
 
         private void _720p_button_Checked(object sender, RoutedEventArgs e)
@@ -37,20 +39,16 @@ namespace Limelight
 
         }
 
-        // Sample code for building a localized ApplicationBar
-        //private void BuildLocalizedApplicationBar()
-        //{
-        //    // Set the page's ApplicationBar to a new instance of ApplicationBar.
-        //    ApplicationBar = new ApplicationBar();
+        private void HyperlinkButton_Click(object sender, RoutedEventArgs e)
+        {
+            Debug.WriteLine("Start Streaming button pressed");
+            NavigationService.Navigate(new Uri("/StreamFrame.xaml", UriKind.Relative));
+        }
 
-        //    // Create a new button and set the text value to the localized string from AppResources.
-        //    ApplicationBarIconButton appBarButton = new ApplicationBarIconButton(new Uri("/Assets/AppBar/appbar.add.rest.png", UriKind.Relative));
-        //    appBarButton.Text = AppResources.AppBarButtonText;
-        //    ApplicationBar.Buttons.Add(appBarButton);
+        private void HyperlinkButton_Click_1(object sender, RoutedEventArgs e)
+        {
+            Debug.WriteLine("Pair button pressed");
+        }
 
-        //    // Create a new menu item with the localized string from AppResources.
-        //    ApplicationBarMenuItem appBarMenuItem = new ApplicationBarMenuItem(AppResources.AppBarMenuItemText);
-        //    ApplicationBar.MenuItems.Add(appBarMenuItem);
-        //}
     }
 }
