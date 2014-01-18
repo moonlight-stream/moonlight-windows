@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>SilverlightToolkitWP</id>
+    <version>4.2012.6.25</version>
+    <title>Silverlight for Windows Phone Toolkit</title>
+    <authors>Microsoft</authors>
+    <owners>Microsoft</owners>
+    <licenseUrl>http://silverlight.codeplex.com/license</licenseUrl>
+    <projectUrl>http://silverlight.codeplex.com/</projectUrl>
+    <iconUrl>http://d2bk44826ux9xe.cloudfront.net/WP75_32.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>The Microsoft Silverlight for Windows Phone Toolkit.  Details at http://silverlight.codeplex.com</description>
+    <tags>silverlight toolkit sltoolkit windowsphone wp7 wp7dev phone sltk tk wp7tk controls mango</tags>
+  </metadata>
+</package>

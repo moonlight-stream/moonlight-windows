@@ -1,112 +1,148 @@
 ﻿using System;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using System.Collections.Generic;
-using System.IO;
 using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Windows.Media;
+using System.Threading;
 
 namespace Limelight
 {
     public class VideoStreamSource : MediaStreamSource
     {
-        //private Stream _videoStream;
-        //private Stream _audioStream;
-        //private WaveFormatEx _waveFormat;
-        private byte[] _audioSourceBytes;
-        private long _currentAudioTimeStamp;
+        public class VideoSample
+        {
+            public VideoSample(Windows.Storage.Streams.IBuffer _buffer, UInt64 _hnsPresentationTime, UInt64 _hnsSampleDuration)
+            {
+                buffer = _buffer;
+                hnsPresentationTime = _hnsPresentationTime;
+                hnsSampleDuration = _hnsSampleDuration;
+            }
 
-        private MediaStreamDescription _audioDesc;
+            public Windows.Storage.Streams.IBuffer buffer;
+            public UInt64 hnsPresentationTime;
+            public UInt64 hnsSampleDuration;
+        }
 
-        private Stream _frameStream;
-
+        private const int maxQueueSize = 4;
         private int _frameWidth;
         private int _frameHeight;
+        private bool isDisposed = false;
+        private Queue<VideoSample> _sampleQueue;
 
-        private int _framePixelSize;
-        private int _frameBufferSize;
-        public const int BytesPerPixel = 4;   // 32 bit including alpha
+        private object lockObj = new object();
+        private ManualResetEvent shutdownEvent;
 
-
-        private byte[][] _frames = new byte[2][];
-
-        private int _currentReadyFrame;
-        private int _currentBufferFrame;
-
-
-        private int _frameTime;
-        private long _currentVideoTimeStamp;
+        private int _outstandingGetVideoSampleCount;
 
         private MediaStreamDescription _videoDesc;
         private Dictionary<MediaSampleAttributeKeys, string> _emptySampleDict = new Dictionary<MediaSampleAttributeKeys, string>();
 
-
-        //public byte[] CurrentFrameBytes
-        //{
-        //    get { return _frame; }
-        //}
-
-
-        public void WritePixel(int position, Color color)
+        public VideoStreamSource(Stream audioStream, int frameWidth, int frameHeight)
         {
-            //BitConverter.GetBytes(color).CopyTo(_frame, position * BytesPerPixel);
-
-            int offset = position * BytesPerPixel;
-
-            _frames[_currentBufferFrame][offset++] = color.B;
-            _frames[_currentBufferFrame][offset++] = color.G;
-            _frames[_currentBufferFrame][offset++] = color.R;
-            _frames[_currentBufferFrame][offset++] = color.A;
-
-            //if (position < 10)
-            //    System.Diagnostics.Debug.WriteLine("Pixel at {3} is {0} {1} {2}", color.R, color.B, color.G, position);
-        }
-
-
-
-        public VideoStreamSource(int frameWidth, int frameHeight)
-        {
-           // _audioStream = audioStream;
-
             _frameWidth = frameWidth;
             _frameHeight = frameHeight;
-
-            _framePixelSize = frameWidth * frameHeight;
-            _frameBufferSize = _framePixelSize * BytesPerPixel;
-
-            // PAL is 50 frames per second
-            _frameTime = (int)TimeSpan.FromSeconds((double)1 / 50).Ticks;
-
-            _frames[0] = new byte[_frameBufferSize];
-            _frames[1] = new byte[_frameBufferSize];
-
-            _currentBufferFrame = 0;
-            _currentReadyFrame = 1;
+            shutdownEvent = new ManualResetEvent(false);
+            _sampleQueue = new Queue<VideoSample>(VideoStreamSource.maxQueueSize);
+            _outstandingGetVideoSampleCount = 0;
+            //BackEnd.Globals.Instance.TransportController.VideoMessageReceived += TransportController_VideoMessageReceived;
         }
 
-
-        public void Flip()
+        public void Dispose()
         {
-            int f = _currentBufferFrame;
-            _currentBufferFrame = _currentReadyFrame;
-            _currentReadyFrame = f;
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public void Shutdown()
+        {
+            shutdownEvent.Set();
+            lock (lockObj)
+            {
+                if (_outstandingGetVideoSampleCount > 0)
+                {
+                    // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
+                    // an empty MediaStreamSample here.
+                    MediaStreamSample msSamp = new MediaStreamSample(
+                        _videoDesc,
+                        null,
+                        0,
+                        0,
+                        0,
+                        0,
+                        _emptySampleDict);
+                    ReportGetSampleCompleted(msSamp);
+                    _outstandingGetVideoSampleCount = 0;
+                }
+            }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!this.isDisposed)
+            {
+                if (disposing)
+                {
+                    //BackEnd.Globals.Instance.TransportController.VideoMessageReceived -= TransportController_VideoMessageReceived;
+                }
+                isDisposed = true;
+            }
+        }
+
+        void TransportController_VideoMessageReceived(Windows.Storage.Streams.IBuffer ibuffer, UInt64 hnsPresenationTime, UInt64 hnsSampleDuration)
+        {
+            lock (lockObj)
+            {
+                if (_sampleQueue.Count >= VideoStreamSource.maxQueueSize)
+                {
+                    // Dequeue and discard oldest
+                    _sampleQueue.Dequeue();
+                }
+
+                _sampleQueue.Enqueue(new VideoSample(ibuffer, hnsPresenationTime, hnsSampleDuration));
+                SendSamples();
+            }
+
+        }
+
+        private void SendSamples()
+        {
+            while (_sampleQueue.Count() > 0 && _outstandingGetVideoSampleCount > 0)
+            {
+                if (!(shutdownEvent.WaitOne(0)))
+                {
+                    VideoSample vs = _sampleQueue.Dequeue();
+                    Stream s = System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.AsStream(vs.buffer);
+
+                    // Send out the next sample
+                    MediaStreamSample msSamp = new MediaStreamSample(
+                        _videoDesc,
+                        s,
+                        0,
+                        s.Length,
+                        (long)vs.hnsPresentationTime,
+                        (long)vs.hnsSampleDuration,
+                        _emptySampleDict);
+
+                    ReportGetSampleCompleted(msSamp);
+                    _outstandingGetVideoSampleCount--;
+                }
+                else
+                {
+                    // If video rendering is shutting down we should no longer deliver frames
+                    return;
+                }
+            }
         }
 
         private void PrepareVideo()
         {
-            _frameStream = new MemoryStream();
-
-        http://open.spotify.com/track/3xDVJcvcKedshWlT3qGSHk    // Stream Description 
+            // Stream Description 
             Dictionary<MediaStreamAttributeKeys, string> streamAttributes =
                 new Dictionary<MediaStreamAttributeKeys, string>();
 
-            streamAttributes[MediaStreamAttributeKeys.VideoFourCC] = "RGBA";
+            // Select the same encoding and dimensions as the video capture
+            streamAttributes[MediaStreamAttributeKeys.VideoFourCC] = "H264";
             streamAttributes[MediaStreamAttributeKeys.Height] = _frameHeight.ToString();
             streamAttributes[MediaStreamAttributeKeys.Width] = _frameWidth.ToString();
 
@@ -116,45 +152,9 @@ namespace Limelight
             _videoDesc = msd;
         }
 
-
-      /*  private void PrepareAudio()
+        private void PrepareAudio()
         {
-            short BitsPerSample = 16;
-            int SampleRate = 8000;          // change this to something higher if we output sound from here
-            short ChannelCount = 1;
-            int ByteRate = SampleRate * ChannelCount * (BitsPerSample / 8);
-
-
-            _waveFormat = new WaveFormatEx();
-            _waveFormat.BitsPerSample = BitsPerSample;
-            _waveFormat.AvgBytesPerSec = (int)ByteRate;
-            _waveFormat.Channels = ChannelCount;
-            _waveFormat.BlockAlign = (short)(ChannelCount * (BitsPerSample / 8));
-            _waveFormat.ext = null; // ??
-            _waveFormat.FormatTag = WaveFormatEx.FormatPCM;
-            _waveFormat.SamplesPerSec = SampleRate;
-            _waveFormat.Size = 0; // must be zero
-
-            _waveFormat.ValidateWaveFormat();
-
-
-            _audioStream = new System.IO.MemoryStream();
-            _audioSourceBytes = new byte[ByteRate];
-
-
-            // TEMP just load the audio buffer with silence
-            for (int i = 1; i < SampleRate; i++)
-            {
-                _audioSourceBytes[i] = 0;
-            }
-
-            // Stream Description 
-            Dictionary<MediaStreamAttributeKeys, string> streamAttributes = new Dictionary<MediaStreamAttributeKeys, string>();
-            streamAttributes[MediaStreamAttributeKeys.CodecPrivateData] = _waveFormat.ToHexString(); // wfx
-            MediaStreamDescription msd = new MediaStreamDescription(MediaStreamType.Audio, streamAttributes);
-            _audioDesc = msd;
-
-        }*/
+        }
 
         protected override void OpenMediaAsync()
         {
@@ -180,65 +180,21 @@ namespace Limelight
 
         protected override void GetSampleAsync(MediaStreamType mediaStreamType)
         {
-            /*if (mediaStreamType == MediaStreamType.Audio)
+            if (mediaStreamType == MediaStreamType.Audio)
             {
-                GetAudioSample();
-            }*/
-            if (mediaStreamType == MediaStreamType.Video)
-            {
-                GetVideoSample();
             }
-        }
-
-
-        // TEMP!
-        /*private void GetAudioSample()
-        {
-            int bufferSize = _audioSourceBytes.Length;
-
-            // spit out one second
-            _audioStream.Write(_audioSourceBytes, 0, bufferSize);
-
-            // Send out the next sample
-            MediaStreamSample msSamp = new MediaStreamSample(
-                _audioDesc,
-                _audioStream,
-                0,
-                bufferSize,
-                _currentAudioTimeStamp,
-                _emptySampleDict);
-
-            _currentAudioTimeStamp += _waveFormat.AudioDurationFromBufferSize((uint)bufferSize);
-
-            ReportGetSampleCompleted(msSamp);
-        }*/
-
-        //private static int offset = 0;
-        private void GetVideoSample()
-        {
-            // seems like creating a new stream is only way to avoid out of memory and
-            // actually figure out the correct offset. that can't be right.
-            _frameStream = new MemoryStream();
-            _frameStream.Write(_frames[_currentReadyFrame], 0, _frameBufferSize);
-
-            // Send out the next sample
-            MediaStreamSample msSamp = new MediaStreamSample(
-                _videoDesc,
-                _frameStream,
-                0,
-                _frameBufferSize,
-                _currentVideoTimeStamp,
-                _emptySampleDict);
-
-            _currentVideoTimeStamp += _frameTime;
-
-            ReportGetSampleCompleted(msSamp);
+            else if (mediaStreamType == MediaStreamType.Video)
+            {
+                lock (lockObj)
+                {
+                    _outstandingGetVideoSampleCount++;
+                    SendSamples();
+                }
+            }
         }
 
         protected override void CloseMedia()
         {
-            _currentAudioTimeStamp = 0;
-            _currentVideoTimeStamp = 0;
         }
 
         protected override void GetDiagnosticAsync(MediaStreamSourceDiagnosticKind diagnosticKind)
@@ -253,11 +209,7 @@ namespace Limelight
 
         protected override void SeekAsync(long seekToTime)
         {
-            _currentVideoTimeStamp = seekToTime;
-
             ReportSeekCompleted(seekToTime);
         }
-
-
     }
 }

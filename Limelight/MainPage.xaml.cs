@@ -49,6 +49,5 @@ namespace Limelight
         {
             Debug.WriteLine("Pair button pressed");
         }
-
     }
 }

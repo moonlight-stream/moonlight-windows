@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using Microsoft.Phone.Controls;
 
+
 namespace Limelight
 {
     public partial class StreamFrame : PhoneApplicationPage
@@ -10,9 +11,12 @@ namespace Limelight
 
         public StreamFrame()
         {
-            VideoStreamSource videoStream = new VideoStreamSource(frameWidth, frameHeight); 
+            VideoStreamSource videoStream = new VideoStreamSource(null, frameWidth, frameHeight);
             InitializeComponent();
-            StreamDisplay.SetSource(videoStream); 
+            StreamDisplay.SetSource(videoStream);
+            StreamDisplay.AutoPlay = true;
+            StreamDisplay.Play();
+            
         }
     }
 }
