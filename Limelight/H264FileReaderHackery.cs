@@ -52,35 +52,4 @@ namespace Limelight
             }
         }
     }
-    /*len = [(NSInputStream *)inStream read:self.byteBuffer maxLength:BUFFER_LENGTH];
-        if (len)
-        {
-            BOOL firstStart = false;
-            for (int i = 0; i < len - 4; i++) {
-                self.offset++;
-                if (self.byteBuffer[i] == 0 && self.byteBuffer[i+1] == 0
-                    && self.byteBuffer[i+2] == 0 && self.byteBuffer[i+3] == 1)
-                {
-                    if (firstStart)
-                    {
-                        // decode the first i-1 bytes and render a frame
-                        [self.decoder decode:self.byteBuffer length:i];
-                        [self.target performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:NULL waitUntilDone:FALSE];
-                        
-                        // move offset back to beginning of start sequence
-                        [inStream setProperty:[[NSNumber alloc] initWithInt:self.offset-4] forKey:NSStreamFileCurrentOffsetKey];
-                        self.offset -= 1;
-                        
-                        break;
-                    } else
-                    {
-                        firstStart = true;
-                    }
-                }
-            }
-        }
-        else
-        {
-            NSLog(@"No Buffer!");
-        }
-    *
+}

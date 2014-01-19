@@ -27,7 +27,6 @@ namespace Limelight
         private const int maxQueueSize = 4;
         private int _frameWidth;
         private int _frameHeight;
-        private bool isDisposed = false;
         private Queue<VideoSample> _sampleQueue;
 
         private object lockObj = new object();
@@ -45,13 +44,6 @@ namespace Limelight
             shutdownEvent = new ManualResetEvent(false);
             _sampleQueue = new Queue<VideoSample>(VideoStreamSource.maxQueueSize);
             _outstandingGetVideoSampleCount = 0;
-            //BackEnd.Globals.Instance.TransportController.VideoMessageReceived += TransportController_VideoMessageReceived;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         public void Shutdown()
@@ -64,32 +56,14 @@ namespace Limelight
                     // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
                     // an empty MediaStreamSample here.
                     MediaStreamSample msSamp = new MediaStreamSample(
-                        _videoDesc,
-                        null,
-                        0,
-                        0,
-                        0,
-                        0,
-                        _emptySampleDict);
+                        _videoDesc, null, 0, 0, 0, 0, _emptySampleDict);
                     ReportGetSampleCompleted(msSamp);
                     _outstandingGetVideoSampleCount = 0;
                 }
             }
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!this.isDisposed)
-            {
-                if (disposing)
-                {
-                    //BackEnd.Globals.Instance.TransportController.VideoMessageReceived -= TransportController_VideoMessageReceived;
-                }
-                isDisposed = true;
-            }
-        }
-
-        void TransportController_VideoMessageReceived(Windows.Storage.Streams.IBuffer ibuffer, UInt64 hnsPresenationTime, UInt64 hnsSampleDuration)
+        public void TransportController_VideoMessageReceived(Windows.Storage.Streams.IBuffer ibuffer, UInt64 hnsPresenationTime, UInt64 hnsSampleDuration)
         {
             lock (lockObj)
             {
@@ -102,7 +76,6 @@ namespace Limelight
                 _sampleQueue.Enqueue(new VideoSample(ibuffer, hnsPresenationTime, hnsSampleDuration));
                 SendSamples();
             }
-
         }
 
         private void SendSamples()
@@ -152,10 +125,18 @@ namespace Limelight
             _videoDesc = msd;
         }
 
+        /// <summary>
+        /// Not implemented because LimelightWP currently does not support audio
+        /// </summary>
         private void PrepareAudio()
         {
+            throw new NotImplementedException();
+
         }
 
+        /// <summary>
+        /// Performs asynchronous streaming of the media
+        /// </summary>
         protected override void OpenMediaAsync()
         {
             // Init
@@ -182,6 +163,9 @@ namespace Limelight
         {
             if (mediaStreamType == MediaStreamType.Audio)
             {
+                // Uh oh
+                throw new NotImplementedException();
+
             }
             else if (mediaStreamType == MediaStreamType.Video)
             {
@@ -193,8 +177,11 @@ namespace Limelight
             }
         }
 
+        // TODO 
         protected override void CloseMedia()
         {
+            throw new NotImplementedException();
+
         }
 
         protected override void GetDiagnosticAsync(MediaStreamSourceDiagnosticKind diagnosticKind)

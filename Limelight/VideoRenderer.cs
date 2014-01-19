@@ -11,25 +11,21 @@ namespace Limelight
     using System.Diagnostics;
     using System.Windows;
 
-    namespace LimeSpace
-    {
         /// <summary>
-        /// A class that renders video from the background process.
-        /// Note, the MediaElement that actually displays the video is in the UI process - 
-        /// this class receives video from the remote party and writes it to a media streamer.
-        /// The media streamer handles connecting the rendered video stream to the media element that
-        /// displays it in the UI process.
+        /// Renders video from the stream
         /// </summary>
         internal class VideoRenderer
         {
+            // Indicates if rendering is already in progress or not
+            private bool isRendering;
+            private VideoStreamSource mediaStreamSource;
+            private MediaStreamer mediaStreamer; 
             /// <summary>
             /// Constructor
             /// </summary>
             internal VideoRenderer()
             {
             }
-
-            #region IVideoRenderer methods
 
             /// <summary>
             /// Start rendering video.
@@ -67,6 +63,7 @@ namespace Limelight
                 int frameHeight = (int)Application.Current.Host.Content.ActualHeight;
                 mediaStreamSource = new VideoStreamSource(null, frameWidth, frameHeight);
                 mediaStreamer.SetSource(mediaStreamSource);
+                
             }
 
             /// <summary>
@@ -81,8 +78,6 @@ namespace Limelight
                         return; // Nothing more to be done
 
                     Debug.WriteLine("[Video Renderer] Video rendering stopped.");
-                    //mediaStreamSource.Shutdown();
-                    //mediaStreamSource.Dispose();
                     mediaStreamSource = null;
                     mediaStreamer.Dispose();
                     mediaStreamer = null;
@@ -90,17 +85,5 @@ namespace Limelight
                     this.isRendering = false;
                 });
             }
-
-            #endregion
-
-            #region Private members
-
-            // Indicates if rendering is already in progress or not
-            private bool isRendering;
-            private VideoStreamSource mediaStreamSource;
-            private MediaStreamer mediaStreamer;
-
-            #endregion
-        }
     }
 }

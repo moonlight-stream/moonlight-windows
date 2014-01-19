@@ -39,13 +39,13 @@ namespace Limelight
 
         }
 
-        private void HyperlinkButton_Click(object sender, RoutedEventArgs e)
+        private void StreamButton_Click(object sender, RoutedEventArgs e)
         {
             Debug.WriteLine("Start Streaming button pressed");
             NavigationService.Navigate(new Uri("/StreamFrame.xaml", UriKind.Relative));
         }
 
-        private void HyperlinkButton_Click_1(object sender, RoutedEventArgs e)
+        private void PairButton_Click(object sender, RoutedEventArgs e)
         {
             Debug.WriteLine("Pair button pressed");
         }
