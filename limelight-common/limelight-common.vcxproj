@@ -114,6 +114,7 @@
     <ClInclude Include="PlatformSockets.h" />
     <ClInclude Include="PlatformThreads.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="ThreadEmulation.h" />
     <ClInclude Include="Video.h" />
   </ItemGroup>
   <ItemGroup>
@@ -128,6 +129,7 @@
     </ClCompile>
     <ClCompile Include="PlatformSockets.cpp" />
     <ClCompile Include="PlatformThreads.cpp" />
+    <ClCompile Include="ThreadEmulation.cpp" />
     <ClCompile Include="VideoDepacketizer.cpp" />
     <ClCompile Include="VideoStream.cpp" />
   </ItemGroup>

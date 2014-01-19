@@ -40,7 +40,7 @@ void PltSleepMs(int ms) {
 
 int PltCreateMutex(PLT_MUTEX *mutex) {
 #ifdef _WIN32
-	*mutex = CreateMutex(NULL, FALSE, NULL);
+	*mutex = CreateMutexEx(NULL, FALSE, 0, NULL);
 	if (!*mutex) {
 		return -1;
 	}
@@ -60,7 +60,7 @@ void PltDeleteMutex(PLT_MUTEX *mutex) {
 
 void PltLockMutex(PLT_MUTEX *mutex) {
 #ifdef _WIN32
-	WaitForSingleObject(*mutex, INFINITE);
+	WaitForSingleObjectEx(*mutex, INFINITE, 0);
 #else
     pthread_mutex_lock(mutex);
 #endif
@@ -76,7 +76,7 @@ void PltUnlockMutex(PLT_MUTEX *mutex) {
 
 void PltJoinThread(PLT_THREAD *thread) {
 #ifdef _WIN32
-	WaitForSingleObject(*thread, INFINITE);
+	WaitForSingleObjectEx(*thread, INFINITE, 0);
 #else
     pthread_join(*thread, NULL);
 #endif
@@ -127,7 +127,7 @@ int PltCreateThread(ThreadEntry entry, void* context, PLT_THREAD *thread) {
 
 int PltCreateEvent(PLT_EVENT *event) {
 #ifdef _WIN32
-	*event = CreateEvent(NULL, TRUE, FALSE, NULL);
+	*event = CreateEventEx(NULL, NULL, CREATE_EVENT_MANUAL_RESET, EVENT_ALL_ACCESS);
 	if (!*event) {
 		return -1;
 	}
@@ -167,21 +167,9 @@ void PltClearEvent(PLT_EVENT *event) {
 #endif
 }
 
-void PltPulseEvent(PLT_EVENT *event) {
-#ifdef _WIN32
-	PulseEvent(*event);
-#else
-    pthread_mutex_lock(&event->mutex);
-    event->signalled = 1;
-    pthread_cond_broadcast(&event->cond);
-    event->signalled = 0;
-    pthread_mutex_unlock(&event->mutex);
-#endif
-}
-
 void PltWaitForEvent(PLT_EVENT *event) {
 #ifdef _WIN32
-	WaitForSingleObject(*event, INFINITE);
+	WaitForSingleObjectEx(*event, INFINITE, 0);
 #else
     while (!event->signalled) {
         pthread_cond_wait(&event->cond, &event->mutex);

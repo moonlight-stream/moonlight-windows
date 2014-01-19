@@ -18,6 +18,7 @@
     <ClCompile Include="PlatformThreads.cpp" />
     <ClCompile Include="VideoDepacketizer.cpp" />
     <ClCompile Include="VideoStream.cpp" />
+    <ClCompile Include="ThreadEmulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="limelight-common.h" />
@@ -30,5 +31,6 @@
     <ClInclude Include="PlatformSockets.h" />
     <ClInclude Include="PlatformThreads.h" />
     <ClInclude Include="Video.h" />
+    <ClInclude Include="ThreadEmulation.h" />
   </ItemGroup>
 </Project>
