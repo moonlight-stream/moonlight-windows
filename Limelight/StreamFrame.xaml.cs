@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using Microsoft.Phone.Controls;
+using System.Threading; 
 
 
 namespace Limelight
@@ -13,10 +14,15 @@ namespace Limelight
         {
             InitializeComponent();
             videoStream = new VideoStreamSource(null, frameWidth, frameHeight);
-            StreamDisplay.SetSource(videoStream);
+            StreamDisplay.SetSource(videoStream);  
             StreamDisplay.AutoPlay = true;
             StreamDisplay.Play();
-            
+
+            ThreadPool.QueueUserWorkItem(hacks);
+        }
+        public void hacks(object o)
+        {
+            new H264FileReaderHackery(this).readFile();
         }
     }
 }

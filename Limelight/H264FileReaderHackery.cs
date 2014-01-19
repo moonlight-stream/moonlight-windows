@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using Windows.Storage.Streams;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Windows;
 
 
 namespace Limelight
@@ -22,26 +23,29 @@ namespace Limelight
 
         public void readFile()
         {
-            Debug.WriteLine("[H264FileReaderHackery::readFile]");
-            var resourceStream  = App.GetResourceStream(new Uri("notpadded.h264", UriKind.Relative));
+            Debug.WriteLine("[H264FileReaderHackery::readFile] Get resource stream");
+            var resourceStream  = Application.GetResourceStream(new Uri("Resources/notpadded.h264", UriKind.Relative));
+            Debug.WriteLineIf(resourceStream == null, "Shit");
             var stream = resourceStream.Stream;
+            Debug.WriteLine("[H264FileReaderHackery::readFile Creating byte[] buffer]");
             Byte[] buffer = new Byte[131072];
             int offset = 0;
             int seekOffset = 0;
+            Debug.WriteLine("[H264FileReaderHackery::readFile Entering while(stream.CanRead]");
+
             while (stream.CanRead)
             {
-                int len = stream.Read(buffer, offset, buffer.Length);
+                int len = stream.Read(buffer, 0, buffer.Length);
                 if (len > 0) {
                     bool firstStart = false;
                     for (int i = 0; i < len - 4; i++) {
                         seekOffset++;
                         if (buffer[i] == 0 && buffer[i+1] == 0 && buffer[i+2] == 0 && buffer[i+3] == 1) {
                             if (firstStart) {
-                                //we should decode the first i-1 bytes
-                                //TODO: ^ that
-                                IBuffer ms = buffer.AsBuffer(); 
+                                //we should decode the first i-1 
+                                IBuffer ms = buffer.AsBuffer();
                                 frame.videoStream.TransportController_VideoMessageReceived(ms,0,10);
-                                offset = --seekOffset;
+                                stream.Position = --seekOffset;
                             } else {
                                 firstStart = true;
                             }
@@ -49,6 +53,8 @@ namespace Limelight
                     }
                 } else {
                     Debug.WriteLine("[H264FileReaderHackery::readFile] No buffer");
+                    stream.Position = 0;
+                    seekOffset = 0;
                 }
             }
         }

@@ -185,6 +185,7 @@ namespace Limelight
 
                 lock (lockObj)
                 {
+                    Debug.WriteLine(_outstandingGetVideoSampleCount);
                     _outstandingGetVideoSampleCount++;
                     SendSamples();
                 }
