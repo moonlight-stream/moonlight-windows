@@ -20,8 +20,9 @@ namespace Limelight
         }
 
 
-        public async void readFile()
+        public void readFile()
         {
+            Debug.WriteLine("[H264FileReaderHackery::readFile]");
             var resourceStream  = App.GetResourceStream(new Uri("notpadded.h264", UriKind.Relative));
             var stream = resourceStream.Stream;
             Byte[] buffer = new Byte[131072];
@@ -47,7 +48,7 @@ namespace Limelight
                         } 
                     }
                 } else {
-                    Debug.WriteLine("No buffer");
+                    Debug.WriteLine("[H264FileReaderHackery::readFile] No buffer");
                 }
             }
         }

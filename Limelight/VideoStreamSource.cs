@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics; 
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -48,6 +49,7 @@ namespace Limelight
 
         public void Shutdown()
         {
+            Debug.WriteLine("[VideoStreamSource::Shutdown]");
             shutdownEvent.Set();
             lock (lockObj)
             {
@@ -65,6 +67,8 @@ namespace Limelight
 
         public void TransportController_VideoMessageReceived(Windows.Storage.Streams.IBuffer ibuffer, UInt64 hnsPresenationTime, UInt64 hnsSampleDuration)
         {
+            Debug.WriteLine("[VideoStreamSource::TransportController_VideoMessageReceived]");
+
             lock (lockObj)
             {
                 if (_sampleQueue.Count >= VideoStreamSource.maxQueueSize)
@@ -80,8 +84,11 @@ namespace Limelight
 
         private void SendSamples()
         {
+            Debug.WriteLine("[VideoStreamSource::SendSamples]");
             while (_sampleQueue.Count() > 0 && _outstandingGetVideoSampleCount > 0)
             {
+                Debug.WriteLine("sampleQueueCount " + _sampleQueue.Count + " _outstandingGetVideoSampleCount " + _outstandingGetVideoSampleCount);
+
                 if (!(shutdownEvent.WaitOne(0)))
                 {
                     VideoSample vs = _sampleQueue.Dequeue();
@@ -110,6 +117,7 @@ namespace Limelight
 
         private void PrepareVideo()
         {
+            Debug.WriteLine("[VideoStreamSource::PrepareVideo]");
             // Stream Description 
             Dictionary<MediaStreamAttributeKeys, string> streamAttributes =
                 new Dictionary<MediaStreamAttributeKeys, string>();
@@ -140,6 +148,8 @@ namespace Limelight
         protected override void OpenMediaAsync()
         {
             // Init
+            Debug.WriteLine("[VideoStreamSource::OpenMediaAsync]");
+
             Dictionary<MediaSourceAttributesKeys, string> sourceAttributes =
                 new Dictionary<MediaSourceAttributesKeys, string>();
             List<MediaStreamDescription> availableStreams =
@@ -161,6 +171,8 @@ namespace Limelight
 
         protected override void GetSampleAsync(MediaStreamType mediaStreamType)
         {
+            Debug.WriteLine("[VideoStreamSource::GetSampleAsync]");
+
             if (mediaStreamType == MediaStreamType.Audio)
             {
                 // Uh oh
@@ -169,6 +181,8 @@ namespace Limelight
             }
             else if (mediaStreamType == MediaStreamType.Video)
             {
+                Debug.WriteLine("[VideoStreamSource::GetSampleAsync] mediaStreamType is video");
+
                 lock (lockObj)
                 {
                     _outstandingGetVideoSampleCount++;
@@ -196,6 +210,7 @@ namespace Limelight
 
         protected override void SeekAsync(long seekToTime)
         {
+            Debug.WriteLine("[VideoStreamSource::SeekAsync]");
             ReportSeekCompleted(seekToTime);
         }
     }

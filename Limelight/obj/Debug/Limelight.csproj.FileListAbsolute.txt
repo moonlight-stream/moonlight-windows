@@ -21,3 +21,4 @@ c:\users\michelle\documents\visual studio 2013\Projects\Limelight\Limelight\obj\
 c:\users\michelle\documents\visual studio 2013\Projects\Limelight\Limelight\Bin\Debug\Microsoft.Phone.Controls.Toolkit.dll
 c:\users\michelle\documents\visual studio 2013\Projects\Limelight\Limelight\Bin\Debug\Microsoft.Phone.Controls.dll
 c:\users\michelle\documents\visual studio 2013\Projects\Limelight\Limelight\obj\Debug\Limelight.csprojResolveAssemblyReference.cache
+c:\users\michelle\documents\visual studio 2013\Projects\Limelight\Limelight\Bin\Debug\Resources\notpadded.h264

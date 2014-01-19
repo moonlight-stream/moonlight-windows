@@ -33,6 +33,8 @@ namespace Limelight
             /// </summary>
             public void Start()
             {
+                Debug.WriteLine("[VideoRenderer::Start");
+
                 if (this.isRendering)
                     return; // Nothing more to be done
 
@@ -53,8 +55,11 @@ namespace Limelight
 
             private void StartMediaStreamer()
             {
+                Debug.WriteLine("[VideoRenderer::StartMediaStreamer]");
+
                 if (mediaStreamer == null)
                 {
+                    Debug.WriteLine("[VideoRenderer::StartMediaStreamer] CreateMediaStreamer");
                     mediaStreamer = MediaStreamerFactory.CreateMediaStreamer(123);
                 }
 
