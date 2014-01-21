@@ -1,36 +1,78 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="limelight-common.cpp" />
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="ByteBuffer.cpp" />
-    <ClCompile Include="Config.cpp" />
-    <ClCompile Include="ControlStream.cpp" />
-    <ClCompile Include="Handshake.cpp" />
-    <ClCompile Include="LinkedBlockingQueue.cpp" />
-    <ClCompile Include="PlatformSockets.cpp" />
-    <ClCompile Include="PlatformThreads.cpp" />
-    <ClCompile Include="VideoDepacketizer.cpp" />
-    <ClCompile Include="VideoStream.cpp" />
-    <ClCompile Include="ThreadEmulation.cpp" />
+    <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="limelight-common.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="ByteBuffer.h" />
-    <ClInclude Include="Limelight.h" />
-    <ClInclude Include="LinkedBlockingQueue.h" />
-    <ClInclude Include="Platform.h" />
-    <ClInclude Include="PlatformSockets.h" />
-    <ClInclude Include="PlatformThreads.h" />
-    <ClInclude Include="Video.h" />
-    <ClInclude Include="ThreadEmulation.h" />
+    <ClCompile Include="ByteBuffer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Connection.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Handshake.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ControlStream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LinkedBlockingQueue.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatformSockets.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatformThreads.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoDepacketizer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VideoStream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="PlatformSockets.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Platform.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ByteBuffer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatformThreads.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LinkedBlockingQueue.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Video.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Limelight-internal.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Limelight.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

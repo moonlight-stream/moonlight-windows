@@ -1,5 +1,4 @@
-#include "pch.h"
-#include "Limelight.h"
+#include "Limelight-internal.h"
 #include "PlatformSockets.h"
 #include "PlatformThreads.h"
 
@@ -8,7 +7,8 @@ typedef struct _NVCTL_PACKET_HEADER {
 	unsigned short payloadLength;
 } NVCTL_PACKET_HEADER, *PNVCTL_PACKET_HEADER;
 
-SOCKET ctlSock;
+IP_ADDRESS host;
+SOCKET ctlSock = INVALID_SOCKET;
 STREAM_CONFIGURATION streamConfig;
 PLT_THREAD heartbeatThread;
 PLT_THREAD jitterThread;
@@ -30,19 +30,18 @@ const short PPAYLEN_RESYNC = 16;
 const short PTYPE_JITTER = 0x140c;
 const short PPAYLEN_JITTER = 0x10;
 
-int initializeControlStream(IP_ADDRESS host, PSTREAM_CONFIGURATION streamConfigPtr) {
-	ctlSock = connectTcpSocket(host, 47995);
-	if (ctlSock == INVALID_SOCKET) {
-		return LastSocketError();
-	}
-
-	enableNoDelay(ctlSock);
-
+int initializeControlStream(IP_ADDRESS addr, PSTREAM_CONFIGURATION streamConfigPtr) {
 	memcpy(&streamConfig, streamConfigPtr, sizeof(*streamConfigPtr));
 
 	PltCreateEvent(&resyncEvent);
 
+	host = addr;
+
 	return 0;
+}
+
+void destroyControlStream(void) {
+	PltCloseEvent(&resyncEvent);
 }
 
 void requestIdrFrame(void) {
@@ -94,12 +93,12 @@ static void heartbeatThreadFunc(void* context) {
 	int err;
 	NVCTL_PACKET_HEADER header;
 
-	for (;;) {
+	while (!PltIsThreadInterrupted(&heartbeatThread)) {
 		header.type = PTYPE_HEARTBEAT;
 		header.payloadLength = PPAYLEN_HEARTBEAT;
 		err = send(ctlSock, (char*) &header, sizeof(header), 0);
 		if (err != sizeof(header)) {
-			Limelog("Heartbeat thread terminating\n");
+			Limelog("Heartbeat thread terminating #1\n");
 			return;
 		}
 
@@ -114,7 +113,7 @@ static void jitterThreadFunc(void* context) {
 
 	header.type = PTYPE_JITTER;
 	header.payloadLength = PPAYLEN_JITTER;
-	for (;;) {
+	while (!PltIsThreadInterrupted(&jitterThread)) {
 		err = send(ctlSock, (char*) &header, sizeof(header), 0);
 		if (err != sizeof(header)) {
 			Limelog("Jitter thread terminating #1\n");
@@ -137,7 +136,7 @@ static void jitterThreadFunc(void* context) {
 }
 
 static void resyncThreadFunc(void* context) {
-	long payload[2];
+	long long payload[2];
 	NVCTL_PACKET_HEADER header;
 	int err;
 
@@ -167,7 +166,14 @@ static void resyncThreadFunc(void* context) {
 }
 
 int stopControlStream(void) {
-	closesocket(ctlSock);
+	PltInterruptThread(&heartbeatThread);
+	PltInterruptThread(&jitterThread);
+	PltInterruptThread(&resyncThread);
+
+	if (ctlSock != INVALID_SOCKET) {
+		closesocket(ctlSock);
+		ctlSock = INVALID_SOCKET;
+	}
 
 	PltJoinThread(&heartbeatThread);
 	PltJoinThread(&jitterThread);
@@ -185,6 +191,13 @@ int startControlStream(void) {
 	char* config;
 	int configSize;
 	PNVCTL_PACKET_HEADER response;
+
+	ctlSock = connectTcpSocket(host, 47995);
+	if (ctlSock == INVALID_SOCKET) {
+		return LastSocketError();
+	}
+
+	enableNoDelay(ctlSock);
 
 	configSize = getConfigDataSize(&streamConfig);
 	config = allocateConfigDataForStreamConfig(&streamConfig);

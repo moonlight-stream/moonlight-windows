@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "ByteBuffer.h"
 
 void BbInitializeWrappedBuffer(PBYTE_BUFFER buff, char* data, int offset, int length, int byteOrder) {

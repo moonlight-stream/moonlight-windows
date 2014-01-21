@@ -9,5 +9,3 @@
 
 // Windows Header Files:
 #include <windows.h>
-#include <stdlib.h> 
-#include <winsock2.h> 
