@@ -7,9 +7,13 @@ namespace Limelight
 {
     public partial class StreamFrame : PhoneApplicationPage
     {
-        int frameWidth = 1280;//(int)Application.Current.Host.Content.ActualWidth;
-        int frameHeight = 720;//(int)Application.Current.Host.Content.ActualHeight;
+        int frameWidth = 1280;
+        int frameHeight = 720;
         public VideoStreamSource videoStream;
+
+        /// <summary>
+        /// Begins stream to the MediaElement
+        /// </summary>
         public StreamFrame()
         {
             InitializeComponent();
@@ -18,6 +22,7 @@ namespace Limelight
             StreamDisplay.AutoPlay = true;
             StreamDisplay.Play();
 
+            // Starts the demo video renderer in a new thread
             ThreadPool.QueueUserWorkItem(hacks);
         }
         public void hacks(object o)

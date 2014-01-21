@@ -9,6 +9,9 @@ using System.Threading;
 
 namespace Limelight
 {
+    /// <summary>
+    /// Custom source for a video stream
+    /// </summary>
     public class VideoStreamSource : MediaStreamSource
     {
         public class VideoSample

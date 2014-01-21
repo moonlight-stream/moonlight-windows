@@ -29,7 +29,6 @@ namespace Limelight
 
             /// <summary>
             /// Start rendering video.
-            /// Note, this method may be called multiple times in a row.
             /// </summary>
             public void Start()
             {
@@ -73,7 +72,6 @@ namespace Limelight
 
             /// <summary>
             /// Stop rendering video.
-            /// Note, this method may be called multiple times in a row.
             /// </summary>
             public void Stop()
             {
@@ -82,7 +80,7 @@ namespace Limelight
                     if (!this.isRendering)
                         return; // Nothing more to be done
 
-                    Debug.WriteLine("[Video Renderer] Video rendering stopped.");
+                    Debug.WriteLine("[VideoRenderer::Stop] Video rendering stopped.");
                     mediaStreamSource = null;
                     mediaStreamer.Dispose();
                     mediaStreamer = null;

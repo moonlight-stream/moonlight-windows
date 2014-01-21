@@ -25,14 +25,9 @@ namespace Limelight
         {
             Debug.WriteLine("[H264FileReaderHackery::readFile] Get resource stream");
             var resourceStream  = Application.GetResourceStream(new Uri("Resources/notpadded.h264", UriKind.Relative));
-            Debug.WriteLineIf(resourceStream == null, "Shit");
             var stream = resourceStream.Stream;
-            Debug.WriteLine("[H264FileReaderHackery::readFile Creating byte[] buffer]");
             Byte[] buffer = new Byte[131072];
-            int offset = 0;
             int seekOffset = 0;
-            Debug.WriteLine("[H264FileReaderHackery::readFile Entering while(stream.CanRead]");
-
             while (stream.CanRead)
             {
                 int len = stream.Read(buffer, 0, buffer.Length);
@@ -44,7 +39,7 @@ namespace Limelight
                             if (firstStart) {
                                 //we should decode the first i-1 
                                 IBuffer ms = buffer.AsBuffer();
-                                frame.videoStream.TransportController_VideoMessageReceived(ms,0,10);
+                                frame.videoStream.TransportController_VideoMessageReceived(ms,10,10);
                                 stream.Position = --seekOffset;
                             } else {
                                 firstStart = true;
