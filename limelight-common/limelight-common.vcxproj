@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{15D85395-B083-4688-B578-58AB22C85BE5}</ProjectGuid>
+    <ProjectGuid>{FA15C9B6-4A89-419B-B3F9-18FFF8FE1C5A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>limelightcommon</RootNamespace>
   </PropertyGroup>
