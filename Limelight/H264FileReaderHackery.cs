@@ -27,6 +27,7 @@ namespace Limelight
             var resourceStream  = Application.GetResourceStream(new Uri("Resources/notpadded.h264", UriKind.Relative));
             var stream = resourceStream.Stream;
             Byte[] buffer = new Byte[131072];
+            IBuffer ms; 
             int seekOffset = 0;
             while (stream.CanRead)
             {
@@ -37,9 +38,9 @@ namespace Limelight
                         seekOffset++;
                         if (buffer[i] == 0 && buffer[i+1] == 0 && buffer[i+2] == 0 && buffer[i+3] == 1) {
                             if (firstStart) {
-                                //we should decode the first i-1 
-                                IBuffer ms = buffer.AsBuffer();
-                                frame.videoStream.TransportController_VideoMessageReceived(ms,10,10);
+                                // we should decode the first i-1 
+                                ms = buffer.AsBuffer();
+                                frame.VideoStream.EnqueueSamples(ms,10,10);
                                 stream.Position = --seekOffset;
                             } else {
                                 firstStart = true;

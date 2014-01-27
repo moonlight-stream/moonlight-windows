@@ -1,114 +1,184 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics; 
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Windows.Media;
-using System.Threading;
-
-namespace Limelight
+﻿namespace Limelight
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Globalization;
+    using System.IO;
+    using System.Linq;
+    using System.Threading;
+    using System.Windows.Media;
+
     /// <summary>
     /// Custom source for a video stream
     /// </summary>
     public class VideoStreamSource : MediaStreamSource
     {
+        /// <summary>
+        /// Video Sample object
+        /// </summary>
         public class VideoSample
         {
-            public VideoSample(Windows.Storage.Streams.IBuffer _buffer, UInt64 _hnsPresentationTime, UInt64 _hnsSampleDuration)
+            /// <summary>
+            /// Initializes a new instance of the <see cref="VideoSample"/> class. 
+            /// </summary>
+            /// <param name="buffer">Buffer for the video stream</param>
+            /// <param name="presentationTime">The time at which a sample should be rendered as measured in 100 nanosecond increments</param>
+            /// <param name="sampleDuration">The duration of the sample</param>
+            public VideoSample(Windows.Storage.Streams.IBuffer buffer, ulong presentationTime, ulong sampleDuration)
             {
-                buffer = _buffer;
-                hnsPresentationTime = _hnsPresentationTime;
-                hnsSampleDuration = _hnsSampleDuration;
+                this.buffer = buffer;
+                this.presentationTime = presentationTime;
+                this.sampleDuration = sampleDuration; 
             }
 
-            public Windows.Storage.Streams.IBuffer buffer;
-            public UInt64 hnsPresentationTime;
-            public UInt64 hnsSampleDuration;
+            /// <summary>
+            /// Gets the buffer for the video stream
+            /// </summary>
+            internal Windows.Storage.Streams.IBuffer buffer { get; private set; }
+
+            /// <summary>
+            /// Gets the time at which a sample should be rendered as measured in 100 nanosecond increments
+            /// </summary>
+            internal ulong presentationTime { get; private set; }
+
+            /// <summary>
+            /// Gets the duration of the sample
+            /// </summary>
+            internal ulong sampleDuration { get; private set; }
         }
 
-        private const int maxQueueSize = 4;
-        private int _frameWidth;
-        private int _frameHeight;
-        private Queue<VideoSample> _sampleQueue;
+        /// <summary>
+        /// Maximum queue size
+        /// </summary>
+        private const int MAX_QUEUE_SIZE = 4;
 
+        /// <summary>
+        /// Width of the frame from the source
+        /// </summary>
+        private int frameWidth;
+
+        /// <summary>
+        /// Height of the frame from the source
+        /// </summary>
+        private int frameHeight;
+
+        /// <summary>
+        /// Queue that holds the media samples
+        /// </summary>
+        private Queue<VideoSample> sampleQueue;
+
+        /// <summary>
+        /// Allows obtaining a mutex lock for the thread
+        /// </summary>
         private object lockObj = new object();
+
+        /// <summary>
+        /// Notifies waiting threads that a shutdown event has occurred
+        /// </summary>
         private ManualResetEvent shutdownEvent;
 
-        private int _outstandingGetVideoSampleCount;
+        /// <summary>
+        /// Number of video samples that still need processing
+        /// </summary>
+        private int outstandingGetVideoSampleCount;
 
-        private MediaStreamDescription _videoDesc;
-        private Dictionary<MediaSampleAttributeKeys, string> _emptySampleDict = new Dictionary<MediaSampleAttributeKeys, string>();
+        /// <summary>
+        /// Describes the video stream to the MediaElement
+        /// </summary>
+        private MediaStreamDescription videoDesc;
 
+        /// <summary>
+        /// A collection of pairs describing attributes of the media sample.
+        /// </summary>
+        private Dictionary<MediaSampleAttributeKeys, string> emptySampleDict = new Dictionary<MediaSampleAttributeKeys, string>();
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VideoStreamSource"/> class. 
+        /// </summary>
+        /// <param name="audioStream">Audio stream associated with the video stream</param>
+        /// <param name="frameWidth">Width of the source's video frame</param>
+        /// <param name="frameHeight">Height of the source's video frame</param>
         public VideoStreamSource(Stream audioStream, int frameWidth, int frameHeight)
         {
-            _frameWidth = frameWidth;
-            _frameHeight = frameHeight;
-            shutdownEvent = new ManualResetEvent(false);
-            _sampleQueue = new Queue<VideoSample>(VideoStreamSource.maxQueueSize);
-            _outstandingGetVideoSampleCount = 0;
+            this.frameWidth = frameWidth;
+            this.frameHeight = frameHeight;
+            this.shutdownEvent = new ManualResetEvent(false);
+            this.sampleQueue = new Queue<VideoSample>(VideoStreamSource.MAX_QUEUE_SIZE);
+            this.outstandingGetVideoSampleCount = 0;
         }
 
+        /// <summary>
+        /// Shuts down the video stream
+        /// </summary>
         public void Shutdown()
         {
             Debug.WriteLine("[VideoStreamSource::Shutdown]");
             shutdownEvent.Set();
-            lock (lockObj)
+            if (outstandingGetVideoSampleCount > 0)
             {
-                if (_outstandingGetVideoSampleCount > 0)
+                lock (lockObj)
                 {
                     // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
                     // an empty MediaStreamSample here.
-                    MediaStreamSample msSamp = new MediaStreamSample(
-                        _videoDesc, null, 0, 0, 0, 0, _emptySampleDict);
-                    ReportGetSampleCompleted(msSamp);
-                    _outstandingGetVideoSampleCount = 0;
+                    MediaStreamSample mediaStreamSamp = new MediaStreamSample(
+                        videoDesc, null, 0, 0, 0, 0, emptySampleDict);
+                    ReportGetSampleCompleted(mediaStreamSamp);
+                    outstandingGetVideoSampleCount = 0;
                 }
             }
         }
 
-        public void TransportController_VideoMessageReceived(Windows.Storage.Streams.IBuffer ibuffer, UInt64 hnsPresenationTime, UInt64 hnsSampleDuration)
+        /// <summary>
+        /// Enqueues next video samples in the buffer
+        /// </summary>
+        /// <param name="buf">Buffer for the video stream</param>
+        /// <param name="presentationTime">The time at which a sample should be rendered as measured in 100 nanosecond increments</param>
+        /// <param name="sampleDuration">The duration of the sample</param>
+        public void EnqueueSamples(Windows.Storage.Streams.IBuffer buf, ulong presentationTime, ulong sampleDuration)
         {
-            Debug.WriteLine("[VideoStreamSource::TransportController_VideoMessageReceived]");
+            Debug.WriteLine("[VideoStreamSource::EnqueueSamples]");
 
             lock (lockObj)
             {
-                if (_sampleQueue.Count >= VideoStreamSource.maxQueueSize)
+                if (sampleQueue.Count >= VideoStreamSource.MAX_QUEUE_SIZE)
                 {
                     // Dequeue and discard oldest
-                    _sampleQueue.Dequeue();
+                    sampleQueue.Dequeue();
                 }
 
-                _sampleQueue.Enqueue(new VideoSample(ibuffer, hnsPresenationTime, hnsSampleDuration));
+                sampleQueue.Enqueue(new VideoSample(buf, presentationTime, sampleDuration));
                 SendSamples();
             }
         }
 
+        /// <summary>
+        /// Dequeues media stream samples and sends them to the renderer
+        /// </summary>
         private void SendSamples()
         {
             Debug.WriteLine("[VideoStreamSource::SendSamples]");
-            while (_sampleQueue.Count() > 0 && _outstandingGetVideoSampleCount > 0)
+            while (sampleQueue.Count() > 0 && outstandingGetVideoSampleCount > 0)
             {
-                Debug.WriteLine("sampleQueueCount " + _sampleQueue.Count + " _outstandingGetVideoSampleCount " + _outstandingGetVideoSampleCount);
+                Debug.WriteLine("sampleQueueCount " + sampleQueue.Count);
 
-                if (!(shutdownEvent.WaitOne(0)))
+                if (!shutdownEvent.WaitOne(0))
                 {
-                    VideoSample vs = _sampleQueue.Dequeue();
-                    Stream s = System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.AsStream(vs.buffer);
+                    VideoSample videoSample = sampleQueue.Dequeue();
+                    Stream sampleStream = System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.AsStream(videoSample.buffer);
 
                     // Send out the next sample
-                    MediaStreamSample msSamp = new MediaStreamSample(
-                        _videoDesc,
-                        s,
+                    MediaStreamSample mediaStreamSamp = new MediaStreamSample(
+                        videoDesc,
+                        sampleStream,
                         0,
-                        s.Length,
-                        (long)vs.hnsPresentationTime,
-                        (long)vs.hnsSampleDuration,
-                        _emptySampleDict);
+                        sampleStream.Length,
+                        (long)videoSample.presentationTime,
+                        (long)videoSample.sampleDuration,
+                        emptySampleDict);
 
-                    ReportGetSampleCompleted(msSamp);
-                    _outstandingGetVideoSampleCount--;
+                    ReportGetSampleCompleted(mediaStreamSamp);
+                    outstandingGetVideoSampleCount--;
                 }
                 else
                 {
@@ -118,22 +188,26 @@ namespace Limelight
             }
         }
 
+        /// <summary>
+        /// Setup the video stream to work with the video
+        /// </summary>
         private void PrepareVideo()
         {
             Debug.WriteLine("[VideoStreamSource::PrepareVideo]");
+
             // Stream Description 
             Dictionary<MediaStreamAttributeKeys, string> streamAttributes =
                 new Dictionary<MediaStreamAttributeKeys, string>();
 
             // Select the same encoding and dimensions as the video capture
             streamAttributes[MediaStreamAttributeKeys.VideoFourCC] = "H264";
-            streamAttributes[MediaStreamAttributeKeys.Height] = _frameHeight.ToString();
-            streamAttributes[MediaStreamAttributeKeys.Width] = _frameWidth.ToString();
+            streamAttributes[MediaStreamAttributeKeys.Height] = frameHeight.ToString();
+            streamAttributes[MediaStreamAttributeKeys.Width] = frameWidth.ToString();
 
             MediaStreamDescription msd =
                 new MediaStreamDescription(MediaStreamType.Video, streamAttributes);
 
-            _videoDesc = msd;
+            videoDesc = msd;
         }
 
         /// <summary>
@@ -142,7 +216,6 @@ namespace Limelight
         private void PrepareAudio()
         {
             throw new NotImplementedException();
-
         }
 
         /// <summary>
@@ -160,7 +233,7 @@ namespace Limelight
 
             PrepareVideo();
 
-            availableStreams.Add(_videoDesc);
+            availableStreams.Add(videoDesc);
 
             // a zero timespan is an infinite video
             sourceAttributes[MediaSourceAttributesKeys.Duration] =
@@ -172,15 +245,18 @@ namespace Limelight
             ReportOpenMediaCompleted(sourceAttributes, availableStreams);
         }
 
+        /// <summary>
+        /// Gets the samples from the video and audio streams
+        /// </summary>
+        /// <param name="mediaStreamType">Audio or video stream</param>
         protected override void GetSampleAsync(MediaStreamType mediaStreamType)
         {
             Debug.WriteLine("[VideoStreamSource::GetSampleAsync]");
 
             if (mediaStreamType == MediaStreamType.Audio)
             {
-                // Uh oh
+                // Uh oh, audio doesn't work yet
                 throw new NotImplementedException();
-
             }
             else if (mediaStreamType == MediaStreamType.Video)
             {
@@ -188,34 +264,46 @@ namespace Limelight
 
                 lock (lockObj)
                 {
-                    Debug.WriteLine(_outstandingGetVideoSampleCount);
-                    _outstandingGetVideoSampleCount++;
+                    outstandingGetVideoSampleCount++;
                     SendSamples();
                 }
             }
         }
-
-        // TODO 
+        
+        /// <summary>
+        /// The MediaElement can call this method when going through normal shutdown or as a result of an error
+        /// </summary>
         protected override void CloseMedia()
         {
             throw new NotImplementedException();
-
         }
 
+        /// <summary>
+        /// The MediaElement can call this method to request information about the MediaStreamSource
+        /// </summary>
+        /// <param name="diagnosticKind">Describes the type of diagnostic information used by the media</param>
         protected override void GetDiagnosticAsync(MediaStreamSourceDiagnosticKind diagnosticKind)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Called when a stream switch is requested on the MediaElement
+        /// </summary>
+        /// <param name="mediaStreamDescription">Describes a media stream</param>
         protected override void SwitchMediaStreamAsync(MediaStreamDescription mediaStreamDescription)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// The MediaElement calls this method to ask the MediaStreamSource to seek to the nearest randomly accessible point before the specified time
+        /// </summary>
+        /// <param name="seekToTime">The time as represented by 100 nanosecond increments to seek to</param>
         protected override void SeekAsync(long seekToTime)
         {
             Debug.WriteLine("[VideoStreamSource::SeekAsync]");
-            ReportSeekCompleted(seekToTime);
+            ReportSeekCompleted(seekToTime); 
         }
     }
 }

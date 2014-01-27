@@ -1,20 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Resources;
-using Windows.Storage.Streams;
-
-namespace Limelight
+﻿namespace Limelight
 {
-    class VideoDecoder
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Runtime.InteropServices.WindowsRuntime;
+    using System.Windows.Resources;
+    using Windows.Storage.Streams;
+
+    /// <summary>
+    /// Video Decoder class
+    /// </summary>
+    internal class VideoDecoder
     {
         private StreamFrame frame;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="VideoDecoder"/> class.
+        /// </summary>
+        /// <param name="frame">The UI frame</param>
         public VideoDecoder(StreamFrame frame)
         {
             this.frame = frame;
@@ -24,7 +27,7 @@ namespace Limelight
         /// Decodes the H264 video stream for rendering
         /// </summary>
         /// <param name="resourceStream">The resource stream for the video</param>
-        public void decodeVideo(StreamResourceInfo resourceStream)
+        public void DecodeVideo(StreamResourceInfo resourceStream)
         {
             Debug.WriteLine("[VideoDecoder] Decoding video...");
 
@@ -32,8 +35,8 @@ namespace Limelight
             IBuffer mediaStream;
             int seekOffset = 0;
 
-            // 128 kilobyte buffer
-            Byte[] buffer = new Byte[131072];
+            // 128 kilobyte byte buffer
+            byte[] buffer = new byte[131072];
 
             while (stream.CanRead)
             {
@@ -51,7 +54,7 @@ namespace Limelight
                                 // Put the buffer contents into a format that the video stream source can use
                                 mediaStream = buffer.AsBuffer();
 
-                                frame.videoStream.TransportController_VideoMessageReceived(mediaStream, 0, 10);
+                                frame.VideoStream.EnqueueSamples(mediaStream, 0, 10);
                                 stream.Position = --seekOffset;
                             }
                             else

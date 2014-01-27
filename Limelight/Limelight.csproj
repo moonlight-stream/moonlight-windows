@@ -107,6 +107,7 @@
     <Compile Include="StreamFrame.xaml.cs">
       <DependentUpon>StreamFrame.xaml</DependentUpon>
     </Compile>
+    <Compile Include="VideoDecoder.cs" />
     <Compile Include="VideoRenderer.cs" />
     <Compile Include="VideoStreamSource.cs" />
   </ItemGroup>
