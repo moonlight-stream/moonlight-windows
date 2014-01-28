@@ -1,5 +1,7 @@
 #Limelight
 
+This is in development and is not considered stable (or buildable). Do not use it. It is not ready.
+
 Limelight is an open source implementation of NVIDIA's GameStream, as used by the NVIDIA Shield,
 but built for Windows Phone 8. 
 
