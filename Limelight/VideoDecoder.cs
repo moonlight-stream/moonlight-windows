@@ -6,6 +6,8 @@
     using System.Runtime.InteropServices.WindowsRuntime;
     using System.Windows.Resources;
     using Windows.Storage.Streams;
+    using Limelight_common_binding;
+    using System.Net;
 
     /// <summary>
     /// Video Decoder class
@@ -67,11 +69,6 @@
                 else
                 {
                     Debug.WriteLine("[VideoDecoder] No buffer");
-
-                    // TODO When reading the file, resetting these make it loop the video
-                    // The decoder isn't for reading from a file
-                    stream.Position = 0;
-                    seekOffset = 0;
                 }
             }
         }

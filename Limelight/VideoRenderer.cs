@@ -10,24 +10,10 @@
         /// </summary>
         internal class VideoRenderer
         {
-            /// <summary>
-            /// Indicates if rendering is already in progress or not
-            /// </summary>
             private bool isRendering;
-
-            /// <summary>
-            /// The stream source
-            /// </summary>
             private VideoStreamSource mediaStreamSource;
-
-            /// <summary>
-            /// Provides streaming media for the MediaElement
-            /// </summary>
             private MediaStreamer mediaStreamer; 
 
-            /// <summary>
-            /// Initializes a new instance of the <see cref="VideoRenderer"/> class. 
-            /// </summary>
             internal VideoRenderer()
             {
             }

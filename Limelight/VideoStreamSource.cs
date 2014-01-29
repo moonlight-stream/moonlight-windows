@@ -31,31 +31,12 @@
                 this.presentationTime = presentationTime;
                 this.sampleDuration = sampleDuration; 
             }
-
-            /// <summary>
-            /// Gets the buffer for the video stream
-            /// </summary>
             internal Windows.Storage.Streams.IBuffer buffer { get; private set; }
-
-            /// <summary>
-            /// Gets the time at which a sample should be rendered as measured in 100 nanosecond increments
-            /// </summary>
             internal ulong presentationTime { get; private set; }
-
-            /// <summary>
-            /// Gets the duration of the sample
-            /// </summary>
             internal ulong sampleDuration { get; private set; }
         }
 
-        /// <summary>
-        /// Maximum queue size
-        /// </summary>
         private const int MAX_QUEUE_SIZE = 4;
-
-        /// <summary>
-        /// Width of the frame from the source
-        /// </summary>
         private int frameWidth;
 
         /// <summary>
@@ -189,7 +170,7 @@
         }
 
         /// <summary>
-        /// Setup the video stream to work with the video
+        /// Prepare the video stream for rendering
         /// </summary>
         private void PrepareVideo()
         {
@@ -211,10 +192,11 @@
         }
 
         /// <summary>
-        /// Not implemented because LimelightWP currently does not support audio
+        /// Prepare the audio stream 
         /// </summary>
         private void PrepareAudio()
         {
+            // TODO 
             throw new NotImplementedException();
         }
 
@@ -275,6 +257,7 @@
         /// </summary>
         protected override void CloseMedia()
         {
+            // TODO 
             throw new NotImplementedException();
         }
 

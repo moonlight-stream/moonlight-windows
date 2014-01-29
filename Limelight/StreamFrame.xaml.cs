@@ -1,8 +1,11 @@
 ﻿namespace Limelight
 {
+    using System.Net;
     using System.Threading;
     using System.Windows;
+    using Limelight_common_binding;
     using Microsoft.Phone.Controls;
+    using System.Diagnostics;
 
     /// <summary>
     /// UI Frame that contains the media element that streams Steam
@@ -26,9 +29,6 @@
         /// </summary>
         internal VideoStreamSource VideoStream { get; private set; }
 
-        // TODO Uncomment when Cameron has Limelight-common-c up and running
-        // LimelightStreamConfiguration c;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="StreamFrame"/> class. 
         /// </summary>
@@ -41,13 +41,8 @@
             StreamDisplay.AutoPlay = true;
             StreamDisplay.Play();
 
-            // Starts the demo video renderer in a new thread
-            ThreadPool.QueueUserWorkItem(Hacks);
-
-            // TODO use Limelight Common to get the stream
-
             // TODO uncomment when you have a real stream to use
-            // ThreadPool.QueueUserWorkItem(Decoder);
+            ThreadPool.QueueUserWorkItem(Connection);
         }
 
         /// <summary>
@@ -60,13 +55,15 @@
         }
 
         /// <summary>
-        /// Begins the decoder
+        /// Starts the connection
         /// </summary>
-        /// <param name="o">Object for the decoder thread</param>
-        public void Decoder(object o)
+        /// <param name="o">Object for the connection thread</param>
+        public void Connection(object o)
         {
-            // TODO pass in resource stream
-            new VideoDecoder(this).DecodeVideo(null); 
+            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(1280, 720, 30);
+
+            Debug.WriteLine("Starting connection\n");
+            LimelightCommonRuntimeComponent.StartConnection((uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("129.22.46.110").Address), streamConfig);
         }
     }
 }
