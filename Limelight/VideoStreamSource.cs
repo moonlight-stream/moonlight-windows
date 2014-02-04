@@ -38,40 +38,12 @@
 
         private const int MAX_QUEUE_SIZE = 4;
         private int frameWidth;
-
-        /// <summary>
-        /// Height of the frame from the source
-        /// </summary>
         private int frameHeight;
-
-        /// <summary>
-        /// Queue that holds the media samples
-        /// </summary>
         private Queue<VideoSample> sampleQueue;
-
-        /// <summary>
-        /// Allows obtaining a mutex lock for the thread
-        /// </summary>
         private object lockObj = new object();
-
-        /// <summary>
-        /// Notifies waiting threads that a shutdown event has occurred
-        /// </summary>
         private ManualResetEvent shutdownEvent;
-
-        /// <summary>
-        /// Number of video samples that still need processing
-        /// </summary>
         private int outstandingGetVideoSampleCount;
-
-        /// <summary>
-        /// Describes the video stream to the MediaElement
-        /// </summary>
         private MediaStreamDescription videoDesc;
-
-        /// <summary>
-        /// A collection of pairs describing attributes of the media sample.
-        /// </summary>
         private Dictionary<MediaSampleAttributeKeys, string> emptySampleDict = new Dictionary<MediaSampleAttributeKeys, string>();
 
         /// <summary>
