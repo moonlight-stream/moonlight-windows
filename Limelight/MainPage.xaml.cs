@@ -17,12 +17,23 @@ namespace Limelight
     /// </summary>
     public partial class MainPage : PhoneApplicationPage
     {
+        static String hostAddr; 
+
         /// <summary>
-        /// Constructor
+        /// Initializes a new instance of the MainPage class.
         /// </summary>
         public MainPage()
         {
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// Gets the host address
+        /// </summary>
+        /// <returns>The host address</returns>
+        public String getHostAddr()
+        {
+            return hostAddr; 
         }
         
         /// <summary>
@@ -40,6 +51,9 @@ namespace Limelight
         private void PairButton_Click(object sender, RoutedEventArgs e)
         {
             Debug.WriteLine("Pair button pressed");
+            hostAddr = host_textbox.Text; 
+
+            // TODO call currently non-existent pair method
         }
     }
 }
