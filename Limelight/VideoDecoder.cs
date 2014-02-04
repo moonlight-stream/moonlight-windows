@@ -6,7 +6,7 @@
     using System.Runtime.InteropServices.WindowsRuntime;
     using System.Windows.Resources;
     using Windows.Storage.Streams;
-    using Limelight_common_binding;
+    //using Limelight_common_binding;
     using System.Net;
 
     /// <summary>

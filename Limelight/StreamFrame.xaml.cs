@@ -3,7 +3,7 @@
     using System.Net;
     using System.Threading;
     using System.Windows;
-    using Limelight_common_binding;
+    //using Limelight_common_binding;
     using Microsoft.Phone.Controls;
     using System.Diagnostics;
 
@@ -42,7 +42,7 @@
             StreamDisplay.Play();
 
             // TODO uncomment when you have a real stream to use
-            ThreadPool.QueueUserWorkItem(Connection);
+            ThreadPool.QueueUserWorkItem(Hacks);
         }
 
         /// <summary>
@@ -60,10 +60,10 @@
         /// <param name="o">Object for the connection thread</param>
         public void Connection(object o)
         {
-            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(1280, 720, 30);
+            //LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(1280, 720, 30);
 
             Debug.WriteLine("Starting connection\n");
-            LimelightCommonRuntimeComponent.StartConnection((uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("129.22.46.110").Address), streamConfig);
+            //LimelightCommonRuntimeComponent.StartConnection((uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("129.22.46.110").Address), streamConfig);
         }
     }
 }
