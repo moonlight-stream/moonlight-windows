@@ -94,7 +94,7 @@ int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, L
 	drCallbacks.release = DrRelease;
 	drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
 
-	return LiStartConnection(hostAddress, &config, NULL, NULL, 0);
+	return LiStartConnection(hostAddress, &config, NULL, NULL, NULL, 0);
 }
 
 void LimelightCommonRuntimeComponent::StopConnection(void)
