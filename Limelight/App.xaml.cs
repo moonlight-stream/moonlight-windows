@@ -74,7 +74,7 @@ namespace Limelight
         // This code will not execute when the application is closing
         private void Application_Deactivated(object sender, DeactivatedEventArgs e)
         {
-            Debug.WriteLine("Stopping connection");
+            Debug.WriteLine("App deactivated: Stopping connection");
             LimelightCommonRuntimeComponent.StopConnection();
         }
 
@@ -82,7 +82,7 @@ namespace Limelight
         // This code will not execute when the application is deactivated
         private void Application_Closing(object sender, ClosingEventArgs e)
         {
-            Debug.WriteLine("Stopping connection");
+            Debug.WriteLine("App closing: Stopping connection");
             LimelightCommonRuntimeComponent.StopConnection();
         }
 

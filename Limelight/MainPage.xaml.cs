@@ -1,15 +1,19 @@
 ﻿using Limelight.Resources;
 using Limelight_common_binding;
 using Microsoft.Phone.Controls;
+using Microsoft.Phone.Reactive;
 using Microsoft.Phone.Shell;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
+using System.Windows.Threading;
 
 namespace Limelight
 {
@@ -18,7 +22,8 @@ namespace Limelight
     /// </summary>
     public partial class MainPage : PhoneApplicationPage
     {
-        static String hostAddr; 
+        static String hostAddr;
+        private BackgroundWorker bw = new BackgroundWorker();
 
         /// <summary>
         /// Initializes a new instance of the MainPage class.
@@ -36,7 +41,11 @@ namespace Limelight
         {
             return hostAddr; 
         }
-        
+        #region Background Worker
+
+        #endregion Background Worker
+
+        #region Event Handlers
         /// <summary>
         /// Executed when the user presses "Start Streaming Steam!"
         /// </summary>
@@ -44,9 +53,21 @@ namespace Limelight
         {
             Debug.WriteLine("Start Streaming button pressed");
             LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(1280, 720, 30);
+
             Debug.WriteLine("Starting connection\n");
-            LimelightCommonRuntimeComponent.StartConnection((uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("129.22.46.110").Address), streamConfig);
-            NavigationService.Navigate(new Uri("/StreamFrame.xaml", UriKind.Relative));
+            // Spinner
+            this.SpinningAnimation.Begin();
+            Waitgrid.Visibility = Visibility.Visible;
+            spinnerState.Visibility = Visibility.Visible;
+            // TODO instead of using a timer, use a backgroundWorker. While the bg worker is busy, show the spinner.
+            Observable.Timer(TimeSpan.FromSeconds(4)).Subscribe(_ =>
+            {
+                this.Dispatcher.BeginInvoke(delegate()
+               {
+                   NavigationService.Navigate(new Uri("/StreamFrame.xaml", UriKind.Relative));
+               });
+            });
+           // LimelightCommonRuntimeComponent.StartConnection((uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("129.22.46.110").Address), streamConfig);
         }
 
         /// <summary>
@@ -60,4 +81,5 @@ namespace Limelight
             // TODO call currently non-existent pair method
         }
     }
+        #endregion Event Handlers
 }

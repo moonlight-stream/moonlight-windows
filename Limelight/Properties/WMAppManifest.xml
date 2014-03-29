@@ -16,9 +16,9 @@
     <Tokens>
       <PrimaryToken TokenID="LimelightToken" TaskName="_default">
         <TemplateFlip>
-          <SmallImageURI IsRelative="true" IsResource="false">ApplicationIcon.png</SmallImageURI>
+          <SmallImageURI IsRelative="true" IsResource="false">Assets\Tiles\IconicTileSmall.png</SmallImageURI>
           <Count>0</Count>
-          <BackgroundImageURI IsRelative="true" IsResource="false">ApplicationIcon.png</BackgroundImageURI>
+          <BackgroundImageURI IsRelative="true" IsResource="false">Assets\Tiles\IconicTileMediumLarge.png</BackgroundImageURI>
           <Title>Limelight</Title>
           <BackContent>
           </BackContent>
