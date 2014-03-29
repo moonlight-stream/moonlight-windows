@@ -1,4 +1,5 @@
 ﻿using Limelight.Resources;
+using Limelight_common_binding;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using System;
@@ -42,6 +43,9 @@ namespace Limelight
         private void StreamButton_Click(object sender, RoutedEventArgs e)
         {
             Debug.WriteLine("Start Streaming button pressed");
+            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(1280, 720, 30);
+            Debug.WriteLine("Starting connection\n");
+            LimelightCommonRuntimeComponent.StartConnection((uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("129.22.46.110").Address), streamConfig);
             NavigationService.Navigate(new Uri("/StreamFrame.xaml", UriKind.Relative));
         }
 

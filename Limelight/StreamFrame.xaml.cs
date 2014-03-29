@@ -42,7 +42,7 @@
             StreamDisplay.Play();
 
             // TODO uncomment when you have a real stream to use
-            ThreadPool.QueueUserWorkItem(Hacks);
+            //ThreadPool.QueueUserWorkItem(Hacks);
         }
 
         /// <summary>
@@ -55,24 +55,11 @@
         }
 
         /// <summary>
-        /// Starts the connection
-        /// </summary>
-        /// <param name="o">Object for the connection thread</param>
-        public void Connection(object o)
-        {
-            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(1280, 720, 30);
-
-            Debug.WriteLine("Starting connection\n");
-            LimelightCommonRuntimeComponent.StartConnection((uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("129.22.46.110").Address), streamConfig);
-            
-
-        }
-
-        /// <summary>
         /// Stop the connection if the stream frame loses focus
         /// </summary>
-        private void focusLost(object sender, RoutedEventArgs e)
+        private void stopConnection(object sender, RoutedEventArgs e)
         {
+            Debug.WriteLine("Stopping connection\n");
             LimelightCommonRuntimeComponent.StopConnection();
         }
     }
