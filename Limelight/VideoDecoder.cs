@@ -37,6 +37,8 @@
             IBuffer mediaStream;
             int seekOffset = 0;
 
+            const ulong sampleDuration = 10; 
+
             // 128 kilobyte byte buffer
             byte[] buffer = new byte[131072];
 
@@ -56,7 +58,7 @@
                                 // Put the buffer contents into a format that the video stream source can use
                                 mediaStream = buffer.AsBuffer();
 
-                                frame.VideoStream.EnqueueSamples(mediaStream, 0, 10);
+                                frame.VideoStream.EnqueueSamples(mediaStream, 0, sampleDuration);
                                 stream.Position = --seekOffset;
                             }
                             else

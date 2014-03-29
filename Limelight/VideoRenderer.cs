@@ -10,6 +10,8 @@
         /// </summary>
         internal class VideoRenderer
         {
+            private const int streamID = 123; 
+
             private bool isRendering;
             private VideoStreamSource mediaStreamSource;
             private MediaStreamer mediaStreamer; 
@@ -76,7 +78,7 @@
                 if (mediaStreamer == null)
                 {
                     Debug.WriteLine("[VideoRenderer::StartMediaStreamer] CreateMediaStreamer");
-                    mediaStreamer = MediaStreamerFactory.CreateMediaStreamer(123);
+                    mediaStreamer = MediaStreamerFactory.CreateMediaStreamer(streamID);
                 }
                                 
                 int frameWidth = (int)Application.Current.Host.Content.ActualWidth;
