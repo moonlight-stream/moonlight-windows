@@ -24,7 +24,7 @@
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
 
         </Grid>
-        <MediaElement x:Name="StreamDisplay" HorizontalAlignment="Left" Height="470" Grid.RowSpan="2" VerticalAlignment="Top" Width="800" Margin="0,10,0,0"/>
+        <MediaElement x:Name="StreamDisplay" HorizontalAlignment="Left" Height="470" Grid.RowSpan="2" VerticalAlignment="Top" Width="800" Margin="0,10,0,0" LostFocus="focusLost"/>
     </Grid>
 
 </phone:PhoneApplicationPage>

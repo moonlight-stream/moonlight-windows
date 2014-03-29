@@ -14,6 +14,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "limelight-common", "..\limelight-common-c\limelight-common\limelight-common.vcxproj", "{15D85395-B083-4688-B578-58AB22C85BE5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Limelight-common-binding", "Limelight-common-binding\Limelight-common-binding.vcxproj", "{F150A355-04CA-4F3E-8295-3FDA0DA800D4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{15D85395-B083-4688-B578-58AB22C85BE5} = {15D85395-B083-4688-B578-58AB22C85BE5}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

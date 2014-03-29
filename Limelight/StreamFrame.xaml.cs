@@ -3,7 +3,7 @@
     using System.Net;
     using System.Threading;
     using System.Windows;
-    //using Limelight_common_binding;
+    using Limelight_common_binding;
     using Microsoft.Phone.Controls;
     using System.Diagnostics;
 
@@ -60,10 +60,20 @@
         /// <param name="o">Object for the connection thread</param>
         public void Connection(object o)
         {
-            //LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(1280, 720, 30);
+            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(1280, 720, 30);
 
             Debug.WriteLine("Starting connection\n");
-            //LimelightCommonRuntimeComponent.StartConnection((uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("129.22.46.110").Address), streamConfig);
+            LimelightCommonRuntimeComponent.StartConnection((uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("129.22.46.110").Address), streamConfig);
+            
+
+        }
+
+        /// <summary>
+        /// Stop the connection if the stream frame loses focus
+        /// </summary>
+        private void focusLost(object sender, RoutedEventArgs e)
+        {
+            LimelightCommonRuntimeComponent.StopConnection();
         }
     }
 }
