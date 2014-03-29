@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <winerror.h> 
+#include <Objbase.h> 
+
 
 #pragma comment(lib, "limelight-common.lib")
 #pragma comment(lib, "ws2_32.lib")
@@ -10,46 +13,25 @@
 using namespace Limelight_common_binding;
 using namespace Platform;
 
-//ILimelightDecoderRenderer *DecoderRendererCallbacks;
+static LimelightDecoderRenderer ^s_DrCallbacks;
+static LimelightAudioRenderer ^s_ArCallbacks;
+static LimelightConnectionListener ^s_ClCallbacks;
 
-LimelightStreamConfiguration::LimelightStreamConfiguration(int width, int height, int fps) :
-m_Width(width), m_Height(height), m_Fps(fps) { }
-
-int LimelightStreamConfiguration::GetWidth(void)
-{
-	return m_Width;
+void DrShimSetup(int width, int height, int redrawRate, void* context, int drFlags) {
+	s_DrCallbacks->Setup(width, height, redrawRate, drFlags);
 }
-
-int LimelightStreamConfiguration::GetHeight(void)
-{
-	return m_Height;
+void DrShimStart(void) {
+	s_DrCallbacks->Start();
 }
-
-int LimelightStreamConfiguration::GetFps(void)
-{
-	return m_Fps;
+void DrShimStop(void) {
+	s_DrCallbacks->Stop();
 }
-
-void DrSetup(int width, int height, int redrawRate, void* context, int drFlags)
-{
-	//DecoderRendererCallbacks->Setup(width, height, redrawRate, drFlags);
-	printf("Setup: %dx%d at %d fps\n", width, height, redrawRate);
+void DrShimRelease(void) {
+	s_DrCallbacks->Destroy();
 }
-
-void DrStart(void)
-{
-	printf("Start\n");
-	//DecoderRendererCallbacks->Start();
-}
-
-void DrStop(void)
-{
-	//DecoderRendererCallbacks->Stop();
-}
-
-void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
-{
+void DrShimSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
 	char* fullData;
+	Platform::Array<unsigned char> ^dataArray;
 
 	fullData = (char*)malloc(decodeUnit->fullLength);
 	if (fullData != NULL)
@@ -65,39 +47,105 @@ void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 			entry = entry->next;
 		}
 
-		printf("Decode unit: %d\n", decodeUnit->fullLength);
-		//DecoderRendererCallbacks->SubmitDecodeUnit(fullData, decodeUnit->fullLength);
+		dataArray = ref new Platform::Array<unsigned char>((unsigned char*)fullData, decodeUnit->fullLength);
+		s_DrCallbacks->SubmitDecodeUnit(&dataArray);
 
 		free(fullData);
 	}
 }
 
-void DrRelease(void)
-{
-	//DecoderRendererCallbacks->Release();
+void ArShimInit(void) {
+	s_ArCallbacks->Init();
+}
+void ArShimStart(void) {
+	s_ArCallbacks->Start();
+}
+void ArShimStop(void) {
+	s_ArCallbacks->Stop();
+}
+void ArShimRelease(void) {
+	s_ArCallbacks->Destroy();
+}
+void ArShimDecodeAndPlaySample(char* sampleData, int sampleLength) {
+	Platform::Array<unsigned char> ^dataArray;
+	dataArray = ref new Platform::Array<unsigned char>((unsigned char*)sampleData, sampleLength);
+	s_ArCallbacks->DecodeAndPlaySample(&dataArray);
 }
 
-int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, LimelightStreamConfiguration ^streamConfig)
+void ClShimStageStarting(int stage) {
+	s_ClCallbacks->StageStarting(stage);
+}
+void ClShimStageComplete(int stage) {
+	s_ClCallbacks->StageComplete(stage);
+}
+void ClShimStageFailed(int stage, int errorCode) {
+	s_ClCallbacks->StageFailed(stage, errorCode);
+}
+void ClShimConnectionStarted(void) {
+	s_ClCallbacks->ConnectionStarted();
+}
+void ClShimConnectionTerminated(int errorCode) {
+	s_ClCallbacks->ConnectionTerminated(errorCode);
+}
+void ClShimDisplayMessage(char *message) {
+	// TODO char* -> Platform::String
+}
+void ClShimDisplayTransientMessage(char *message) {
+	// TODO char* -> Platform::String
+}
+
+int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, LimelightStreamConfiguration ^streamConfig,
+	LimelightConnectionListener ^clCallbacks, LimelightDecoderRenderer ^drCallbacks, LimelightAudioRenderer ^arCallbacks)
 {
 	STREAM_CONFIGURATION config;
-	DECODER_RENDERER_CALLBACKS drCallbacks;
+	DECODER_RENDERER_CALLBACKS drShimCallbacks;
+	AUDIO_RENDERER_CALLBACKS arShimCallbacks;
+	CONNECTION_LISTENER_CALLBACKS clShimCallbacks;
 
 	config.width = streamConfig->GetWidth();
 	config.height = streamConfig->GetHeight();
 	config.fps = streamConfig->GetFps();
 	
-	//DecoderRendererCallbacks = decoderRenderer;
+	s_ClCallbacks = clCallbacks;
+	s_DrCallbacks = drCallbacks;
+	s_ArCallbacks = arCallbacks;
 
-	drCallbacks.setup = DrSetup;
-	drCallbacks.start = DrStart;
-	drCallbacks.stop = DrStop;
-	drCallbacks.release = DrRelease;
-	drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
+	drShimCallbacks.setup = DrShimSetup;
+	drShimCallbacks.start = DrShimStart;
+	drShimCallbacks.stop = DrShimStop;
+	drShimCallbacks.release = DrShimRelease;
+	drShimCallbacks.submitDecodeUnit = DrShimSubmitDecodeUnit;
 
-	return LiStartConnection(hostAddress, &config, NULL, NULL, NULL, 0);
+	arShimCallbacks.init = ArShimInit;
+	arShimCallbacks.start = ArShimStart;
+	arShimCallbacks.stop = ArShimStop;
+	arShimCallbacks.release = ArShimRelease;
+	arShimCallbacks.decodeAndPlaySample = ArShimDecodeAndPlaySample;
+
+	clShimCallbacks.stageStarting = ClShimStageStarting;
+	clShimCallbacks.stageComplete = ClShimStageComplete;
+	clShimCallbacks.stageFailed = ClShimStageFailed;
+	clShimCallbacks.connectionStarted = ClShimConnectionStarted;
+	clShimCallbacks.connectionTerminated = ClShimConnectionTerminated;
+	clShimCallbacks.displayMessage = ClShimDisplayMessage;
+	clShimCallbacks.displayTransientMessage = ClShimDisplayTransientMessage;
+
+	return LiStartConnection(hostAddress, &config, &clShimCallbacks,
+		&drShimCallbacks, &arShimCallbacks, NULL, 0);
 }
 
-void LimelightCommonRuntimeComponent::StopConnection(void)
-{
+void LimelightCommonRuntimeComponent::StopConnection(void) {
 	LiStopConnection();
+}
+
+int LimelightCommonRuntimeComponent::SendMouseMoveEvent(short deltaX, short deltaY) {
+	return LiSendMouseMoveEvent(deltaX, deltaY);
+}
+
+int LimelightCommonRuntimeComponent::SendMouseButtonEvent(unsigned char action, int button) {
+	return LiSendMouseButtonEvent(action, button);
+}
+
+int LimelightCommonRuntimeComponent::SendKeyboardEvent(short keyCode, unsigned char keyAction, unsigned char modifiers) {
+	return LiSendKeyboardEvent(keyCode, keyAction, modifiers);
 }
