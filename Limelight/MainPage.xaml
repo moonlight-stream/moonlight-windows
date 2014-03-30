@@ -31,33 +31,6 @@
         <RadioButton x:Name="_1080p_button" Content="1080p (may increase lag)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="159,483,0,0" GroupName="pixels"/>
         <RadioButton x:Name="_720p_button" Content="720p" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14,483,0,0" GroupName="pixels" IsChecked="True"/>
 
-        <Grid x:Name="Waitgrid" Grid.Row="0" Background="Black" Opacity="0.6" Margin="0,-19,0,19" Visibility="Collapsed">
-            <Ellipse Fill="{StaticResource PhoneForegroundBrush}"  Height="100" Width="100" Canvas.ZIndex="100" Margin="190,312,190,356">
-                <Ellipse.OpacityMask>
-                    <ImageBrush ImageSource="/Assets/Spinner.png" Stretch="Uniform"/>
-                </Ellipse.OpacityMask>
-                <Ellipse.RenderTransform>
-                    <RotateTransform x:Name="SpinningRotateTransform"
-                CenterX="50"
-                CenterY="50" />
-                </Ellipse.RenderTransform>
-            </Ellipse>
-            <Rectangle x:Name="spinnerState" Fill="#FF2121EC" HorizontalAlignment="Left" Height="51" Margin="10,457,0,0" Stroke="Black" VerticalAlignment="Top" Width="460" Visibility="Collapsed"/>
-        </Grid>
-
     </Grid>
-
-
-    <phone:PhoneApplicationPage.Resources>
-        <Storyboard x:Name="SpinningAnimation">
-            <DoubleAnimation AutoReverse="False"
-                       Duration="0:0:1"
-                       From="0"
-                       RepeatBehavior="Forever"
-                       Storyboard.TargetName="SpinningRotateTransform"
-                       Storyboard.TargetProperty="Angle"
-                       To="360" />
-        </Storyboard>
-    </phone:PhoneApplicationPage.Resources>
 
 </phone:PhoneApplicationPage>
