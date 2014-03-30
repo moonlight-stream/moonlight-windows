@@ -8,6 +8,7 @@
     using System.Diagnostics;
     using Microsoft.Xna.Framework.Input;
     using System;
+    using System.Runtime.InteropServices.WindowsRuntime;
 
     /// <summary>
     /// UI Frame that contains the media element that streams Steam
@@ -34,6 +35,92 @@
         /// </summary>
         internal VideoStreamSource VideoStream { get; private set; }
 
+        public void DrSetup(int width, int height, int redrawRate, int drFlags)
+        {
+
+        }
+
+        public void DrStart()
+        {
+
+        }
+
+        public void DrStop()
+        {
+
+        }
+
+        public void DrRelease()
+        {
+
+        }
+
+        public void DrSubmitDecodeUnit(byte[] data)
+        {
+            Debug.WriteLine("Submitting decode unit of " + data.Length + " bytes");
+            VideoStream.EnqueueSamples(data.AsBuffer(), 0, 0);
+        }
+
+        public void ArInit()
+        {
+
+        }
+
+        public void ArStart()
+        {
+
+        }
+
+        public void ArStop()
+        {
+
+        }
+
+        public void ArRelease()
+        {
+
+        }
+
+        public void ArDecodeAndPlaySample(byte[] data)
+        {
+            Debug.WriteLine("Playing audio of " + data.Length + " bytes");
+        }
+
+        public void ClStageStarting(int stage)
+        {
+
+        }
+
+        public void ClStageComplete(int stage)
+        {
+
+        }
+
+        public void ClStageFailed(int stage, int errorCode)
+        {
+
+        }
+
+        public void ClConnectionStarted()
+        {
+
+        }
+
+        public void ClConnectionTerminated(int errorCode)
+        {
+            Debug.WriteLine("Terminated: " + errorCode);
+        }
+
+        public void ClDisplayMessage(String message)
+        {
+
+        }
+
+        public void ClDisplayTransientMessage(String message)
+        {
+
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="StreamFrame"/> class. 
         /// </summary>
@@ -46,7 +133,15 @@
             StreamDisplay.AutoPlay = true;
             StreamDisplay.Play();
 
-            // TODO play the stream. ha.
+            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 60);
+            LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
+            LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArDecodeAndPlaySample);
+            LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
+                ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
+
+            //(uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("192.168.1.207").Address)
+            LimelightCommonRuntimeComponent.StartConnection(0xcf01a8c0, 
+                streamConfig, clCallbacks, drCallbacks, arCallbacks);
         }
 
         #region Event Handlers
@@ -69,7 +164,7 @@
             {
                 // We haven't moved so send a click
 
-                //conn.sendMouseButtonDown((byte) 0x01); 
+                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, (int)MouseButton.Left); 
 
                 // Sleep here because some games do input detection by polling
                 try
@@ -81,7 +176,7 @@
                 }
 
                 // Raise the mouse button
-                // conn.sendMouseButtonUp((byte) 0x01); 
+                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release, (int)MouseButton.Left);
             }
         }
 
@@ -94,7 +189,7 @@
             if (ms.X != lastTouchX || ms.Y != lastTouchY)
             {
                 hasMoved = true;
-                //conn.sendMouseMove((short)(ms.X - lastTouchX),(short)(ms.Y - lastTouchY));
+                LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(ms.X - lastTouchX),(short)(ms.Y - lastTouchY));
 
                 lastTouchX = ms.X;
                 lastTouchY = ms.Y; 

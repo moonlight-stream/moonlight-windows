@@ -31,7 +31,7 @@ void DrShimRelease(void) {
 }
 void DrShimSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
 	char* fullData;
-	Platform::Array<unsigned char> ^dataArray;
+	const Platform::Array<unsigned char> ^dataArray;
 
 	fullData = (char*)malloc(decodeUnit->fullLength);
 	if (fullData != NULL)
@@ -47,8 +47,8 @@ void DrShimSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
 			entry = entry->next;
 		}
 
-		dataArray = ref new Platform::Array<unsigned char>((unsigned char*)fullData, decodeUnit->fullLength);
-		s_DrCallbacks->SubmitDecodeUnit(&dataArray);
+		dataArray = ref new Platform::Array<byte>((byte*)fullData, decodeUnit->fullLength);
+		s_DrCallbacks->SubmitDecodeUnit(dataArray);
 
 		free(fullData);
 	}
@@ -67,9 +67,9 @@ void ArShimRelease(void) {
 	s_ArCallbacks->Destroy();
 }
 void ArShimDecodeAndPlaySample(char* sampleData, int sampleLength) {
-	Platform::Array<unsigned char> ^dataArray;
-	dataArray = ref new Platform::Array<unsigned char>((unsigned char*)sampleData, sampleLength);
-	s_ArCallbacks->DecodeAndPlaySample(&dataArray);
+	const Platform::Array<unsigned char> ^dataArray;
+	dataArray = ref new Platform::Array<byte>((byte*)sampleData, sampleLength);
+	s_ArCallbacks->DecodeAndPlaySample(dataArray);
 }
 
 void ClShimStageStarting(int stage) {

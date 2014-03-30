@@ -2,6 +2,8 @@
 
 #include <Limelight.h>
 
+typedef unsigned char byte;
+
 namespace Limelight_common_binding
 {
 	public ref class LimelightStreamConfiguration sealed
@@ -30,7 +32,7 @@ namespace Limelight_common_binding
 	public delegate void DrStart(void);
 	public delegate void DrStop(void);
 	public delegate void DrRelease(void);
-	public delegate void DrSubmitDecodeUnit(Platform::Array<unsigned char>^ *data);
+	public delegate void DrSubmitDecodeUnit(const Platform::Array<unsigned char> ^data);
 
 	public ref class LimelightDecoderRenderer sealed
 	{
@@ -52,7 +54,7 @@ namespace Limelight_common_binding
 		void Destroy(void) {
 			m_DrRelease();
 		}
-		void SubmitDecodeUnit(Platform::Array<unsigned char>^ *dataArray) {
+		void SubmitDecodeUnit(const Platform::Array<byte> ^dataArray) {
 			m_DrSubmitDecodeUnit(dataArray);
 		}
 
@@ -68,7 +70,7 @@ namespace Limelight_common_binding
 	public delegate void ArStart(void);
 	public delegate void ArStop(void);
 	public delegate void ArRelease(void);
-	public delegate void ArDecodeAndPlaySample(Platform::Array<unsigned char>^ *data);
+	public delegate void ArDecodeAndPlaySample(const Platform::Array<unsigned char> ^data);
 
 	public ref class LimelightAudioRenderer sealed
 	{
@@ -90,7 +92,7 @@ namespace Limelight_common_binding
 		void Destroy(void) {
 			m_ArRelease();
 		}
-		void DecodeAndPlaySample(Platform::Array<unsigned char>^ *dataArray) {
+		void DecodeAndPlaySample(const Platform::Array<byte> ^dataArray) {
 			m_ArDecodeAndPlaySample(dataArray);
 		}
 
@@ -153,6 +155,28 @@ namespace Limelight_common_binding
 		Limelight_common_binding::ClDisplayTransientMessage ^m_ClDisplayTransientMessage;
 	};
 
+	public enum class MouseButtonAction : int {
+		Press = 0x07,
+		Release = 0x08
+	};
+
+	public enum class MouseButton : int {
+		Left = 0x01,
+		Middle = 0x02,
+		Right = 0x03
+	};
+
+	public enum class KeyAction : int {
+		Down = 0x03,
+		Up = 0x04
+	};
+
+	public enum class Modifier : int {
+		ModifierShift = 0x01,
+		ModifierCtrl = 0x02,
+		ModifierAlt = 0x04
+	};
+
 	public ref class LimelightCommonRuntimeComponent sealed
 	{
 	public:
@@ -161,6 +185,7 @@ namespace Limelight_common_binding
 		static void StopConnection(void);
 
 		static int SendMouseMoveEvent(short deltaX, short deltaY);
+
 		static int SendMouseButtonEvent(unsigned char action, int button);
 		static int SendKeyboardEvent(short keyCode, unsigned char keyAction, unsigned char modifiers);
 	};

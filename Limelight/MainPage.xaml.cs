@@ -52,11 +52,11 @@ namespace Limelight
         private void StreamButton_Click(object sender, RoutedEventArgs e)
         {
             Debug.WriteLine("Start Streaming button pressed");
-            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(1280, 720, 30);
+            
 
             Debug.WriteLine("Starting connection\n");
             // Spinner
-            this.SpinningAnimation.Begin();
+            /*this.SpinningAnimation.Begin();
             Waitgrid.Visibility = Visibility.Visible;
             spinnerState.Visibility = Visibility.Visible;
             // TODO instead of using a timer, use a backgroundWorker. While the bg worker is busy, show the spinner.
@@ -64,10 +64,10 @@ namespace Limelight
             {
                 this.Dispatcher.BeginInvoke(delegate()
                {
-                   NavigationService.Navigate(new Uri("/StreamFrame.xaml", UriKind.Relative));
                });
-            });
-           // LimelightCommonRuntimeComponent.StartConnection((uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("129.22.46.110").Address), streamConfig);
+            });*/
+
+            NavigationService.Navigate(new Uri("/StreamFrame.xaml", UriKind.Relative));
         }
 
         /// <summary>
