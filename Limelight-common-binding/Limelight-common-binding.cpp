@@ -69,7 +69,7 @@ void ArShimRelease(void) {
 void ArShimDecodeAndPlaySample(char* sampleData, int sampleLength) {
 	const Platform::Array<unsigned char> ^dataArray;
 	dataArray = ref new Platform::Array<byte>((byte*)sampleData, sampleLength);
-	s_ArCallbacks->DecodeAndPlaySample(dataArray);
+	//s_ArCallbacks->DecodeAndPlaySample(dataArray);
 }
 
 void ClShimStageStarting(int stage) {
