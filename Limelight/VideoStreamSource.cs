@@ -90,8 +90,6 @@
         /// <param name="sampleDuration">The duration of the sample</param>
         public void EnqueueSamples(Windows.Storage.Streams.IBuffer buf, ulong presentationTime, ulong sampleDuration)
         {
-            Debug.WriteLine("[VideoStreamSource::EnqueueSamples]");
-
             lock (lockObj)
             {
                 if (sampleQueue.Count >= VideoStreamSource.MAX_QUEUE_SIZE)
@@ -112,10 +110,6 @@
         /// </summary>
         private void SendSamples()
         {
-            Debug.WriteLine("[VideoStreamSource::SendSamples]");
-            Debug.WriteLine("sampleQueueCount " + sampleQueue.Count);
-            Debug.WriteLine("outstandingGetVideoSampleCount " + outstandingGetVideoSampleCount);
-
             while (sampleQueue.Count() > 0 && outstandingGetVideoSampleCount > 0)
             {
                 if (!shutdownEvent.WaitOne(0))
@@ -208,8 +202,6 @@
         /// <param name="mediaStreamType">Audio or video stream</param>
         protected override void GetSampleAsync(MediaStreamType mediaStreamType)
         {
-            Debug.WriteLine("[VideoStreamSource::GetSampleAsync]");
-
             if (mediaStreamType == MediaStreamType.Audio)
             {
                 // Uh oh, audio doesn't work yet
@@ -217,8 +209,6 @@
             }
             else if (mediaStreamType == MediaStreamType.Video)
             {
-                Debug.WriteLine("[VideoStreamSource::GetSampleAsync] mediaStreamType is video");
-
                 lock (lockObj)
                 {
                     outstandingGetVideoSampleCount++;
