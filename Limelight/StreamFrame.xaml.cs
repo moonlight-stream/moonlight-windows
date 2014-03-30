@@ -28,7 +28,6 @@
         private int lastTouchX = 0;
         private int lastTouchY = 0;
         private bool hasMoved = false;
-        MouseState ms;
 
         /// <summary>
         /// Gets and sets the custom video stream source
@@ -58,7 +57,7 @@
         public void DrSubmitDecodeUnit(byte[] data)
         {
             Debug.WriteLine("Submitting decode unit of " + data.Length + " bytes");
-            VideoStream.EnqueueSamples(data.AsBuffer(), 0, 0);
+            VideoStream.EnqueueSamples(data.AsBuffer(), 10, 10);
         }
 
         public void ArInit()
@@ -151,6 +150,8 @@
         /// </summary>
         private void touchDownEvent(object sender, System.Windows.Input.ManipulationStartedEventArgs e)
         {
+            MouseState ms = Mouse.GetState();
+
             Debug.WriteLine("Hello. You have poked me");
             lastTouchX = ms.X;
             lastTouchY = ms.Y;
@@ -182,7 +183,7 @@
 
         private void touchMoveEvent(object sender, System.Windows.Input.ManipulationDeltaEventArgs e)
         {
-            ms = Mouse.GetState();
+            MouseState ms = Mouse.GetState();
 
             Debug.WriteLine("meep");
             // If the user has moved
