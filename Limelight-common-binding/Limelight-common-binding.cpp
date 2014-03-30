@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <winerror.h> 
 #include <Objbase.h> 
-
+#include <string>
 
 #pragma comment(lib, "limelight-common.lib")
 #pragma comment(lib, "ws2_32.lib")
@@ -88,10 +88,20 @@ void ClShimConnectionTerminated(int errorCode) {
 	s_ClCallbacks->ConnectionTerminated(errorCode);
 }
 void ClShimDisplayMessage(char *message) {
-	// TODO char* -> Platform::String
+	std::string stdStr = std::string(message);
+	std::wstring wStr = std::wstring(stdStr.begin(), stdStr.end());
+	const wchar_t* wChar = wStr.c_str();
+	Platform::String^ messageString = ref new Platform::String(wChar);
+
+	s_ClCallbacks->DisplayMessage(messageString); 
 }
 void ClShimDisplayTransientMessage(char *message) {
-	// TODO char* -> Platform::String
+	std::string stdStr = std::string(message);
+	std::wstring wStr = std::wstring(stdStr.begin(), stdStr.end());
+	const wchar_t* wChar = wStr.c_str();
+	Platform::String^ messageString = ref new Platform::String(wChar);
+
+	s_ClCallbacks->DisplayTransientMessage(messageString);
 }
 
 int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, LimelightStreamConfiguration ^streamConfig,
