@@ -9,6 +9,7 @@
     using Microsoft.Xna.Framework.Input;
     using System;
     using System.Runtime.InteropServices.WindowsRuntime;
+    using System.ComponentModel;
 
     /// <summary>
     /// UI Frame that contains the media element that streams Steam
@@ -25,8 +26,6 @@
         /// <summary>
         /// Mouse input
         /// </summary>
-        private int lastTouchX = 0;
-        private int lastTouchY = 0;
         private bool hasMoved = false;
 
         /// <summary>
@@ -112,7 +111,6 @@
 
         public void ClDisplayMessage(String message)
         {
-
         }
 
         public void ClDisplayTransientMessage(String message)
@@ -185,12 +183,12 @@
             MouseState ms = Mouse.GetState();
 
             // If the user has moved
-            if (ms.X != e.ManipulationOrigin.X || ms.Y != e.ManipulationOrigin.Y)
+            if (ms.X != e.DeltaManipulation.Translation.X || ms.Y != e.DeltaManipulation.Translation.Y)
             {
                 Debug.WriteLine("meep");
 
                 hasMoved = true;
-                LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(ms.X - e.ManipulationOrigin.X), (short)(ms.Y - e.ManipulationOrigin.Y));
+                LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(ms.X - e.DeltaManipulation.Translation.Y), (short)(ms.Y - e.DeltaManipulation.Translation.Y));
             }
         }
 
