@@ -153,8 +153,7 @@
             MouseState ms = Mouse.GetState();
 
             Debug.WriteLine("Hello. You have poked me");
-            lastTouchX = ms.X;
-            lastTouchY = ms.Y;
+
             hasMoved = false; 
         }
 
@@ -185,15 +184,13 @@
         {
             MouseState ms = Mouse.GetState();
 
-            Debug.WriteLine("meep");
             // If the user has moved
-            if (ms.X != lastTouchX || ms.Y != lastTouchY)
+            if (ms.X != e.ManipulationOrigin.X || ms.Y != e.ManipulationOrigin.Y)
             {
-                hasMoved = true;
-                LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(ms.X - lastTouchX),(short)(ms.Y - lastTouchY));
+                Debug.WriteLine("meep");
 
-                lastTouchX = ms.X;
-                lastTouchY = ms.Y; 
+                hasMoved = true;
+                LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(ms.X - e.ManipulationOrigin.X), (short)(ms.Y - e.ManipulationOrigin.Y));
             }
         }
 
