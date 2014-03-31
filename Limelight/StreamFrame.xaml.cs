@@ -16,6 +16,20 @@
     /// </summary>
     public partial class StreamFrame : PhoneApplicationPage
     {
+        #region Class Variables
+        private const int STAGE_NONE = 0;
+        private const int STAGE_PLATFORM_INIT = 1;
+        private const int STAGE_HANDSHAKE = 2;
+        private const int STAGE_CONTROL_STREAM_INIT = 3;
+        private const int STAGE_VIDEO_STREAM_INIT = 4;
+        private const int STAGE_AUDIO_STREAM_INIT = 5;
+        private const int STAGE_INPUT_STREAM_INIT = 6;
+        private const int STAGE_CONTROL_STREAM_START = 7;
+        private const int STAGE_VIDEO_STREAM_START = 8;
+        private const int STAGE_AUDIO_STREAM_START = 9;
+        private const int STAGE_INPUT_STREAM_START = 10;
+        private const int STAGE_MAX = 11;
+
         /// <summary>
         /// Width and height of the frame from the video source
         /// TODO Make these numbers less magic
@@ -33,6 +47,12 @@
         /// </summary>
         internal VideoStreamSource VideoStream { get; private set; }
 
+        private BackgroundWorker bw = new BackgroundWorker();
+        private String stageFailureText; 
+
+        #endregion Class Variables
+
+        #region Callbacks
         public void DrSetup(int width, int height, int redrawRate, int drFlags)
         {
 
@@ -86,7 +106,43 @@
 
         public void ClStageStarting(int stage)
         {
-
+            String stateText = ""; 
+            switch (stage)
+            {
+                case STAGE_PLATFORM_INIT:
+                    stateText = "Initializing platform...";
+                    break;
+                case STAGE_HANDSHAKE:
+                    stateText = "Starting handshake...";
+                    break;
+                case STAGE_CONTROL_STREAM_INIT:
+                    stateText = "Initializing control stream...";
+                    break;
+                case STAGE_VIDEO_STREAM_INIT:
+                    stateText = "Initializing video stream...";
+                    break;
+                case STAGE_AUDIO_STREAM_INIT:
+                    stateText = "Initializing audio stream...";
+                    break;
+                case STAGE_INPUT_STREAM_INIT:
+                    stateText = "Initializing input stream...";
+                    break;
+                case STAGE_CONTROL_STREAM_START:
+                    stateText = "Starting control stream...";
+                    break;
+                case STAGE_VIDEO_STREAM_START:
+                    stateText = "Starting video stream...";
+                    break;
+                case STAGE_AUDIO_STREAM_START:
+                    stateText = "Starting audio stream...";
+                    break;
+                case STAGE_INPUT_STREAM_START:
+                    stateText = "Starting input stream...";
+                    break;
+            }
+            // Send the stage change to the UI thread. 
+            // The dispatcher might not be quick enough for the user to see every stage
+            Dispatcher.BeginInvoke(new Action(() => setStateText(stateText)));
         }
 
         public void ClStageComplete(int stage)
@@ -96,7 +152,39 @@
 
         public void ClStageFailed(int stage, int errorCode)
         {
-
+            switch (stage)
+            {
+                case STAGE_PLATFORM_INIT:
+                    stageFailureText = "Initializing platform failed.";
+                    break;
+                case STAGE_HANDSHAKE:
+                    stageFailureText = "Starting handshake failed.";
+                    break;
+                case STAGE_CONTROL_STREAM_INIT:
+                    stageFailureText = "Initializing control stream failed.";
+                    break;
+                case STAGE_VIDEO_STREAM_INIT:
+                    stageFailureText = "Initializing video stream failed.";
+                    break;
+                case STAGE_AUDIO_STREAM_INIT:
+                    stageFailureText = "Initializing audio stream failed.";
+                    break;
+                case STAGE_INPUT_STREAM_INIT:
+                    stageFailureText = "Initializing input stream failed.";
+                    break;
+                case STAGE_CONTROL_STREAM_START:
+                    stageFailureText = "Starting control stream failed.";
+                    break;
+                case STAGE_VIDEO_STREAM_START:
+                    stageFailureText = "Starting video stream failed.";
+                    break;
+                case STAGE_AUDIO_STREAM_START:
+                    stageFailureText = "Starting audio stream failed.";
+                    break;
+                case STAGE_INPUT_STREAM_START:
+                    stageFailureText = "Starting input stream failed.";
+                    break;
+            }
         }
 
         public void ClConnectionStarted()
@@ -118,6 +206,69 @@
 
         }
 
+        #endregion Callbacks
+
+
+        #region Background Worker
+
+        /// <summary>
+        /// Event handler for Background Worker's doWork event.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void bwDoWork(object sender, DoWorkEventArgs e)
+        {
+            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 60);
+            LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
+            LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArDecodeAndPlaySample);
+            LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
+            ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
+
+            // Call into Common to start the connection
+            // TODO give it a real host address
+            LimelightCommonRuntimeComponent.StartConnection(0xcf01a8c0, streamConfig, clCallbacks, drCallbacks, arCallbacks);
+            if(stageFailureText != null)
+            {
+                Debug.WriteLine("Operation cancelled");
+                e.Cancel = true;
+            }
+        }
+
+        // <summary>
+        /// On completed do the appropriate task
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void bwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            this.Waitgrid.Visibility = Visibility.Collapsed;
+            this.currentStateText.Visibility = Visibility.Collapsed; 
+            // Check to see if an error occurred in the background process.
+            if (e.Error != null)
+            {
+                Debug.WriteLine("Error while performing background operation.");
+            }
+            else if(e.Cancelled) {
+                // TODO Display a message box for the user
+                // When the user presses cancel, it navigates them to the settings screen
+                MessageBoxResult result = MessageBox.Show(stageFailureText, "Failure Starting Connection",  MessageBoxButton.OK);
+                if (result == MessageBoxResult.OK)
+                {
+                    NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
+                }
+            }
+            else
+            {
+                // Everything completed normally.
+                Debug.WriteLine("Background Worker Successfully Completed");
+
+                StreamDisplay.Visibility = Visibility.Visible; 
+            }
+
+        }
+
+        #endregion Background Worker
+
         /// <summary>
         /// Initializes a new instance of the <see cref="StreamFrame"/> class. 
         /// </summary>
@@ -130,15 +281,17 @@
             StreamDisplay.AutoPlay = true;
             StreamDisplay.Play();
 
-            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 60);
-            LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
-            LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArDecodeAndPlaySample);
-            LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
-                ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
+            bw.WorkerReportsProgress = false;
+            bw.WorkerSupportsCancellation = false; 
+
+            bw.DoWork += new DoWorkEventHandler(bwDoWork);
+            bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bwRunWorkerCompleted);
+
+            Waitgrid.Visibility = Visibility.Visible;
+            currentStateText.Visibility = Visibility.Visible; 
+            bw.RunWorkerAsync(); 
 
             //(uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("192.168.1.207").Address)
-            LimelightCommonRuntimeComponent.StartConnection(0xcf01a8c0, 
-                streamConfig, clCallbacks, drCallbacks, arCallbacks);
         }
 
         #region Event Handlers
@@ -185,11 +338,20 @@
             // If the user has moved
             if (ms.X != e.DeltaManipulation.Translation.X || ms.Y != e.DeltaManipulation.Translation.Y)
             {
-                Debug.WriteLine("meep");
+                Debug.WriteLine("(" + (ms.X - e.DeltaManipulation.Translation.X) + ", " + (ms.Y - e.DeltaManipulation.Translation.Y) + ")");
 
                 hasMoved = true;
-                LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(ms.X - e.DeltaManipulation.Translation.Y), (short)(ms.Y - e.DeltaManipulation.Translation.Y));
+                LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(ms.X - e.DeltaManipulation.Translation.X), (short)(ms.Y - e.DeltaManipulation.Translation.Y));
             }
+        }
+
+        /// <summary>
+        /// Let the dispatcher set the state text on the progress bar
+        /// </summary>
+        /// <param name="stateText"></param>
+        private void setStateText(string stateText)
+        {
+            currentStateText.Text = stateText; 
         }
 
         #endregion Event Handlers

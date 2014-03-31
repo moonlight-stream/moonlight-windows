@@ -15,15 +15,21 @@
 
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent">
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <!--ContentPanel - place additional content here-->
-        <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0"/>
-        <MediaElement x:Name="StreamDisplay" HorizontalAlignment="Left" Height="470" Grid.RowSpan="2" VerticalAlignment="Top" Width="800" Margin="0,10,0,0" LostFocus="stopConnection"/>
-        
-    </Grid>
+        <Grid x:Name="Waitgrid" Grid.Row="0" Background="Black" Margin="12,10,-12,31" Grid.RowSpan="2">
 
+            <TextBlock x:Name="currentStateText" TextWrapping="Wrap" VerticalAlignment="Top" Margin="198,215,198,0" Height="82" TextAlignment="Center" FontSize="20"/>
+            <ProgressBar x:Name="progressDots" Height="80" VerticalAlignment="Top" Margin="198,162,198,0" IsIndeterminate="True" Foreground="#FF0AE500"/>
+        </Grid>
+
+        <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0"/>
+        <MediaElement x:Name="StreamDisplay" HorizontalAlignment="Left" Height="470" VerticalAlignment="Top" Width="800" Margin="-12,-59,0,0" ManipulationStarted="touchDownEvent" ManipulationCompleted="touchUpEvent" ManipulationDelta="touchMoveEvent" Visibility="Collapsed"/>
+
+    </Grid>
 </phone:PhoneApplicationPage>
