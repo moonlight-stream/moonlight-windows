@@ -22,7 +22,7 @@ namespace Limelight
     /// </summary>
     public partial class MainPage : PhoneApplicationPage
     {
-        static String hostAddr;
+        private static String hostAddr;
 
         /// <summary>
         /// Initializes a new instance of the MainPage class.
@@ -33,21 +33,14 @@ namespace Limelight
 
         }
 
-        /// <summary>
-        /// Gets the host address
-        /// </summary>
-        /// <returns>The host address</returns>
-        public String getHostAddr()
-        {
-            return hostAddr; 
-        }
         #region Event Handlers
         /// <summary>
         /// Executed when the user presses "Start Streaming Steam!"
         /// </summary>
         private void StreamButton_Click(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine("Start Streaming button pressed");           
+            Debug.WriteLine("Start Streaming button pressed");
+            PhoneApplicationService.Current.State["hostAddr"] = hostAddr; 
             NavigationService.Navigate(new Uri("/StreamFrame.xaml", UriKind.Relative));
         }
 

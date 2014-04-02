@@ -10,6 +10,8 @@
     using System;
     using System.Runtime.InteropServices.WindowsRuntime;
     using System.ComponentModel;
+    using Microsoft.Phone.Shell;
+    using Microsoft.Phone.Net.NetworkInformation; 
 
     /// <summary>
     /// UI Frame that contains the media element that streams Steam
@@ -17,6 +19,10 @@
     public partial class StreamFrame : PhoneApplicationPage
     {
         #region Class Variables
+
+        /// <summary>
+        /// Connection stage identifiers
+        /// </summary>
         private const int STAGE_NONE = 0;
         private const int STAGE_PLATFORM_INIT = 1;
         private const int STAGE_HANDSHAKE = 2;
@@ -47,10 +53,42 @@
         /// </summary>
         internal VideoStreamSource VideoStream { get; private set; }
 
+        /// <summary>
+        /// Background worker and callbacks
+        /// </summary>
         private BackgroundWorker bw = new BackgroundWorker();
-        private String stageFailureText; 
+        private String stageFailureText;
+        private String resolvedHost; 
 
         #endregion Class Variables
+
+        #region Init
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StreamFrame"/> class. 
+        /// </summary>
+        public StreamFrame()
+        {
+            InitializeComponent();
+
+            VideoStream = new VideoStreamSource(null, frameWidth, frameHeight);
+            StreamDisplay.SetSource(VideoStream);
+            StreamDisplay.AutoPlay = true;
+            StreamDisplay.Play();
+
+            bw.WorkerReportsProgress = false;
+            bw.WorkerSupportsCancellation = false;
+
+            bw.DoWork += new DoWorkEventHandler(bwDoWork);
+            bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bwRunWorkerCompleted);
+
+            Waitgrid.Visibility = Visibility.Visible;
+            currentStateText.Visibility = Visibility.Visible;
+
+            bw.RunWorkerAsync();
+
+            //(uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("192.168.1.207").Address)
+        }
+        #endregion Init
 
         #region Callbacks
         public void DrSetup(int width, int height, int redrawRate, int drFlags)
@@ -101,7 +139,7 @@
 
         public void ArDecodeAndPlaySample(byte[] data)
         {
-            Debug.WriteLine("Playing audio of " + data.Length + " bytes");
+            Debug.WriteLine("Decoding and playing audio of " + data.Length + " bytes");
         }
 
         public void ClStageStarting(int stage)
@@ -194,7 +232,7 @@
 
         public void ClConnectionTerminated(int errorCode)
         {
-            Debug.WriteLine("Terminated: " + errorCode);
+            Debug.WriteLine("Connection terminated: " + errorCode);
         }
 
         public void ClDisplayMessage(String message)
@@ -208,7 +246,6 @@
 
         #endregion Callbacks
 
-
         #region Background Worker
 
         /// <summary>
@@ -218,6 +255,9 @@
         /// <param name="e"></param>
         private void bwDoWork(object sender, DoWorkEventArgs e)
         {
+            String hostnameString = (String)PhoneApplicationService.Current.State["hostAddr"];
+            uint hostAddr = (uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse(resolvedHost).Address);
+
             LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 60);
             LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
             LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArDecodeAndPlaySample);
@@ -227,18 +267,17 @@
             // Call into Common to start the connection
             // TODO give it a real host address
             LimelightCommonRuntimeComponent.StartConnection(0xcf01a8c0, streamConfig, clCallbacks, drCallbacks, arCallbacks);
+            //LimelightCommonRuntimeComponent.StartConnection(hostAddr, streamConfig, clCallbacks, drCallbacks, arCallbacks);
             if(stageFailureText != null)
             {
-                Debug.WriteLine("Operation cancelled");
+                Debug.WriteLine("Stage failed - background worker cancelled");
                 e.Cancel = true;
             }
         }
 
         // <summary>
-        /// On completed do the appropriate task
+        /// Runs once the background worker completes
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         void bwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             this.Waitgrid.Visibility = Visibility.Collapsed;
@@ -248,18 +287,22 @@
             {
                 Debug.WriteLine("Error while performing background operation.");
             }
-            else if(e.Cancelled) {
-                // TODO Display a message box for the user
-                // When the user presses cancel, it navigates them to the settings screen
+
+            // If the connection attempt was cancelled by a failed stage
+            else if(e.Cancelled) 
+            {
+                // Inform the user of the failure via a message box
                 MessageBoxResult result = MessageBox.Show(stageFailureText, "Failure Starting Connection",  MessageBoxButton.OK);
                 if (result == MessageBoxResult.OK)
                 {
+                    // Return to the settings page
                     NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
                 }
             }
+                
+            // Everything completed normally - bring the user to the stream frame
             else
             {
-                // Everything completed normally.
                 Debug.WriteLine("Background Worker Successfully Completed");
 
                 StreamDisplay.Visibility = Visibility.Visible; 
@@ -269,32 +312,7 @@
 
         #endregion Background Worker
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="StreamFrame"/> class. 
-        /// </summary>
-        public StreamFrame()
-        {
-            InitializeComponent();
-
-            VideoStream = new VideoStreamSource(null, frameWidth, frameHeight);
-            StreamDisplay.SetSource(VideoStream);  
-            StreamDisplay.AutoPlay = true;
-            StreamDisplay.Play();
-
-            bw.WorkerReportsProgress = false;
-            bw.WorkerSupportsCancellation = false; 
-
-            bw.DoWork += new DoWorkEventHandler(bwDoWork);
-            bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bwRunWorkerCompleted);
-
-            Waitgrid.Visibility = Visibility.Visible;
-            currentStateText.Visibility = Visibility.Visible; 
-            bw.RunWorkerAsync(); 
-
-            //(uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse("192.168.1.207").Address)
-        }
-
-        #region Event Handlers
+        #region Private Methods
 
         /// <summary>
         /// Touch event initiated
@@ -302,15 +320,11 @@
         private void touchDownEvent(object sender, System.Windows.Input.ManipulationStartedEventArgs e)
         {
             MouseState ms = Mouse.GetState();
-
-            Debug.WriteLine("Hello. You have poked me");
-
             hasMoved = false; 
         }
 
         private void touchUpEvent(object sender, System.Windows.Input.ManipulationCompletedEventArgs e)
         {
-            Debug.WriteLine("You have stopped touching me :( How sad.");
             if (!hasMoved)
             {
                 // We haven't moved so send a click
@@ -354,6 +368,35 @@
             currentStateText.Text = stateText; 
         }
 
-        #endregion Event Handlers
+        /// <summary>
+        /// Resolve the GEForce PC hostname to an IP Address
+        /// </summary>
+        /// <param name="hostName"></param>
+        private void ResolveHostName(String hostName)
+        {
+            var endPoint = new DnsEndPoint(hostName, 0);
+            DeviceNetworkInformation.ResolveHostNameAsync(endPoint, OnNameResolved, null);
+        }
+
+        /// <summary>
+        /// Callback for ResolveHostNameAsync
+        /// </summary>
+        /// <param name="result"></param>
+        private void OnNameResolved(NameResolutionResult result)
+        {
+            IPEndPoint[] endpoints = result.IPEndPoints;
+
+            // If resolved, it will provide me with an IP address
+            if (endpoints != null && endpoints.Length > 0)
+            {
+                var ipAddress = endpoints[0].Address;
+
+                // TODO if this gives me what I want, use it to start the connection.
+                Debug.WriteLine(ipAddress.Address.ToString());
+                resolvedHost = ipAddress.Address.ToString(); 
+            }
+        }
+
+        #endregion Private Methods
     }
 }
