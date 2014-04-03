@@ -36,7 +36,6 @@
             internal ulong sampleDuration { get; private set; }
         }
 
-        private const int MAX_QUEUE_SIZE = 100;
         private int frameWidth;
         private int frameHeight;
         private Queue<VideoSample> sampleQueue;
@@ -57,7 +56,7 @@
             this.frameWidth = frameWidth;
             this.frameHeight = frameHeight;
             this.shutdownEvent = new ManualResetEvent(false);
-            this.sampleQueue = new Queue<VideoSample>(VideoStreamSource.MAX_QUEUE_SIZE);
+            this.sampleQueue = new Queue<VideoSample>();
             this.outstandingGetVideoSampleCount = 0;
         }
 
@@ -92,14 +91,6 @@
         {
             lock (lockObj)
             {
-                if (sampleQueue.Count >= VideoStreamSource.MAX_QUEUE_SIZE)
-                {
-                    // Dequeue and discard oldest
-                    Debug.WriteLine("[VideoStreamSource::EnqueueSamples] Throwing out samples");
-
-                    sampleQueue.Dequeue();
-                }
-
                 sampleQueue.Enqueue(new VideoSample(buf, presentationTime, sampleDuration));
                 SendSamples();
             }
