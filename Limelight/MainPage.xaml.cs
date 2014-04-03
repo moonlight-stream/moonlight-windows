@@ -22,15 +22,13 @@ namespace Limelight
     /// </summary>
     public partial class MainPage : PhoneApplicationPage
     {
-        private static String hostAddr;
-
+        BackgroundWorker bw = new BackgroundWorker(); 
         /// <summary>
         /// Initializes a new instance of the MainPage class.
         /// </summary>
         public MainPage()
         {
             InitializeComponent();
-
         }
 
         #region Event Handlers
@@ -40,7 +38,9 @@ namespace Limelight
         private void StreamButton_Click(object sender, RoutedEventArgs e)
         {
             Debug.WriteLine("Start Streaming button pressed");
-            PhoneApplicationService.Current.State["hostAddr"] = hostAddr; 
+
+            // Save the user's host input and send it to the streamframe page
+            PhoneApplicationService.Current.State["host"] = host_textbox.Text; 
             NavigationService.Navigate(new Uri("/StreamFrame.xaml", UriKind.Relative));
         }
 
@@ -49,11 +49,48 @@ namespace Limelight
         /// </summary>
         private void PairButton_Click(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine("Pair button pressed");
-            hostAddr = host_textbox.Text; 
-
+            Debug.WriteLine("Pairing...");
             // TODO call currently non-existent pair method
+            // TODO tell the user that the device is pairing
         }
-    }
         #endregion Event Handlers
+
+        #region Background Worker
+
+        /// <summary>
+        /// Event handler for Background Worker's doWork event.
+        /// </summary>
+        private void bwDoWork(object sender, DoWorkEventArgs e)
+        {
+            Debug.WriteLine("Doing work");
+            // TODO do the pair thing
+            Http.getMacAddressString(); 
+        }
+
+        // <summary>
+        /// Runs once the background worker completes
+        /// </summary>
+        void bwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            // Check to see if an error occurred in the background process.
+            if (e.Error != null)
+            {
+                Debug.WriteLine("Error while performing pairing.");
+            }
+
+            // If the connection attempt was cancelled by a failed stage
+            else if (e.Cancelled)
+            {
+                Debug.WriteLine("Pairing cancelled.");
+            }
+
+            // Everything completed normally - bring the user to the stream frame
+            else
+            {
+                Debug.WriteLine("Pairing background Worker Successfully Completed");
+            }
+        }
+
+        #endregion Background Worker
+    }
 }

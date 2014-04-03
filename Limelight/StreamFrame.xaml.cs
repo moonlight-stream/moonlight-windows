@@ -58,7 +58,9 @@
         /// </summary>
         private BackgroundWorker bw = new BackgroundWorker();
         private String stageFailureText;
-        private String resolvedHost; 
+        private String resolvedHost;
+
+        AutoResetEvent stopWaitHandle = new AutoResetEvent(false);
 
         #endregion Class Variables
 
@@ -251,14 +253,17 @@
         /// <summary>
         /// Event handler for Background Worker's doWork event.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
         private void bwDoWork(object sender, DoWorkEventArgs e)
         {
-            String hostnameString = (String)PhoneApplicationService.Current.State["hostAddr"];
+            Debug.WriteLine("Doing work");
+            String hostNameString = (String)PhoneApplicationService.Current.State["host"];
+            // Resolve the host name to an IP address string. 
+            ResolveHostName(hostNameString);
+            stopWaitHandle.WaitOne(); 
             uint hostAddr = (uint)IPAddress.HostToNetworkOrder((int)IPAddress.Parse(resolvedHost).Address);
-
-            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 60);
+            Debug.WriteLine(hostAddr);
+            // Set up callbacks
+            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 60); // TODO 60 is a magic number. Get FPS from the settings
             LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
             LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArDecodeAndPlaySample);
             LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
@@ -266,8 +271,10 @@
 
             // Call into Common to start the connection
             // TODO give it a real host address
-            LimelightCommonRuntimeComponent.StartConnection(0xcf01a8c0, streamConfig, clCallbacks, drCallbacks, arCallbacks);
-            //LimelightCommonRuntimeComponent.StartConnection(hostAddr, streamConfig, clCallbacks, drCallbacks, arCallbacks);
+            //LimelightCommonRuntimeComponent.StartConnection(0xcf01a8c0, streamConfig, clCallbacks, drCallbacks, arCallbacks);
+            LimelightCommonRuntimeComponent.StartConnection(hostAddr, streamConfig, clCallbacks, drCallbacks, arCallbacks);
+
+            // If one of the stages failed, tell the background worker to cancel
             if(stageFailureText != null)
             {
                 Debug.WriteLine("Stage failed - background worker cancelled");
@@ -392,9 +399,10 @@
                 var ipAddress = endpoints[0].Address;
 
                 // TODO if this gives me what I want, use it to start the connection.
-                Debug.WriteLine(ipAddress.Address.ToString());
-                resolvedHost = ipAddress.Address.ToString(); 
+                Debug.WriteLine("The IP address is " + ipAddress.ToString());
+                resolvedHost = ipAddress.ToString(); 
             }
+            stopWaitHandle.Set(); 
         }
 
         #endregion Private Methods

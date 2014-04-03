@@ -1,5 +1,4 @@
 ﻿#pragma once
-
 #include <Limelight.h>
 
 typedef unsigned char byte;
