@@ -113,7 +113,6 @@
 
         public void DrSubmitDecodeUnit(byte[] data)
         {
-            Debug.WriteLine("Submitting decode unit of " + data.Length + " bytes");
             VideoStream.EnqueueSamples(data.AsBuffer(), 10, 10);
         }
 
@@ -190,7 +189,6 @@
 
         public void ClStageFailed(int stage, int errorCode)
         {
-            Debug.WriteLine("Got cooned " + errorCode);
             switch (stage)
             {
                 case STAGE_PLATFORM_INIT:

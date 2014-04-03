@@ -93,7 +93,6 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="H264FileReaderHackery.cs" />
     <Compile Include="Http.cs" />
     <Compile Include="LocalizedStrings.cs" />
     <Compile Include="MainPage.xaml.cs">
@@ -108,8 +107,6 @@
     <Compile Include="StreamFrame.xaml.cs">
       <DependentUpon>StreamFrame.xaml</DependentUpon>
     </Compile>
-    <Compile Include="VideoDecoder.cs" />
-    <Compile Include="VideoRenderer.cs" />
     <Compile Include="VideoStreamSource.cs" />
   </ItemGroup>
   <ItemGroup>
