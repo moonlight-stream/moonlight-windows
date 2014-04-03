@@ -41,7 +41,7 @@
         private Queue<VideoSample> sampleQueue;
         private object lockObj = new object();
         private ManualResetEvent shutdownEvent;
-        private int outstandingGetVideoSampleCount;
+        private volatile int outstandingGetVideoSampleCount;
         private MediaStreamDescription videoDesc;
         private Dictionary<MediaSampleAttributeKeys, string> emptySampleDict = new Dictionary<MediaSampleAttributeKeys, string>();
 
@@ -92,8 +92,9 @@
             lock (lockObj)
             {
                 sampleQueue.Enqueue(new VideoSample(buf, presentationTime, sampleDuration));
-                SendSamples();
             }
+
+            SendSamples();
         }
 
         /// <summary>
@@ -101,31 +102,43 @@
         /// </summary>
         private void SendSamples()
         {
-            while (sampleQueue.Count() > 0 && outstandingGetVideoSampleCount > 0)
+            if (shutdownEvent.WaitOne(0))
             {
-                if (!shutdownEvent.WaitOne(0))
-                {
-                    VideoSample videoSample = sampleQueue.Dequeue();
-                    Stream sampleStream = System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.AsStream(videoSample.buffer);
+                return;
+            }
 
-                    // Send out the next sample
-                    MediaStreamSample mediaStreamSamp = new MediaStreamSample(
-                        videoDesc,
-                        sampleStream,
-                        0,
-                        sampleStream.Length,
-                        (long)videoSample.presentationTime,
-                        (long)videoSample.sampleDuration,
-                        emptySampleDict);
+            while (true)
+            {
+                VideoSample videoSample;
 
-                    ReportGetSampleCompleted(mediaStreamSamp);
-                    outstandingGetVideoSampleCount--;
-                }
-                else
+                if (outstandingGetVideoSampleCount == 0)
                 {
-                    // If video rendering is shutting down we should no longer deliver frames
                     return;
                 }
+
+                lock (lockObj)
+                {
+                    if (sampleQueue.Count() == 0)
+                    {
+                        return;
+                    }
+                    videoSample = sampleQueue.Dequeue();
+                }
+
+                Stream sampleStream = System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.AsStream(videoSample.buffer);
+
+                // Send out the next sample
+                MediaStreamSample mediaStreamSamp = new MediaStreamSample(
+                    videoDesc,
+                    sampleStream,
+                    0,
+                    sampleStream.Length,
+                    (long)videoSample.presentationTime,
+                    (long)videoSample.sampleDuration,
+                    emptySampleDict);
+
+                ReportGetSampleCompleted(mediaStreamSamp);
+                outstandingGetVideoSampleCount--;
             }
         }
 
@@ -200,11 +213,7 @@
             }
             else if (mediaStreamType == MediaStreamType.Video)
             {
-                lock (lockObj)
-                {
-                    outstandingGetVideoSampleCount++;
-                    SendSamples();
-                }
+                outstandingGetVideoSampleCount++;
             }
         }
         
