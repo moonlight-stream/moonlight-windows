@@ -118,6 +118,11 @@
 
                 lock (lockObj)
                 {
+                    if (sampleQueue.Count() % 10 == 0)
+                    {
+                        Debug.WriteLine("Queued frames: " + sampleQueue.Count());
+                    }
+
                     if (sampleQueue.Count() == 0)
                     {
                         return;

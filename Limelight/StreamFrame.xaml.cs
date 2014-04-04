@@ -355,8 +355,6 @@
             // If the user has moved
             if (ms.X != e.DeltaManipulation.Translation.X || ms.Y != e.DeltaManipulation.Translation.Y)
             {
-                Debug.WriteLine("(" + (ms.X - e.DeltaManipulation.Translation.X) + ", " + (ms.Y - e.DeltaManipulation.Translation.Y) + ")");
-
                 hasMoved = true;
                 LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(ms.X - e.DeltaManipulation.Translation.X), (short)(ms.Y - e.DeltaManipulation.Translation.Y));
             }
