@@ -264,9 +264,7 @@
             ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
 
             // Call into Common to start the connection
-
-            //uint hostAddr = (uint)IPAddress.HostToNetworkOrder();
-            //Debug.WriteLine(hostAddr);
+            Debug.WriteLine("Starting connection");
             LimelightCommonRuntimeComponent.StartConnection((uint)resolvedHost.Address, streamConfig, clCallbacks, drCallbacks, arCallbacks);
 
             // If one of the stages failed, tell the background worker to cancel

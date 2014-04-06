@@ -68,7 +68,7 @@
         /// </summary>
         public void Shutdown()
         {
-            Debug.WriteLine("[VideoStreamSource::Shutdown]");
+            Debug.WriteLine("Shutting down video stream");
             shutdownEvent.Set();
             if (outstandingGetVideoSampleCount > 0)
             {
@@ -161,6 +161,7 @@
         /// </summary>
         private void SendSamples()
         {
+            // If shutdown event is pending, return
             if (shutdownEvent.WaitOne(0))
             {
                 return;
@@ -211,8 +212,7 @@
         /// </summary>
         private void PrepareVideo()
         {
-            Debug.WriteLine("[VideoStreamSource::PrepareVideo]");
-
+            Debug.WriteLine("Preparing video stream");
             // Stream Description 
             Dictionary<MediaStreamAttributeKeys, string> streamAttributes =
                 new Dictionary<MediaStreamAttributeKeys, string>();
@@ -233,6 +233,7 @@
         /// </summary>
         private void PrepareAudio()
         {
+            Debug.WriteLine("Preparing audio stream");
             // TODO 
             throw new NotImplementedException();
         }
@@ -243,24 +244,23 @@
         protected override void OpenMediaAsync()
         {
             // Init
-            Debug.WriteLine("[VideoStreamSource::OpenMediaAsync]");
-
+            Debug.WriteLine("Opening media");
             Dictionary<MediaSourceAttributesKeys, string> sourceAttributes =
                 new Dictionary<MediaSourceAttributesKeys, string>();
             List<MediaStreamDescription> availableStreams =
                 new List<MediaStreamDescription>();
 
+            // Set video attributes and list our stream as available
             PrepareVideo();
-
             availableStreams.Add(videoDesc);
 
-            // a zero timespan is an infinite video
+            // A zero timespan is an infinite video
             sourceAttributes[MediaSourceAttributesKeys.Duration] =
                 TimeSpan.FromSeconds(0).Ticks.ToString(CultureInfo.InvariantCulture);
 
             sourceAttributes[MediaSourceAttributesKeys.CanSeek] = false.ToString();
 
-            // tell Silverlight that we've prepared and opened our video
+            // Tell Silverlight that we've prepared and opened our video
             ReportOpenMediaCompleted(sourceAttributes, availableStreams);
         }
 
@@ -314,7 +314,7 @@
         /// <param name="seekToTime">The time as represented by 100 nanosecond increments to seek to</param>
         protected override void SeekAsync(long seekToTime)
         {
-            Debug.WriteLine("[VideoStreamSource::SeekAsync]");
+            Debug.WriteLine("Seeking to " + seekToTime);
             ReportSeekCompleted(seekToTime); 
         }
     }
