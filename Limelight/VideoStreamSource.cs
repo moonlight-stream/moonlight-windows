@@ -58,6 +58,9 @@
             this.shutdownEvent = new ManualResetEvent(false);
             this.sampleQueue = new Queue<VideoSample>();
             this.outstandingGetVideoSampleCount = 0;
+
+            // 15 is the minimum size
+            this.AudioBufferLength = 15;
         }
 
         /// <summary>
