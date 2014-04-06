@@ -6,8 +6,10 @@
     using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Runtime.InteropServices.WindowsRuntime;
     using System.Threading;
     using System.Windows.Media;
+    using Windows.Storage.Streams;
 
     /// <summary>
     /// Custom source for a video stream
@@ -23,22 +25,19 @@
             /// Initializes a new instance of the <see cref="VideoSample"/> class. 
             /// </summary>
             /// <param name="buffer">Buffer for the video stream</param>
-            /// <param name="presentationTime">The time at which a sample should be rendered as measured in 100 nanosecond increments</param>
-            /// <param name="sampleDuration">The duration of the sample</param>
-            public VideoSample(Windows.Storage.Streams.IBuffer buffer, ulong presentationTime, ulong sampleDuration)
+            /// <param name="frameNumber">The frame number that this sample is part of</param>
+            public VideoSample(IBuffer buffer, ulong frameNumber)
             {
                 this.buffer = buffer;
-                this.presentationTime = presentationTime;
-                this.sampleDuration = sampleDuration; 
+                this.frameNumber = frameNumber;
             }
-            internal Windows.Storage.Streams.IBuffer buffer { get; private set; }
-            internal ulong presentationTime { get; private set; }
-            internal ulong sampleDuration { get; private set; }
+            internal IBuffer buffer { get; private set; }
+            internal ulong frameNumber { get; private set; }
         }
 
         private int frameWidth;
         private int frameHeight;
-        private Queue<VideoSample> sampleQueue;
+        private Queue<VideoSample> nalQueue;
         private object lockObj = new object();
         private ManualResetEvent shutdownEvent;
         private volatile int outstandingGetVideoSampleCount;
@@ -56,7 +55,7 @@
             this.frameWidth = frameWidth;
             this.frameHeight = frameHeight;
             this.shutdownEvent = new ManualResetEvent(false);
-            this.sampleQueue = new Queue<VideoSample>();
+            this.nalQueue = new Queue<VideoSample>();
             this.outstandingGetVideoSampleCount = 0;
 
             // 15 is the minimum size
@@ -84,17 +83,46 @@
             }
         }
 
+        private void EnqueueNal(byte[] buf, int nalStart, int nalEnd, ulong frameNumber)
+        {
+            int nalLength = nalEnd - nalStart;
+            byte[] nal = new byte[nalLength];
+            Array.ConstrainedCopy(buf, nalStart, nal, 0, nalLength);
+            lock (lockObj)
+            {
+                nalQueue.Enqueue(new VideoSample(nal.AsBuffer(), frameNumber));
+            }
+        }
+
         /// <summary>
         /// Enqueues next video samples in the buffer
         /// </summary>
         /// <param name="buf">Buffer for the video stream</param>
-        /// <param name="presentationTime">The time at which a sample should be rendered as measured in 100 nanosecond increments</param>
-        /// <param name="sampleDuration">The duration of the sample</param>
-        public void EnqueueSamples(Windows.Storage.Streams.IBuffer buf, ulong presentationTime, ulong sampleDuration)
+        public void EnqueueSamples(byte[] buf)
         {
-            lock (lockObj)
+            int i;
+
+            int currentNalStart = -1;
+            for (i = 0; i < buf.Length - 3; i++)
             {
-                sampleQueue.Enqueue(new VideoSample(buf, presentationTime, sampleDuration));
+                // Look for the Annex B NAL start sequence (0x000001)
+                if (buf[i] == 0 && buf[i+1] == 0 && buf[i+2] == 1)
+                {
+                    // End the current NAL at i (exclusive)
+                    if (currentNalStart > 0)
+                    {
+                        EnqueueNal(buf, currentNalStart, i, 0);
+                    }
+
+                    // NAL start
+                    currentNalStart = i;
+                }
+            }
+
+            // Add the NAL that ends at the buffer's end
+            if (currentNalStart > 0)
+            {
+                EnqueueNal(buf, currentNalStart, buf.Length, 0);
             }
 
             SendSamples();
@@ -121,28 +149,29 @@
 
                 lock (lockObj)
                 {
-                    if (sampleQueue.Count() % 10 == 0)
+                    if (nalQueue.Count() % 10 == 0)
                     {
-                        Debug.WriteLine("Queued frames: " + sampleQueue.Count());
+                        Debug.WriteLine("Queued NALs: " + nalQueue.Count());
                     }
 
-                    if (sampleQueue.Count() == 0)
+                    if (nalQueue.Count() == 0)
                     {
                         return;
                     }
-                    videoSample = sampleQueue.Dequeue();
+
+                    videoSample = nalQueue.Dequeue();
                 }
 
-                Stream sampleStream = System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.AsStream(videoSample.buffer);
+                Stream sampleStream = WindowsRuntimeBufferExtensions.AsStream(videoSample.buffer);
 
-                // Send out the next sample
+                // Send out the next NAL
                 MediaStreamSample mediaStreamSamp = new MediaStreamSample(
                     videoDesc,
                     sampleStream,
                     0,
                     sampleStream.Length,
-                    (long)videoSample.presentationTime,
-                    (long)videoSample.sampleDuration,
+                    (long)videoSample.frameNumber,
+                    0,
                     emptySampleDict);
 
                 ReportGetSampleCompleted(mediaStreamSamp);

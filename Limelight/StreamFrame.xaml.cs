@@ -8,7 +8,6 @@
     using System.Diagnostics;
     using Microsoft.Xna.Framework.Input;
     using System;
-    using System.Runtime.InteropServices.WindowsRuntime;
     using System.ComponentModel;
     using Microsoft.Phone.Shell;
     using Microsoft.Phone.Net.NetworkInformation; 
@@ -113,7 +112,7 @@
 
         public void DrSubmitDecodeUnit(byte[] data)
         {
-            VideoStream.EnqueueSamples(data.AsBuffer(), 10, 10);
+            VideoStream.EnqueueSamples(data);
         }
 
         public void ArInit()
