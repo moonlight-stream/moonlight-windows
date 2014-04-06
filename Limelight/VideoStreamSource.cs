@@ -43,6 +43,7 @@
         private volatile int outstandingGetVideoSampleCount;
         private MediaStreamDescription videoDesc;
         private Dictionary<MediaSampleAttributeKeys, string> emptySampleDict = new Dictionary<MediaSampleAttributeKeys, string>();
+        private ulong frameNumber;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="VideoStreamSource"/> class. 
@@ -103,15 +104,42 @@
             int i;
 
             int currentNalStart = -1;
-            for (i = 0; i < buf.Length - 3; i++)
+            bool frameStart = false;
+            for (i = 0; i < buf.Length - 4; i++)
             {
                 // Look for the Annex B NAL start sequence (0x000001)
-                if (buf[i] == 0 && buf[i+1] == 0 && buf[i+2] == 1)
+                if (buf[i] == 0 && buf[i+1] == 0)
                 {
+                    // Check for frame start
+                    if (buf[i + 2] == 0 && buf[i + 3] == 1)
+                    {
+                        // We're on the next frame
+                        frameNumber++;
+
+                        // Remember this is a frame start NAL for later
+                        frameStart = true;
+                    }
+                    else if (buf[i + 2] == 1)
+                    {
+                        // NAL start (but not frame start)
+                        frameStart = false;
+                    }
+                    else
+                    {
+                        // Not actually NAL start
+                        continue;
+                    }
+
                     // End the current NAL at i (exclusive)
                     if (currentNalStart > 0)
                     {
-                        EnqueueNal(buf, currentNalStart, i, 0);
+                        EnqueueNal(buf, currentNalStart, i, frameNumber);
+                    }
+
+                    if (frameStart)
+                    {
+                        // Skip the first zero byte of the 4-byte frame start prefix
+                        i++;
                     }
 
                     // NAL start
@@ -122,7 +150,7 @@
             // Add the NAL that ends at the buffer's end
             if (currentNalStart > 0)
             {
-                EnqueueNal(buf, currentNalStart, buf.Length, 0);
+                EnqueueNal(buf, currentNalStart, buf.Length, frameNumber);
             }
 
             SendSamples();
