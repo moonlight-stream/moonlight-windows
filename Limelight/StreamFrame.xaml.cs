@@ -258,7 +258,7 @@
             ResolveHostName(hostNameString);
             stopWaitHandle.WaitOne();
             // Set up callbacks
-            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 60); // TODO 60 is a magic number. Get FPS from the settings
+            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 30); // TODO a magic number. Get FPS from the settings
             LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
             LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArDecodeAndPlaySample);
             LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
