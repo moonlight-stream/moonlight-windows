@@ -10,6 +10,14 @@
 #pragma comment(lib, "limelight-common.lib")
 #pragma comment(lib, "ws2_32.lib")
 
+#include <opus.h>
+#pragma comment(lib, "opus.lib")
+#pragma comment(lib, "celt.lib")
+#pragma comment(lib, "silk_common.lib")
+#pragma comment(lib, "silk_float.lib")
+
+static OpusDecoder *s_OpusDecoder;
+
 using namespace Limelight_common_binding;
 using namespace Platform;
 
@@ -54,7 +62,17 @@ void DrShimSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
 	}
 }
 
+#define MAX_OUTPUT_SHORTS_PER_CHANNEL 240
+#define CHANNEL_COUNT 2
+#define SAMPLE_RATE_HZ 48000
+
 void ArShimInit(void) {
+	int err;
+
+	s_OpusDecoder = opus_decoder_create(SAMPLE_RATE_HZ,
+		CHANNEL_COUNT,
+		&err);
+
 	s_ArCallbacks->Init();
 }
 void ArShimStart(void) {
@@ -64,12 +82,25 @@ void ArShimStop(void) {
 	s_ArCallbacks->Stop();
 }
 void ArShimRelease(void) {
+	if (s_OpusDecoder != NULL) {
+		opus_decoder_destroy(s_OpusDecoder);
+		s_OpusDecoder = NULL;
+	}
+
 	s_ArCallbacks->Destroy();
 }
 void ArShimDecodeAndPlaySample(char* sampleData, int sampleLength) {
 	const Platform::Array<unsigned char> ^dataArray;
-	dataArray = ref new Platform::Array<byte>((byte*)sampleData, sampleLength);
-	//s_ArCallbacks->DecodeAndPlaySample(dataArray);
+	opus_int16 decodedBuffer[MAX_OUTPUT_SHORTS_PER_CHANNEL * CHANNEL_COUNT];
+	int decodedSamples;
+		
+	decodedSamples = opus_decode(s_OpusDecoder, (const unsigned char*)sampleData, sampleLength,
+		decodedBuffer, MAX_OUTPUT_SHORTS_PER_CHANNEL, 0);
+	if (decodedSamples > 0) {
+		dataArray = ref new Platform::Array<byte>((byte*)decodedBuffer, 
+			decodedSamples * CHANNEL_COUNT * sizeof(opus_int16));
+		s_ArCallbacks->PlaySample(dataArray);
+	}
 }
 
 void ClShimStageStarting(int stage) {

@@ -69,15 +69,15 @@ namespace Limelight_common_binding
 	public delegate void ArStart(void);
 	public delegate void ArStop(void);
 	public delegate void ArRelease(void);
-	public delegate void ArDecodeAndPlaySample(const Platform::Array<unsigned char> ^data);
+	public delegate void ArPlaySample(const Platform::Array<unsigned char> ^data);
 
 	public ref class LimelightAudioRenderer sealed
 	{
 	public:
 		LimelightAudioRenderer(ArInit ^arInit, ArStart ^arStart, ArStop ^arStop,
-			ArRelease ^arRelease, ArDecodeAndPlaySample ^arDecodeAndPlaySample) :
+			ArRelease ^arRelease, ArPlaySample ^arPlaySample) :
 			m_ArInit(arInit), m_ArStart(arStart), m_ArStop(arStop), m_ArRelease(arRelease),
-			m_ArDecodeAndPlaySample(arDecodeAndPlaySample) {}
+			m_ArPlaySample(arPlaySample) {}
 
 		void Init(void) {
 			m_ArInit();
@@ -91,8 +91,8 @@ namespace Limelight_common_binding
 		void Destroy(void) {
 			m_ArRelease();
 		}
-		void DecodeAndPlaySample(const Platform::Array<byte> ^dataArray) {
-			m_ArDecodeAndPlaySample(dataArray);
+		void PlaySample(const Platform::Array<byte> ^dataArray) {
+			m_ArPlaySample(dataArray);
 		}
 
 	private:
@@ -100,7 +100,7 @@ namespace Limelight_common_binding
 		Limelight_common_binding::ArStart ^m_ArStart;
 		Limelight_common_binding::ArStop ^m_ArStop;
 		Limelight_common_binding::ArRelease ^m_ArRelease;
-		Limelight_common_binding::ArDecodeAndPlaySample ^m_ArDecodeAndPlaySample;
+		Limelight_common_binding::ArPlaySample ^m_ArPlaySample;
 	};
 
 	public delegate void ClStageStarting(int stage);

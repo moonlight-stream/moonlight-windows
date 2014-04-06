@@ -57,7 +57,8 @@
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <LibraryPath>..\ARM\Debug\limelight-common;$(LibraryPath)</LibraryPath>
+    <LibraryPath>..\opus-1.1-static\ARM;..\ARM\Debug\limelight-common;$(LibraryPath)</LibraryPath>
+    <IncludePath>..\opus-1.1-static;$(WP80ToolSetPath)include;$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LibraryPath>..\Debug;$(WP80ToolSetPath)lib;$(WindowsSDK_LibraryPath_x86);</LibraryPath>

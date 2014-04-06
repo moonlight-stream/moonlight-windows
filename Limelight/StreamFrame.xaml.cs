@@ -135,9 +135,9 @@
 
         }
 
-        public void ArDecodeAndPlaySample(byte[] data)
+        public void ArPlaySample(byte[] data)
         {
-            Debug.WriteLine("Decoding and playing audio of " + data.Length + " bytes");
+            AvStream.EnqueueAudioSamples(data);
         }
 
         public void ClStageStarting(int stage)
@@ -261,7 +261,7 @@
             // Set up callbacks
             LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 30); // TODO a magic number. Get FPS from the settings
             LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
-            LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArDecodeAndPlaySample);
+            LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArPlaySample);
             LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
             ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
 
