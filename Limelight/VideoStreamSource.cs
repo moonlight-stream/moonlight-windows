@@ -77,7 +77,7 @@
                     // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
                     // an empty MediaStreamSample here.
                     MediaStreamSample mediaStreamSamp = new MediaStreamSample(
-                        videoDesc, null, 0, 0, 0, 0, emptySampleDict);
+                        videoDesc, null, 0, 0, 0, emptySampleDict);
                     ReportGetSampleCompleted(mediaStreamSamp);
                     outstandingGetVideoSampleCount = 0;
                 }
@@ -199,7 +199,6 @@
                     0,
                     sampleStream.Length,
                     (long)videoSample.frameNumber,
-                    0,
                     emptySampleDict);
 
                 ReportGetSampleCompleted(mediaStreamSamp);
