@@ -59,7 +59,7 @@
         private String stageFailureText;
         private IPAddress resolvedHost;
 
-        AutoResetEvent stopWaitHandle = new AutoResetEvent(false);
+        private AutoResetEvent stopWaitHandle = new AutoResetEvent(false);
 
         #endregion Class Variables
 
