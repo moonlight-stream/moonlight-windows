@@ -15,7 +15,7 @@
     /// <summary>
     /// UI Frame that contains the media element that streams Steam
     /// </summary>
-    public partial class StreamFrame : PhoneApplicationPage
+    public partial class StreamFrame : PhoneApplicationPage, IDisposable
     {
         #region Class Variables
 
@@ -405,5 +405,23 @@
         }
 
         #endregion Private Methods
+
+        #region IDisposable implementation
+
+        protected virtual void Dispose(bool managed)
+        {
+            if (managed)
+            {
+                stopWaitHandle.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        #endregion IDisposable implementation
     }
 }
