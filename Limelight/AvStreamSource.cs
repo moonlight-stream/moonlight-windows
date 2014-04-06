@@ -76,6 +76,7 @@
             this.frameHeight = frameHeight;
             this.shutdownEvent = new ManualResetEvent(false);
             this.nalQueue = new Queue<VideoSample>();
+            this.audioQueue = new Queue<AudioSample>();
 
             // 15 is the minimum size
             this.AudioBufferLength = 15;
