@@ -48,9 +48,9 @@
         private bool hasMoved = false;
 
         /// <summary>
-        /// Gets and sets the custom video stream source
+        /// Gets and sets the custom AV source
         /// </summary>
-        internal VideoStreamSource VideoStream { get; private set; }
+        internal AvStreamSource AvStream { get; private set; }
 
         /// <summary>
         /// Background worker and callbacks
@@ -71,8 +71,8 @@
         {
             InitializeComponent();
 
-            VideoStream = new VideoStreamSource(null, frameWidth, frameHeight);
-            StreamDisplay.SetSource(VideoStream);
+            AvStream = new AvStreamSource(frameWidth, frameHeight);
+            StreamDisplay.SetSource(AvStream);
             StreamDisplay.AutoPlay = true;
             StreamDisplay.Play();
 
@@ -112,7 +112,7 @@
 
         public void DrSubmitDecodeUnit(byte[] data)
         {
-            VideoStream.EnqueueSamples(data);
+            AvStream.EnqueueVideoSamples(data);
         }
 
         public void ArInit()

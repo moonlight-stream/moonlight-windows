@@ -14,8 +14,24 @@
     /// <summary>
     /// Custom source for a video stream
     /// </summary>
-    public class VideoStreamSource : MediaStreamSource, IDisposable
+    public class AvStreamSource : MediaStreamSource, IDisposable
     {
+        /// <summary>
+        /// Audio Sample object
+        /// </summary>
+        public class AudioSample
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="AudioSample"/> class. 
+            /// </summary>
+            /// <param name="buffer">Buffer for the audio sample</param>
+            public AudioSample(IBuffer buffer)
+            {
+                this.buffer = buffer;
+            }
+            internal IBuffer buffer { get; private set; }
+        }
+
         /// <summary>
         /// Video Sample object
         /// </summary>
@@ -37,27 +53,29 @@
 
         private int frameWidth;
         private int frameHeight;
-        private Queue<VideoSample> nalQueue;
         private object lockObj = new object();
         private ManualResetEvent shutdownEvent;
-        private volatile int outstandingGetVideoSampleCount;
-        private MediaStreamDescription videoDesc;
         private Dictionary<MediaSampleAttributeKeys, string> emptySampleDict = new Dictionary<MediaSampleAttributeKeys, string>();
         private ulong frameNumber;
 
+        private volatile int outstandingGetVideoSampleCount;
+        private volatile int outstandingGetAudioSampleCount;
+        private MediaStreamDescription videoDesc;
+        private MediaStreamDescription audioDesc;
+        private Queue<VideoSample> nalQueue;
+        private Queue<AudioSample> audioQueue;
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="VideoStreamSource"/> class. 
+        /// Initializes a new instance of the <see cref="AvStreamSource"/> class. 
         /// </summary>
-        /// <param name="audioStream">Audio stream associated with the video stream</param>
         /// <param name="frameWidth">Width of the source's video frame</param>
         /// <param name="frameHeight">Height of the source's video frame</param>
-        public VideoStreamSource(Stream audioStream, int frameWidth, int frameHeight)
+        public AvStreamSource(int frameWidth, int frameHeight)
         {
             this.frameWidth = frameWidth;
             this.frameHeight = frameHeight;
             this.shutdownEvent = new ManualResetEvent(false);
             this.nalQueue = new Queue<VideoSample>();
-            this.outstandingGetVideoSampleCount = 0;
 
             // 15 is the minimum size
             this.AudioBufferLength = 15;
@@ -68,7 +86,6 @@
         /// </summary>
         public void Shutdown()
         {
-            Debug.WriteLine("Shutting down video stream");
             shutdownEvent.Set();
             if (outstandingGetVideoSampleCount > 0)
             {
@@ -80,6 +97,18 @@
                         videoDesc, null, 0, 0, 0, emptySampleDict);
                     ReportGetSampleCompleted(mediaStreamSamp);
                     outstandingGetVideoSampleCount = 0;
+                }
+            }
+            if (outstandingGetAudioSampleCount > 0)
+            {
+                lock (lockObj)
+                {
+                    // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
+                    // an empty MediaStreamSample here.
+                    MediaStreamSample mediaStreamSamp = new MediaStreamSample(
+                        audioDesc, null, 0, 0, 0, emptySampleDict);
+                    ReportGetSampleCompleted(mediaStreamSamp);
+                    outstandingGetAudioSampleCount = 0;
                 }
             }
         }
@@ -99,7 +128,7 @@
         /// Enqueues next video samples in the buffer
         /// </summary>
         /// <param name="buf">Buffer for the video stream</param>
-        public void EnqueueSamples(byte[] buf)
+        public void EnqueueVideoSamples(byte[] buf)
         {
             int i;
 
@@ -153,13 +182,69 @@
                 EnqueueNal(buf, currentNalStart, buf.Length, frameNumber);
             }
 
-            SendSamples();
+            SendVideoSamples();
         }
 
         /// <summary>
-        /// Dequeues media stream samples and sends them to the renderer
+        /// Enqueues next audio samples in the buffer
         /// </summary>
-        private void SendSamples()
+        /// <param name="buf">Buffer for the audio stream</param>
+        public void EnqueueAudioSamples(byte[] buf)
+        {
+            audioQueue.Enqueue(new AudioSample(buf.AsBuffer()));
+            SendAudioSamples();
+        }
+
+        /// <summary>
+        /// Dequeues audio stream samples and sends them to the renderer
+        /// </summary>
+        private void SendAudioSamples()
+        {
+            // If shutdown event is pending, return
+            if (shutdownEvent.WaitOne(0))
+            {
+                return;
+            }
+
+            while (true)
+            {
+                AudioSample audioSample;
+
+                if (outstandingGetAudioSampleCount == 0)
+                {
+                    return;
+                }
+
+                lock (lockObj)
+                {
+                    if (audioQueue.Count() == 0)
+                    {
+                        return;
+                    }
+
+                    audioSample = audioQueue.Dequeue();
+                }
+
+                Stream sampleStream = WindowsRuntimeBufferExtensions.AsStream(audioSample.buffer);
+
+                // Send out the next LPCM sample
+                MediaStreamSample mediaStreamSamp = new MediaStreamSample(
+                    audioDesc,
+                    sampleStream,
+                    0,
+                    sampleStream.Length,
+                    (long)frameNumber, // FIXME?
+                    emptySampleDict);
+
+                ReportGetSampleCompleted(mediaStreamSamp);
+                outstandingGetAudioSampleCount--;
+            }
+        }
+
+        /// <summary>
+        /// Dequeues video stream samples and sends them to the renderer
+        /// </summary>
+        private void SendVideoSamples()
         {
             // If shutdown event is pending, return
             if (shutdownEvent.WaitOne(0))
@@ -212,7 +297,6 @@
         /// </summary>
         private void PrepareVideo()
         {
-            Debug.WriteLine("Preparing video stream");
             // Stream Description 
             Dictionary<MediaStreamAttributeKeys, string> streamAttributes =
                 new Dictionary<MediaStreamAttributeKeys, string>();
@@ -228,14 +312,53 @@
             videoDesc = msd;
         }
 
+        private string ByteToBase16Str(byte inputByte)
+        {
+            return inputByte.ToString("X2");
+        }
+
+        private string ShortToBase16Str(short inputShort)
+        {
+            byte[] bytes = new byte[2];
+            bytes[0] = (byte)(inputShort & 0xFF);
+            bytes[1] = (byte)(inputShort >> 8);
+            return ByteToBase16Str(bytes[0]) + ByteToBase16Str(bytes[1]);
+        }
+
+        private string IntToBase16Str(int inputInt)
+        {
+            byte[] bytes = new byte[4];
+
+            bytes[0] = (byte)(inputInt & 0xFF);
+            bytes[1] = (byte)(inputInt >> 8);
+            bytes[2] = (byte)(inputInt >> 16);
+            bytes[3] = (byte)(inputInt >> 24);
+            return ByteToBase16Str(bytes[0]) + ByteToBase16Str(bytes[1]) +
+                ByteToBase16Str(bytes[2]) + ByteToBase16Str(bytes[3]);
+        }
+
         /// <summary>
         /// Prepare the audio stream 
         /// </summary>
         private void PrepareAudio()
         {
-            Debug.WriteLine("Preparing audio stream");
-            // TODO 
-            throw new NotImplementedException();
+            // Stream Description 
+            Dictionary<MediaStreamAttributeKeys, string> streamAttributes =
+                new Dictionary<MediaStreamAttributeKeys, string>();
+
+            streamAttributes[MediaStreamAttributeKeys.CodecPrivateData] = 
+                ShortToBase16Str(1) + // wFormatTag = WAVE_FORMAT_PCM
+                ShortToBase16Str(2) + // nChannels = 2
+                IntToBase16Str(48000) + // nSamplesPerSec = 48000
+                IntToBase16Str(192000) + // nAvgBytesPerSec = (nSamplesPerSec * nBlockAlign) = 192000
+                ShortToBase16Str(4) + // nBlockAlign = (nChannels * wBitsPerSample) / 8 = 4
+                ShortToBase16Str(16) + // wBitsPerSample = 16
+                ShortToBase16Str(0); // cbSize = 0
+
+            MediaStreamDescription msd =
+                new MediaStreamDescription(MediaStreamType.Audio, streamAttributes);
+
+            audioDesc = msd;
         }
 
         /// <summary>
@@ -244,23 +367,24 @@
         protected override void OpenMediaAsync()
         {
             // Init
-            Debug.WriteLine("Opening media");
             Dictionary<MediaSourceAttributesKeys, string> sourceAttributes =
                 new Dictionary<MediaSourceAttributesKeys, string>();
             List<MediaStreamDescription> availableStreams =
                 new List<MediaStreamDescription>();
 
-            // Set video attributes and list our stream as available
+            // Set attributes and list our stream as available
             PrepareVideo();
+            PrepareAudio();
             availableStreams.Add(videoDesc);
+            availableStreams.Add(audioDesc);
 
-            // A zero timespan is an infinite video
+            // A zero timespan is an infinite stream
             sourceAttributes[MediaSourceAttributesKeys.Duration] =
                 TimeSpan.FromSeconds(0).Ticks.ToString(CultureInfo.InvariantCulture);
 
             sourceAttributes[MediaSourceAttributesKeys.CanSeek] = false.ToString();
 
-            // Tell Silverlight that we've prepared and opened our video
+            // Tell Silverlight that we've prepared and opened our AV stream
             ReportOpenMediaCompleted(sourceAttributes, availableStreams);
         }
 
@@ -272,8 +396,7 @@
         {
             if (mediaStreamType == MediaStreamType.Audio)
             {
-                // Uh oh, audio doesn't work yet
-                throw new NotImplementedException();
+                outstandingGetAudioSampleCount++;
             }
             else if (mediaStreamType == MediaStreamType.Video)
             {
@@ -286,8 +409,7 @@
         /// </summary>
         protected override void CloseMedia()
         {
-            // TODO 
-            throw new NotImplementedException();
+            // Nothing to do
         }
 
         /// <summary>
