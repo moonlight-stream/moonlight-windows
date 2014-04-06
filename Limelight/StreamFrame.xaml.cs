@@ -191,34 +191,34 @@
             switch (stage)
             {
                 case STAGE_PLATFORM_INIT:
-                    stageFailureText = "Initializing platform failed.";
+                    stageFailureText = "Initializing platform failed. Error: " + errorCode.ToString();
                     break;
                 case STAGE_HANDSHAKE:
-                    stageFailureText = "Starting handshake failed.";
+                    stageFailureText = "Starting handshake failed. Error: " + errorCode.ToString();
                     break;
                 case STAGE_CONTROL_STREAM_INIT:
-                    stageFailureText = "Initializing control stream failed.";
+                    stageFailureText = "Initializing control stream failed. Error: " + errorCode.ToString();
                     break;
                 case STAGE_VIDEO_STREAM_INIT:
-                    stageFailureText = "Initializing video stream failed.";
+                    stageFailureText = "Initializing video stream failed. Error: " + errorCode.ToString();
                     break;
                 case STAGE_AUDIO_STREAM_INIT:
-                    stageFailureText = "Initializing audio stream failed.";
+                    stageFailureText = "Initializing audio stream failed. Error: " + errorCode.ToString();
                     break;
                 case STAGE_INPUT_STREAM_INIT:
-                    stageFailureText = "Initializing input stream failed.";
+                    stageFailureText = "Initializing input stream failed. Error: " + errorCode.ToString();
                     break;
                 case STAGE_CONTROL_STREAM_START:
-                    stageFailureText = "Starting control stream failed.";
+                    stageFailureText = "Starting control stream failed. Error: " + errorCode.ToString();
                     break;
                 case STAGE_VIDEO_STREAM_START:
-                    stageFailureText = "Starting video stream failed.";
+                    stageFailureText = "Starting video stream failed. Error: " + errorCode.ToString();
                     break;
                 case STAGE_AUDIO_STREAM_START:
-                    stageFailureText = "Starting audio stream failed.";
+                    stageFailureText = "Starting audio stream failed. Error: " + errorCode.ToString();
                     break;
                 case STAGE_INPUT_STREAM_START:
-                    stageFailureText = "Starting input stream failed.";
+                    stageFailureText = "Starting input stream failed. Error: " + errorCode.ToString();
                     break;
             }
         }
@@ -254,8 +254,10 @@
             Debug.WriteLine("Doing work");
             String hostNameString = (String)PhoneApplicationService.Current.State["host"];
             // Resolve the host name to an IP address string. 
+            Dispatcher.BeginInvoke(new Action(() => setStateText("Resolving hostname...")));
             ResolveHostName(hostNameString);
             stopWaitHandle.WaitOne();
+
             // Set up callbacks
             LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 30); // TODO a magic number. Get FPS from the settings
             LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
@@ -286,6 +288,12 @@
             if (e.Error != null)
             {
                 Debug.WriteLine("Error while performing background operation.");
+                MessageBoxResult result = MessageBox.Show("Unable to resolve hostname");
+                if (result == MessageBoxResult.OK)
+                {
+                    // Return to the settings page
+                    NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
+                }
             }
 
             // If the connection attempt was cancelled by a failed stage
