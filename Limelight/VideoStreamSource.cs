@@ -14,7 +14,7 @@
     /// <summary>
     /// Custom source for a video stream
     /// </summary>
-    public class VideoStreamSource : MediaStreamSource
+    public class VideoStreamSource : MediaStreamSource, IDisposable
     {
         /// <summary>
         /// Video Sample object
@@ -316,6 +316,20 @@
         {
             Debug.WriteLine("Seeking to " + seekToTime);
             ReportSeekCompleted(seekToTime); 
+        }
+
+        protected virtual void Dispose(bool managed)
+        {
+            if (managed)
+            {
+                shutdownEvent.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
