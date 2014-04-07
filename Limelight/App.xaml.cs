@@ -11,18 +11,13 @@ using Limelight_common_binding;
 
 namespace Limelight
 {
-    public partial class App : Application, IDisposable
+    public partial class App : Application
     {
         /// <summary>
         /// Provides easy access to the root frame of the Phone Application.
         /// </summary>
         /// <returns>The root frame of the Phone Application.</returns>
         public static PhoneApplicationFrame RootFrame { get; private set; }
-
-        /// <summary>
-        /// Stream Frame object reference 
-        /// </summary>
-        private StreamFrame stream = new StreamFrame(); 
 
         /// <summary>
         /// Constructor for the Application object.
@@ -81,7 +76,6 @@ namespace Limelight
         {
             Debug.WriteLine("App deactivated: Stopping connection");
             LimelightCommonRuntimeComponent.StopConnection();
-            stream.mogaController.Close(); 
         }
 
         // Code to execute when the application is closing (eg, user hit Back)
@@ -90,7 +84,6 @@ namespace Limelight
         {
             Debug.WriteLine("App closing: Stopping connection");
             LimelightCommonRuntimeComponent.StopConnection();
-            stream.mogaController.Close(); 
         }
 
         // Code to execute if a navigation fails
@@ -231,28 +224,5 @@ namespace Limelight
                 throw;
             }
         }
-
-        #region IDisposable implementation
-        /// <summary>
-        /// Virtual method that allows for disposing of some managed resources in addition to unmanaged
-        /// </summary>
-        /// <param name="managed">Whether to dispose of managed resources also</param>
-        protected virtual void Dispose(bool managed)
-        {
-            if (managed)
-            {
-                stream.Dispose(); 
-            }
-        }
-
-        /// <summary>
-        /// Explicitly dispose of unmanaged resources
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-    #endregion IDisposable implementation
     }
 }
