@@ -121,10 +121,31 @@
             int nalLength = nalEnd - nalStart;
             byte[] nal = new byte[nalLength];
             Array.ConstrainedCopy(buf, nalStart, nal, 0, nalLength);
-            Debug.WriteLine("Queueing NAL of " + nalLength + " bytes");
+
+            VideoSample videoSample = new VideoSample(nal.AsBuffer(), frameNumber);
+            bool canDirectSubmit;
             lock (nalQueueLock)
             {
-                nalQueue.Enqueue(new VideoSample(nal.AsBuffer(), frameNumber));
+                if (nalQueue.Count == 0 && outstandingGetVideoSampleCount > 0)
+                {
+                    outstandingGetVideoSampleCount--;
+                    canDirectSubmit = true;
+                }
+                else
+                {
+                    canDirectSubmit = false;
+                    nalQueue.Enqueue(videoSample);
+                }
+            }
+
+            if (canDirectSubmit)
+            {
+                Debug.WriteLine("Direct submitting NALU");
+                SubmitVideoSample(videoSample);
+            }
+            else
+            {
+                Debug.WriteLine("Queued NALU");
             }
         }
 
@@ -195,12 +216,33 @@
         /// <param name="buf">Buffer for the audio stream</param>
         public void EnqueueAudioSamples(byte[] buf)
         {
-            Debug.WriteLine("Queuing LPCM sample of " + buf.Length + " bytes");
+            AudioSample audioSample = new AudioSample(buf.AsBuffer());
+            bool canDirectSubmit;
+
             lock (audioQueueLock)
             {
-                audioQueue.Enqueue(new AudioSample(buf.AsBuffer()));
+                if (audioQueue.Count == 0 && outstandingGetAudioSampleCount > 0)
+                {
+                    outstandingGetAudioSampleCount--;
+                    canDirectSubmit = true;
+                }
+                else
+                {
+                    canDirectSubmit = false;
+                    audioQueue.Enqueue(audioSample);
+                }
             }
-            SendAudioSamples();
+
+            if (canDirectSubmit)
+            {
+                Debug.WriteLine("Direct submitting LPCM sample");
+                SubmitAudioSample(audioSample);
+            }
+            else
+            {
+                Debug.WriteLine("Queued LPCM sample");
+                SendAudioSamples();
+            }
         }
 
         private void SubmitAudioSample(AudioSample audioSample)
