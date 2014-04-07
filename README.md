@@ -24,7 +24,11 @@ If you are running recent GeForce drivers (334.xx and 335.xx) or your video stop
 #####Windows Phone Requirements: 
 - Windows Phone 8
 
-#####Other Official Versions:
+#####Contribute: 
+- Fork us and set up a solution in Visual Studio
+- Add [Limelight Common](https://github.com/limelight-stream/limelight-common-c) as a project in your solution
+- Make changes and send us a pull request!
 
+#####Other Official Versions:
 [Limelight](https://github.com/limelight-stream) also has an Android
 implementation, and versions for PC and iOS are currently in development.
