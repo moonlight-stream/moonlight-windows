@@ -10,12 +10,13 @@
     using System;
     using System.ComponentModel;
     using Microsoft.Phone.Shell;
-    using Microsoft.Phone.Net.NetworkInformation; 
+    using Microsoft.Phone.Net.NetworkInformation;
+    using Moga.Windows.Phone;
 
     /// <summary>
     /// UI Frame that contains the media element that streams Steam
     /// </summary>
-    public partial class StreamFrame : PhoneApplicationPage, IDisposable
+    public partial class StreamFrame : PhoneApplicationPage, IDisposable, IControllerListener
     {
         #region Class Variables
 
@@ -58,8 +59,12 @@
         private BackgroundWorker bw = new BackgroundWorker();
         private String stageFailureText;
         private IPAddress resolvedHost;
-
         private AutoResetEvent stopWaitHandle = new AutoResetEvent(false);
+
+        /// <summary>
+        /// MOGA Controller
+        /// </summary>
+        internal ControllerManager mogaController = new ControllerManager(); 
 
         #endregion Class Variables
 
@@ -71,21 +76,32 @@
         {
             InitializeComponent();
 
+            // Audio/video stream source init
             AvStream = new AvStreamSource(frameWidth, frameHeight);
             StreamDisplay.SetSource(AvStream);
             StreamDisplay.AutoPlay = true;
             StreamDisplay.Play();
 
-            bw.WorkerReportsProgress = false;
-            bw.WorkerSupportsCancellation = false;
-
+            // Background Worker Init
+            bw.WorkerReportsProgress = true;
+            bw.WorkerSupportsCancellation = true;
             bw.DoWork += new DoWorkEventHandler(bwDoWork);
             bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bwRunWorkerCompleted);
 
-            Waitgrid.Visibility = Visibility.Visible;
-            currentStateText.Visibility = Visibility.Visible;
-
+            // Run the background worker that starts the connection
             bw.RunWorkerAsync();
+
+            // Attempt to connect to a MOGA controller
+            try
+            {
+                Debug.WriteLine("Checking for MOGA controller...");
+                mogaController.SetListener(this);
+                mogaController.Connect();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Failed to connect to a MOGA Controller: "  + ex.HResult);
+            }
         }
         #endregion Init
 
@@ -387,7 +403,7 @@
         /// <summary>
         /// Callback for ResolveHostNameAsync
         /// </summary>
-        /// <param name="result"></param>
+        /// <param name="result">The IP Address</param>
         private void OnNameResolved(NameResolutionResult result)
         {
             IPEndPoint[] endpoints = result.IPEndPoints;
@@ -396,8 +412,6 @@
             if (endpoints != null && endpoints.Length > 0)
             {
                 var ipAddress = endpoints[0].Address;
-
-                // TODO if this gives me what I want, use it to start the connection.
                 Debug.WriteLine("The IP address is " + ipAddress.ToString());
                 resolvedHost = ipAddress; 
             }
@@ -408,6 +422,10 @@
 
         #region IDisposable implementation
 
+        /// <summary>
+        /// Virtual method that allows for disposing of some managed resources in addition to unmanaged
+        /// </summary>
+        /// <param name="managed">Whether to dispose of managed resources also</param>
         protected virtual void Dispose(bool managed)
         {
             if (managed)
@@ -416,6 +434,9 @@
             }
         }
 
+        /// <summary>
+        /// Explicitly dispose of unmanaged resources
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
@@ -423,5 +444,38 @@
         }
 
         #endregion IDisposable implementation
+
+        #region IControllerListener implementation
+
+        /// <summary>
+        /// MOGA Controller key event
+        /// </summary>
+        /// <param name="e">Key event args</param>
+        public void OnKeyEvent(KeyEvent e)
+        {
+            Debug.WriteLine("Controller key event");
+            // TODO 
+        }
+
+        /// <summary>
+        /// MOGA Controller motion event
+        /// </summary>
+        /// <param name="e">Motion event args</param>
+        public void OnMotionEvent(MotionEvent e)
+        {
+            Debug.WriteLine("Controller motion event");
+            // TODO 
+        }
+
+        /// <summary>
+        /// MOGA Controller state event
+        /// </summary>
+        /// <param name="e">State event args</param>
+        public void OnStateEvent(StateEvent e)
+        {
+            Debug.WriteLine("Controller state changed event");
+            // TODO
+        }
+        #endregion IControllerListener implementation
     }
 }
