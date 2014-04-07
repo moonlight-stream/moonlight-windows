@@ -25,7 +25,11 @@ static LimelightDecoderRenderer ^s_DrCallbacks;
 static LimelightAudioRenderer ^s_ArCallbacks;
 static LimelightConnectionListener ^s_ClCallbacks;
 
+#define MAX_FRAME_SIZE 1048576
+static char* s_FrameBuffer;
+
 void DrShimSetup(int width, int height, int redrawRate, void* context, int drFlags) {
+	s_FrameBuffer = (char*)malloc(MAX_FRAME_SIZE);
 	s_DrCallbacks->Setup(width, height, redrawRate, drFlags);
 }
 void DrShimStart(void) {
@@ -35,31 +39,22 @@ void DrShimStop(void) {
 	s_DrCallbacks->Stop();
 }
 void DrShimRelease(void) {
+	free(s_FrameBuffer);
 	s_DrCallbacks->Destroy();
 }
 void DrShimSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
-	char* fullData;
-	const Platform::Array<unsigned char> ^dataArray;
+	PLENTRY entry;
+	int offset = 0;
 
-	fullData = (char*)malloc(decodeUnit->fullLength);
-	if (fullData != NULL)
+	entry = decodeUnit->bufferList;
+	while (entry != NULL)
 	{
-		PLENTRY entry;
-		int offset = 0;
-
-		entry = decodeUnit->bufferList;
-		while (entry != NULL)
-		{
-			memcpy(&fullData[offset], entry->data, entry->length);
-			offset += entry->length;
-			entry = entry->next;
-		}
-
-		dataArray = ref new Platform::Array<byte>((byte*)fullData, decodeUnit->fullLength);
-		s_DrCallbacks->SubmitDecodeUnit(dataArray);
-
-		free(fullData);
+		memcpy(&s_FrameBuffer[offset], entry->data, entry->length);
+		offset += entry->length;
+		entry = entry->next;
 	}
+
+	s_DrCallbacks->SubmitDecodeUnit(Platform::ArrayReference<byte>((byte*)s_FrameBuffer, decodeUnit->fullLength));
 }
 
 #define MAX_OUTPUT_SHORTS_PER_CHANNEL 240
