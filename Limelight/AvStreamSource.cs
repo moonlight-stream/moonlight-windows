@@ -53,7 +53,6 @@
 
         private int frameWidth;
         private int frameHeight;
-        private object lockObj = new object();
         private ManualResetEvent shutdownEvent;
         private Dictionary<MediaSampleAttributeKeys, string> emptySampleDict = new Dictionary<MediaSampleAttributeKeys, string>();
         private ulong frameNumber;
@@ -64,6 +63,9 @@
         private MediaStreamDescription audioDesc;
         private Queue<VideoSample> nalQueue;
         private Queue<AudioSample> audioQueue;
+        private object nalQueueLock = new object();
+        private object audioQueueLock = new object();
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AvStreamSource"/> class. 
@@ -90,7 +92,7 @@
             shutdownEvent.Set();
             if (outstandingGetVideoSampleCount > 0)
             {
-                lock (lockObj)
+                lock (nalQueueLock)
                 {
                     // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
                     // an empty MediaStreamSample here.
@@ -102,7 +104,7 @@
             }
             if (outstandingGetAudioSampleCount > 0)
             {
-                lock (lockObj)
+                lock (audioQueueLock)
                 {
                     // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
                     // an empty MediaStreamSample here.
@@ -119,7 +121,8 @@
             int nalLength = nalEnd - nalStart;
             byte[] nal = new byte[nalLength];
             Array.ConstrainedCopy(buf, nalStart, nal, 0, nalLength);
-            lock (lockObj)
+            Debug.WriteLine("Queueing NAL of " + nalLength + " bytes");
+            lock (nalQueueLock)
             {
                 nalQueue.Enqueue(new VideoSample(nal.AsBuffer(), frameNumber));
             }
@@ -192,8 +195,29 @@
         /// <param name="buf">Buffer for the audio stream</param>
         public void EnqueueAudioSamples(byte[] buf)
         {
-            audioQueue.Enqueue(new AudioSample(buf.AsBuffer()));
+            Debug.WriteLine("Queuing LPCM sample of " + buf.Length + " bytes");
+            lock (audioQueueLock)
+            {
+                audioQueue.Enqueue(new AudioSample(buf.AsBuffer()));
+            }
             SendAudioSamples();
+        }
+
+        private void SubmitAudioSample(AudioSample audioSample)
+        {
+            Stream sampleStream = WindowsRuntimeBufferExtensions.AsStream(audioSample.buffer);
+
+            // Send out the next LPCM sample
+            MediaStreamSample mediaStreamSamp = new MediaStreamSample(
+                audioDesc,
+                sampleStream,
+                0,
+                sampleStream.Length,
+                (long)frameNumber, // FIXME?
+                emptySampleDict);
+
+            Debug.WriteLine("Submitting audio samples");
+            ReportGetSampleCompleted(mediaStreamSamp);
         }
 
         /// <summary>
@@ -216,7 +240,7 @@
                     return;
                 }
 
-                lock (lockObj)
+                lock (audioQueueLock)
                 {
                     if (audioQueue.Count() == 0)
                     {
@@ -226,20 +250,26 @@
                     audioSample = audioQueue.Dequeue();
                 }
 
-                Stream sampleStream = WindowsRuntimeBufferExtensions.AsStream(audioSample.buffer);
-
-                // Send out the next LPCM sample
-                MediaStreamSample mediaStreamSamp = new MediaStreamSample(
-                    audioDesc,
-                    sampleStream,
-                    0,
-                    sampleStream.Length,
-                    (long)frameNumber, // FIXME?
-                    emptySampleDict);
-
-                ReportGetSampleCompleted(mediaStreamSamp);
+                SubmitAudioSample(audioSample);
                 outstandingGetAudioSampleCount--;
             }
+        }
+
+        private void SubmitVideoSample(VideoSample videoSample)
+        {
+            Stream sampleStream = WindowsRuntimeBufferExtensions.AsStream(videoSample.buffer);
+
+            // Send out the next NAL
+            MediaStreamSample mediaStreamSamp = new MediaStreamSample(
+                videoDesc,
+                sampleStream,
+                0,
+                sampleStream.Length,
+                (long)videoSample.frameNumber,
+                emptySampleDict);
+
+            Debug.WriteLine("Submitting video samples");
+            ReportGetSampleCompleted(mediaStreamSamp);
         }
 
         /// <summary>
@@ -262,7 +292,7 @@
                     return;
                 }
 
-                lock (lockObj)
+                lock (nalQueueLock)
                 {
                     if (nalQueue.Count() % 10 == 0)
                     {
@@ -277,18 +307,7 @@
                     videoSample = nalQueue.Dequeue();
                 }
 
-                Stream sampleStream = WindowsRuntimeBufferExtensions.AsStream(videoSample.buffer);
-
-                // Send out the next NAL
-                MediaStreamSample mediaStreamSamp = new MediaStreamSample(
-                    videoDesc,
-                    sampleStream,
-                    0,
-                    sampleStream.Length,
-                    (long)videoSample.frameNumber,
-                    emptySampleDict);
-
-                ReportGetSampleCompleted(mediaStreamSamp);
+                SubmitVideoSample(videoSample);
                 outstandingGetVideoSampleCount--;
             }
         }
@@ -397,11 +416,41 @@
         {
             if (mediaStreamType == MediaStreamType.Audio)
             {
-                outstandingGetAudioSampleCount++;
+                AudioSample audioSample;
+
+                lock (audioQueueLock)
+                {
+                    if (audioQueue.Count > 0)
+                    {
+                        audioSample = audioQueue.Dequeue();
+                    }
+                    else
+                    {
+                        outstandingGetAudioSampleCount++;
+                        return;
+                    }
+                }
+
+                SubmitAudioSample(audioSample);
             }
             else if (mediaStreamType == MediaStreamType.Video)
             {
-                outstandingGetVideoSampleCount++;
+                VideoSample videoSample;
+
+                lock (nalQueueLock)
+                {
+                    if (nalQueue.Count > 0)
+                    {
+                        videoSample = nalQueue.Dequeue();
+                    }
+                    else
+                    {
+                        outstandingGetVideoSampleCount++;
+                        return;
+                    }
+                }
+
+                SubmitVideoSample(videoSample);
             }
         }
         
