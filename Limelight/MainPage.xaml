@@ -10,27 +10,31 @@
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
-    SupportedOrientations="Portrait" 
-    shell:SystemTray.IsVisible="True">
+    SupportedOrientations="PortraitOrLandscape" 
+    shell:SystemTray.IsVisible="True" Orientation="Portrait">
 
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent">
+        <!---->
+        
+        
         <!--TitlePanel contains the name of the application and page title-->
-        <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,662">
-            <TextBlock Text="Limelight" Margin="9,-7,0,0" Style="{StaticResource PhoneTextTitle1Style}"/>
-        </StackPanel>
+        <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,662"/>
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Margin="14,170,10,-36">
-            <HyperlinkButton x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="60,118,42,0" FontWeight="Bold" FontSize="30" Click="StreamButton_Click" Width="354"/>
-            <HyperlinkButton x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="133,201,128,0" FontWeight="Bold" FontSize="30" Click="PairButton_Click"/>
+            <HyperlinkButton x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="60,86,42,0" FontWeight="Bold" FontSize="30" Click="StreamButton_Click" Width="354"/>
+            <HyperlinkButton x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="133,137,128,0" FontWeight="Bold" FontSize="30" Click="PairButton_Click"/>
         </Grid>
 
-        <TextBox x:Name="host_textbox" HorizontalAlignment="Left" Height="72" TextWrapping="Wrap" VerticalAlignment="Top" Width="480" Margin="10,144,-10,0" Text="GeForce PC Host"/>
-        <RadioButton x:Name="_60fps_button" Content="60 FPS (may increase lag)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="159,560,0,0" GroupName="fps" RenderTransformOrigin="0.559,0.464"/>
-        <RadioButton x:Name="_30fps_button" Content="30 FPS" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14,560,0,0" GroupName="fps" IsChecked="True"/>
-        <RadioButton x:Name="_1080p_button" Content="1080p (may increase lag)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="159,483,0,0" GroupName="pixels"/>
-        <RadioButton x:Name="_720p_button" Content="720p" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14,483,0,0" GroupName="pixels" IsChecked="True"/>
+        <TextBox x:Name="host_textbox" HorizontalAlignment="Left" Height="72" TextWrapping="Wrap" VerticalAlignment="Top" Width="446" Margin="14,164,0,0" Text="GeForce PC Host"/>
+        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top" Margin="14,17,0,0" Height="142" Width="446" FontSize="100"/>
 
     </Grid>
+
+    <phone:PhoneApplicationPage.ApplicationBar>
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
+            <shell:ApplicationBarIconButton IconUri="/Assets/AppBar/feature.settings.png" Text="Settings" Click="ApplicationBarMenuItem_Click"/>
+        </shell:ApplicationBar>
+    </phone:PhoneApplicationPage.ApplicationBar>
 
 </phone:PhoneApplicationPage>
