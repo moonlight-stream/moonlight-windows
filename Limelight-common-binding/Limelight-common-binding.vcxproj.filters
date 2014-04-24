@@ -5,11 +5,37 @@
       <UniqueIdentifier>5fd0e509-b6ae-4f29-bd2a-4d2cc10f3aa0</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Toolkit.Content">
+      <UniqueIdentifier>{db0aed02-2d41-48ad-810d-bae43f80963e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Limelight-common-binding.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Limelight-common-binding.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Toolkit.Content\ApplicationBar.Select.png">
+      <Filter>Toolkit.Content</Filter>
+    </Image>
+    <Image Include="Toolkit.Content\ApplicationBar.Delete.png">
+      <Filter>Toolkit.Content</Filter>
+    </Image>
+    <Image Include="Toolkit.Content\ApplicationBar.Check.png">
+      <Filter>Toolkit.Content</Filter>
+    </Image>
+    <Image Include="Toolkit.Content\ApplicationBar.Cancel.png">
+      <Filter>Toolkit.Content</Filter>
+    </Image>
+    <Image Include="Toolkit.Content\ApplicationBar.Add.png">
+      <Filter>Toolkit.Content</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="README_FIRST.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

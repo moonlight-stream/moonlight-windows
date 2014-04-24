@@ -1,5 +1,6 @@
 ﻿<phone:PhoneApplicationPage 
     x:Class="Limelight.MainPage"
+    xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
@@ -22,12 +23,12 @@
         <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,662"/>
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Margin="14,170,10,-36">
-            <HyperlinkButton x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="60,86,42,0" FontWeight="Bold" FontSize="30" Click="StreamButton_Click" Width="354"/>
-            <HyperlinkButton x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="133,137,128,0" FontWeight="Bold" FontSize="30" Click="PairButton_Click"/>
+            <Button x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="43,154,36,327" FontWeight="Bold" FontSize="30" Click="StreamButton_Click" Width="377"/>
+            <Button x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="109,260,103,221" FontWeight="Bold" FontSize="30" Click="PairButton_Click" Width="244"/>
         </Grid>
 
-        <TextBox x:Name="host_textbox" HorizontalAlignment="Left" Height="72" TextWrapping="Wrap" VerticalAlignment="Top" Width="446" Margin="14,164,0,0" Text="GeForce PC Host"/>
-        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top" Margin="14,17,0,0" Height="142" Width="446" FontSize="100"/>
+        <toolkit:PhoneTextBox x:Name="host_textbox" InputScope="Url" Hint="GeForce PC Host" HorizontalAlignment="Center" Height="72" TextWrapping="Wrap" VerticalAlignment="Center" Width="446" Margin="24,219,10,405"/>
+        <TextBlock HorizontalAlignment="Center" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top" Margin="19,17,0,0" Height="142" Width="446" FontSize="100"/>
 
     </Grid>
 

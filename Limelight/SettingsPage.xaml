@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
     xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
+    xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
@@ -27,12 +28,14 @@
 
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-            <RadioButton x:Name="_60fps_button" Content="60 FPS" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="207,187,-48,0" GroupName="fps" RenderTransformOrigin="0.559,0.464"/>
-            <RadioButton x:Name="_30fps_button" Content="30 FPS" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="62,187,0,0" GroupName="fps" IsChecked="True"/>
-            <RadioButton x:Name="_1080p_button" Content="1080p" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="207,96,0,0" GroupName="pixels"/>
-            <RadioButton x:Name="_720p_button" Content="720p" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="62,96,0,0" GroupName="pixels" IsChecked="True"/>
-            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="720p is optimal for most devices" VerticalAlignment="Top" Margin="73,158,0,0" Width="338"/>
-            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="30 FPS is optimal for most devices" VerticalAlignment="Top" Margin="73,252,0,0" Width="338"/>
+            <toolkit:ListPicker x:Name="ResolutionAndFrameRatePicker" Margin="62,228,45,-26">
+                <toolkit:ListPickerItem x:Name="_30_FPS_720p" Content="720p (30FPS)"/>
+                <toolkit:ListPickerItem x:Name="_60_FPS_720p" Content="720p (60FPS)"/>
+                <toolkit:ListPickerItem x:Name="_30_FPS_1080p" Content="1080p (30FPS)"/>
+                <toolkit:ListPickerItem x:Name="_60_FPS_1080p" Content="1080p (60FPS)"/>
+            </toolkit:ListPicker>
+
+            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Margin="70,203,0,0" Width="338" Text="Frame Rate"/>
         </Grid>
     </Grid>
 

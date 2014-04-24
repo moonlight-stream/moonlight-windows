@@ -141,6 +141,19 @@
   <ItemGroup>
     <ClCompile Include="Limelight-common-binding.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Toolkit.Content\ApplicationBar.Add.png" />
+    <Image Include="Toolkit.Content\ApplicationBar.Cancel.png" />
+    <Image Include="Toolkit.Content\ApplicationBar.Check.png" />
+    <Image Include="Toolkit.Content\ApplicationBar.Delete.png" />
+    <Image Include="Toolkit.Content\ApplicationBar.Select.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="README_FIRST.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsPhone\v$(TargetPlatformVersion)\Microsoft.Cpp.WindowsPhone.$(TargetPlatformVersion).targets" />
   <ImportGroup Label="ExtensionTargets">
