@@ -64,7 +64,7 @@ namespace Limelight
         {
             Debug.WriteLine("Doing work");
             // TODO do the pair thing
-            NvHttp.getMacAddressString(); 
+            NvHttp.GetMacAddressString(); 
         }
 
         // <summary>

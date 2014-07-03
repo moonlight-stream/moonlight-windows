@@ -10,12 +10,13 @@
     using System;
     using System.ComponentModel;
     using Microsoft.Phone.Shell;
-    using Microsoft.Phone.Net.NetworkInformation; 
+    using Microsoft.Phone.Net.NetworkInformation;
+    using System.Threading.Tasks; 
 
     /// <summary>
     /// UI Frame that contains the media element that streams Steam
     /// </summary>
-    public partial class StreamFrame : PhoneApplicationPage, IDisposable
+    public partial class StreamFrame : PhoneApplicationPage
     {
         #region Class Variables
 
@@ -57,19 +58,23 @@
         /// </summary>
         private BackgroundWorker bw = new BackgroundWorker();
         private String stageFailureText;
-        private IPAddress resolvedHost;
-
-        private AutoResetEvent stopWaitHandle = new AutoResetEvent(false);
 
         #endregion Class Variables
 
         #region Init
+
         /// <summary>
         /// Initializes a new instance of the <see cref="StreamFrame"/> class. 
         /// </summary>
         public StreamFrame()
         {
             InitializeComponent();
+
+            // Set up the XML query object with serverinfo
+            // TODO the real url
+
+
+            // TODO Convince the app to run synchronously 
 
             AvStream = new AvStreamSource(frameWidth, frameHeight);
             StreamDisplay.SetSource(AvStream);
@@ -84,7 +89,6 @@
 
             Waitgrid.Visibility = Visibility.Visible;
             currentStateText.Visibility = Visibility.Visible;
-
             bw.RunWorkerAsync();
         }
         #endregion Init
@@ -251,15 +255,15 @@
         /// </summary>
         private void bwDoWork(object sender, DoWorkEventArgs e)
         {
-            Debug.WriteLine("Doing work");
-            String hostNameString = (String)PhoneApplicationService.Current.State["host"];
-            // Resolve the host name to an IP address string. 
+
+            String hostnameString = (String)PhoneApplicationService.Current.State["host"];
             Dispatcher.BeginInvoke(new Action(() => setStateText("Resolving hostname...")));
-            ResolveHostName(hostNameString);
-            stopWaitHandle.WaitOne();
+            NvHttp nv = new NvHttp(hostnameString);
+
+            ServerInfo serverInfo = new ServerInfo(nv.baseUrl + "/serverinfo");
 
             // Set up callbacks
-            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 30); // TODO a magic number. Get FPS from the settings
+            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 10000, 1024); // TODO a magic number. Get FPS from the settings
             LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
             LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArPlaySample);
             LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
@@ -267,7 +271,7 @@
 
             // Call into Common to start the connection
             Debug.WriteLine("Starting connection");
-            LimelightCommonRuntimeComponent.StartConnection((uint)resolvedHost.Address, streamConfig, clCallbacks, drCallbacks, arCallbacks);
+            LimelightCommonRuntimeComponent.StartConnection((uint)nv.resolvedHost.Address, streamConfig, clCallbacks, drCallbacks, arCallbacks);
 
             // If one of the stages failed, tell the background worker to cancel
             if(stageFailureText != null)
@@ -284,15 +288,17 @@
         {
             this.Waitgrid.Visibility = Visibility.Collapsed;
             this.currentStateText.Visibility = Visibility.Collapsed; 
+
             // Check to see if an error occurred in the background process.
             if (e.Error != null)
             {
                 Debug.WriteLine("Error while performing background operation.");
-                MessageBoxResult result = MessageBox.Show("Unable to resolve hostname");
+                MessageBoxResult result = MessageBox.Show(e.Error.Message);
                 if (result == MessageBoxResult.OK)
                 {
                     // Return to the settings page
                     NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
+                    // TODO clean up
                 }
             }
 
@@ -374,54 +380,6 @@
             currentStateText.Text = stateText; 
         }
 
-        /// <summary>
-        /// Resolve the GEForce PC hostname to an IP Address
-        /// </summary>
-        /// <param name="hostName"></param>
-        private void ResolveHostName(String hostName)
-        {
-            var endPoint = new DnsEndPoint(hostName, 0);
-            DeviceNetworkInformation.ResolveHostNameAsync(endPoint, OnNameResolved, null);
-        }
-
-        /// <summary>
-        /// Callback for ResolveHostNameAsync
-        /// </summary>
-        /// <param name="result"></param>
-        private void OnNameResolved(NameResolutionResult result)
-        {
-            IPEndPoint[] endpoints = result.IPEndPoints;
-
-            // If resolved, it will provide me with an IP address
-            if (endpoints != null && endpoints.Length > 0)
-            {
-                var ipAddress = endpoints[0].Address;
-
-                // TODO if this gives me what I want, use it to start the connection.
-                Debug.WriteLine("The IP address is " + ipAddress.ToString());
-                resolvedHost = ipAddress; 
-            }
-            stopWaitHandle.Set(); 
-        }
-
         #endregion Private Methods
-
-        #region IDisposable implementation
-
-        protected virtual void Dispose(bool managed)
-        {
-            if (managed)
-            {
-                stopWaitHandle.Dispose();
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion IDisposable implementation
     }
 }
