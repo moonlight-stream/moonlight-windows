@@ -14,7 +14,6 @@ namespace Limelight
     /// </summary>
     public partial class MainPage : PhoneApplicationPage
     {
-
         BackgroundWorker bw = new BackgroundWorker();
         int steamId = 0; 
 
@@ -40,16 +39,27 @@ namespace Limelight
         {
             SaveSettings(); 
             Debug.WriteLine("Start Streaming button pressed");
-            if (steamId != 0)
+            NvHttp nv = new NvHttp(host_textbox.Text);
+            XmlQuery pairState = new XmlQuery(nv.baseUrl + "/pairstate?uniqueid=" + nv.GetDeviceName());
+            if (pairState.GetErrorMessage() != null)
+            {
+                MessageBox.Show("Failed to get pair state");
+            }
+            else if (String.Compare(pairState.XmlAttribute("paired"), "0") == 0)
+            {
+                MessageBox.Show("Device not paired");
+            }
+            else if (steamId == 0)
+            {
+                MessageBox.Show("Failed to find Steam");
+            } 
+            else
             {
                 // Save the user's host input and send it to the streamframe page
                 PhoneApplicationService.Current.State["host"] = host_textbox.Text;
                 NavigationService.Navigate(new Uri("/StreamFrame.xaml?steamId="+steamId, UriKind.Relative));
             }
-            else
-            {
-                MessageBox.Show("Device not paired correctly: Steam not found");
-            }
+
         }
 
         /// <summary>
@@ -57,8 +67,8 @@ namespace Limelight
         /// </summary>
         private void PairButton_Click(object sender, RoutedEventArgs e)
         {
+            bw.RunWorkerAsync(host_textbox.Text);
             SaveSettings(); 
-            bw.RunWorkerAsync(host_textbox.Text); 
         }
 
         /// <summary>
@@ -104,17 +114,43 @@ namespace Limelight
             // Create NvHttp object with the user input as the URL
             NvHttp nv = new NvHttp((string)e.Argument);
             XmlQuery pairInfo = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + nv.GetDeviceName());
-            if (String.Compare(pairInfo.XmlAttribute("sessionid"), "0") == 0 )
+            if (pairInfo.GetErrorMessage() != null)
             {
-                MessageBox.Show("Pairing Failed");
+                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Pairing failed: " + pairInfo.GetErrorMessage())));
                 bw.CancelAsync();
             }
+            // Session ID = 0; pairing failed
+            else if (String.Compare(pairInfo.XmlAttribute("sessionid"), "0") == 0 )
+            {
+                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Pairing failed: Session ID = 0")));
+                bw.CancelAsync();
+            }
+                // Session ID is okay - try to get the app list
             else
             {
                 XmlQuery appList = new XmlQuery(nv.baseUrl + "/applist?uniqueid=" + nv.GetDeviceName());
-                string steamIdStr = appList.XmlAttributeFromElement("ID", appList.XmlAttributeElement("App"));
-                steamId = Convert.ToInt32(steamIdStr);
-                Debug.WriteLine(steamId);
+                // Error querying app list
+                if (appList.GetErrorMessage() != null)
+                {
+                    Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("App list query failed: " + appList.GetErrorMessage())));
+                    bw.CancelAsync();
+                }
+                    // App list query went well - try to get the steam ID
+                else
+                {
+                    string steamIdStr = appList.XmlAttributeFromElement("ID", appList.XmlAttributeElement("App"));
+                    // Steam ID failed
+                    if (appList.GetErrorMessage() != null)
+                    {
+                        Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Failed to get Steam ID: " + appList.GetErrorMessage())));
+                    }
+                        // We're in the clear - save the Steam app ID and tell the user all went well
+                    else
+                    {
+                        steamId = Convert.ToInt32(steamIdStr);
+                        Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Pairing successfully completed")));
+                    }
+                }
             }
         }
        

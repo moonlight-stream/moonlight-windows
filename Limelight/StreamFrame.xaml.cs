@@ -66,9 +66,6 @@
         private BackgroundWorker bw = new BackgroundWorker();
         private String stageFailureText;
 
-        private IPAddress resolvedHost;
-        private AutoResetEvent stopWaitHandle = new AutoResetEvent(false);
-
         #endregion Class Variables
 
         #region Init
@@ -206,7 +203,7 @@
             }
             // Send the stage change to the UI thread. 
             // The dispatcher might not be quick enough for the user to see every stage
-            Dispatcher.BeginInvoke(new Action(() => setStateText(stateText)));
+            Deployment.Current.Dispatcher.BeginInvoke(new Action(() => setStateText(stateText)));
         }
 
         public void ClStageComplete(int stage)
@@ -283,8 +280,6 @@
             String hostnameString = (String)PhoneApplicationService.Current.State["host"];
             Dispatcher.BeginInvoke(new Action(() => setStateText("Resolving hostname...")));
             NvHttp nv = new NvHttp(hostnameString);
-            // Get the server info
-            XmlQuery serverInfo = new XmlQuery(nv.baseUrl + "/serverinfo");
 
             // Launch Steam
             XmlQuery launchGame = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetDeviceName() + "&appid=" + steamId);
@@ -324,9 +319,9 @@
                 MessageBoxResult result = MessageBox.Show(e.Error.Message);
                 if (result == MessageBoxResult.OK)
                 {
+                    cleanup(); 
                     // Return to the settings page
-                    NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
-                    // TODO clean up
+                    NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));                    
                 }
             }
 
@@ -338,6 +333,7 @@
                 if (result == MessageBoxResult.OK)
                 {
                     // Return to the settings page
+                    cleanup(); 
                     NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
                 }
             }
@@ -345,8 +341,7 @@
             // Everything completed normally - bring the user to the stream frame
             else
             {
-                Debug.WriteLine("Background Worker Successfully Completed");
-
+                Debug.WriteLine("Connection Background Worker Successfully Completed");
                 StreamDisplay.Visibility = Visibility.Visible;
             }
         }
@@ -406,6 +401,13 @@
         private void setStateText(string stateText)
         {
             currentStateText.Text = stateText;
+        }
+
+        private void cleanup()
+        {
+            this.steamId = 0;
+            AvStream.Dispose();
+            hasMoved = false; 
         }
 
     }

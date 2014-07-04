@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Xml.Linq;
-using System.Linq;
-using System.Windows;
-using System.Windows.Threading; 
 namespace Limelight
 {
     /// <summary>
@@ -17,7 +15,7 @@ namespace Limelight
         private Uri uri;
         private XDocument rawXml;
         private string rawXmlString;
-        WebClient client = new WebClient();
+        private string err = null; 
 
         /// <summary>
         ///  Initializes a new instance of the <see cref="XmlQuery"/> class. 
@@ -35,21 +33,22 @@ namespace Limelight
         /// <returns>The server info XML as a string</returns>
         private void GetXml()
         {
-            // TODO Handle page not found
-            lock (this)
+            if (rawXmlString == null)
             {
-                if (rawXmlString == null)
-                {
-                    client.DownloadStringCompleted += new DownloadStringCompletedEventHandler(XmlCallback);
-                    client.DownloadStringAsync(uri);
+                WebClient client = new WebClient();
+                client.DownloadStringCompleted += new DownloadStringCompletedEventHandler(XmlCallback);
+                client.DownloadStringAsync(uri);
 
-
-                    // Wait for the callback to complete
-                    completeEvent.WaitOne();
-                    completeEvent.Dispose(); 
-                }
+                    
+                // Wait for the callback to complete
+                completeEvent.WaitOne();
+                completeEvent.Dispose(); 
             }
-            this.rawXml = XDocument.Parse(rawXmlString); 
+            // If no error occured, keep on going
+            if (err == null)
+            {
+                this.rawXml = XDocument.Parse(rawXmlString); 
+            }
         }
         /// <summary>
         /// Given a tag, return the first XML attribute contained in this tag as a string
@@ -90,25 +89,34 @@ namespace Limelight
         }
 
         /// <summary>
+        /// Returns the XML error message for the caller
+        /// </summary>
+        /// <returns></returns>
+        public string GetErrorMessage()
+        {
+            return err; 
+        }
+
+        /// <summary>
         /// Sets the xmlString field to the XML string we just downloaded
         /// </summary>
         private void XmlCallback(object sender, DownloadStringCompletedEventArgs e)
         {
             // TODO error check
-            if (e.Error != null) { 
-                ExitFailure(e.Error.Message);
-        }
-
-            this.rawXmlString = e.Result;
-  
+            if (e.Error != null) {
+                ExitFailure(err);
+            }
+            else
+            {
+                this.rawXmlString = e.Result;
+            }
             completeEvent.Set();
         }
 
         private void ExitFailure(string failureMessage)
         {
             Debug.WriteLine("Failed: " + failureMessage);
-            MessageBox.Show(failureMessage);
-            // TODO reset everything
+            err = failureMessage; 
         }
 
         #region IDisposable implementation
