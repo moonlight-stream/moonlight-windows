@@ -290,7 +290,8 @@
 
             // Call into Common to start the connection
             Debug.WriteLine("Starting connection");
-            LimelightCommonRuntimeComponent.StartConnection((uint)nv.resolvedHost.Address, streamConfig, clCallbacks, drCallbacks, arCallbacks);
+            uint addr = (uint)nv.resolvedHost.Address;
+            LimelightCommonRuntimeComponent.StartConnection(addr, streamConfig, clCallbacks, drCallbacks, arCallbacks);
 
             // If one of the stages failed, tell the background worker to cancel
             if(stageFailureText != null)

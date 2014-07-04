@@ -8,8 +8,8 @@ namespace Limelight_common_binding
 	public ref class LimelightStreamConfiguration sealed
 	{
 	public:
-		LimelightStreamConfiguration(int width, int height, int fps) :
-			m_Width(width), m_Height(height), m_Fps(fps) {}
+		LimelightStreamConfiguration(int width, int height, int fps, int bitrate, int packetSize) :
+			m_Width(width), m_Height(height), m_Fps(fps), m_Bitrate(bitrate), m_PacketSize(packetSize) {}
 
 		int GetWidth(void) {
 			return m_Width;
@@ -20,11 +20,19 @@ namespace Limelight_common_binding
 		int GetFps(void) {
 			return m_Fps;
 		}
+		int GetBitrate(void) {
+			return m_Bitrate;
+		}
+		int GetPacketSize(void) {
+			return m_PacketSize;
+		}
 
 	private:
 		int m_Width;
 		int m_Height;
 		int m_Fps;
+		int m_Bitrate;
+		int m_PacketSize;
 	};
 
 	public delegate void DrSetup(int width, int height, int redrawRate, int drFlags);

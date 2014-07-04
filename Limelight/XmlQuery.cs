@@ -25,7 +25,6 @@ namespace Limelight
         /// <param name="url">URL of XML page</param>
         public XmlQuery(string url)
         {
-            Debug.WriteLine(url);
             uri = new Uri(url);
             completeEvent = new ManualResetEvent(false);
             GetXml(); 

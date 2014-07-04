@@ -141,6 +141,8 @@ int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, L
 	config.width = streamConfig->GetWidth();
 	config.height = streamConfig->GetHeight();
 	config.fps = streamConfig->GetFps();
+	config.bitrate = streamConfig->GetBitrate();
+	config.packetSize = streamConfig->GetPacketSize();
 	
 	s_ClCallbacks = clCallbacks;
 	s_DrCallbacks = drCallbacks;

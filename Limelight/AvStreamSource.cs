@@ -1,16 +1,14 @@
-﻿namespace Limelight
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
+using System.Windows.Media;
+using Windows.Storage.Streams;
+namespace Limelight
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Globalization;
-    using System.IO;
-    using System.Linq;
-    using System.Runtime.InteropServices.WindowsRuntime;
-    using System.Threading;
-    using System.Windows.Media;
-    using Windows.Storage.Streams;
-
     /// <summary>
     /// Custom source for a video stream
     /// </summary>
@@ -140,12 +138,12 @@
 
             if (canDirectSubmit)
             {
-                Debug.WriteLine("Direct submitting NALU");
+                //Debug.WriteLine("Direct submitting NALU");
                 SubmitVideoSample(videoSample);
             }
             else
             {
-                Debug.WriteLine("Queued NALU");
+                //Debug.WriteLine("Queued NALU");
             }
         }
 
@@ -235,12 +233,12 @@
 
             if (canDirectSubmit)
             {
-                Debug.WriteLine("Direct submitting LPCM sample");
+                //Debug.WriteLine("Direct submitting LPCM sample");
                 SubmitAudioSample(audioSample);
             }
             else
             {
-                Debug.WriteLine("Queued LPCM sample");
+                //Debug.WriteLine("Queued LPCM sample");
                 SendAudioSamples();
             }
         }
@@ -258,7 +256,7 @@
                 (long)frameNumber, // FIXME?
                 emptySampleDict);
 
-            Debug.WriteLine("Submitting audio samples");
+            //Debug.WriteLine("Submitting audio samples");
             ReportGetSampleCompleted(mediaStreamSamp);
         }
 
@@ -300,7 +298,6 @@
         private void SubmitVideoSample(VideoSample videoSample)
         {
             Stream sampleStream = WindowsRuntimeBufferExtensions.AsStream(videoSample.buffer);
-
             // Send out the next NAL
             MediaStreamSample mediaStreamSamp = new MediaStreamSample(
                 videoDesc,
@@ -310,7 +307,7 @@
                 (long)videoSample.frameNumber,
                 emptySampleDict);
 
-            Debug.WriteLine("Submitting video samples");
+            //Debug.WriteLine("Submitting video samples");
             ReportGetSampleCompleted(mediaStreamSamp);
         }
 
@@ -338,7 +335,7 @@
                 {
                     if (nalQueue.Count() % 10 == 0)
                     {
-                        Debug.WriteLine("Queued NALs: " + nalQueue.Count());
+                        //Debug.WriteLine("Queued NALs: " + nalQueue.Count());
                     }
 
                     if (nalQueue.Count() == 0)
@@ -528,7 +525,7 @@
         /// <param name="seekToTime">The time as represented by 100 nanosecond increments to seek to</param>
         protected override void SeekAsync(long seekToTime)
         {
-            Debug.WriteLine("Seeking to " + seekToTime);
+            //Debug.WriteLine("Seeking to " + seekToTime);
             ReportSeekCompleted(seekToTime); 
         }
 

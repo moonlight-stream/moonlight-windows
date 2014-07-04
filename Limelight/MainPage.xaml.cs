@@ -50,7 +50,6 @@ namespace Limelight
             {
                 MessageBox.Show("Device not paired correctly: Steam not found");
             }
-
         }
 
         /// <summary>

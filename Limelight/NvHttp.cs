@@ -10,8 +10,7 @@ namespace Limelight
 {
     public class NvHttp : IDisposable
     {
-        private String uniqueId;
-	    private String deviceName;
+
         private ManualResetEvent completeEvent;
 
 	    public const int PORT = 47989;
@@ -24,10 +23,6 @@ namespace Limelight
             completeEvent = new ManualResetEvent(false);
             ResolveHostName(hostnameString);
             this.baseUrl = "http://" + resolvedHost.ToString() + ":" + PORT;
-            this.deviceName = GetDeviceName();
-            this.uniqueId = GetDeviceName();
-            Debug.WriteLine(deviceName);
-            Debug.WriteLine(uniqueId);
         }
 
         /// <summary>
@@ -64,7 +59,6 @@ namespace Limelight
             if (endpoints != null && endpoints.Length > 0)
             {
                 var ipAddress = endpoints[0].Address;
-                Debug.WriteLine("The IP address is " + ipAddress.ToString());
                 this.resolvedHost = ipAddress;
             }
             completeEvent.Set();
