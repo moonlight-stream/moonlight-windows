@@ -17,6 +17,7 @@
     /// <summary>
     /// UI Frame that contains the media element that streams Steam
     /// </summary>
+
     public partial class StreamFrame : PhoneApplicationPage
     {
         #region Class Variables
@@ -24,7 +25,7 @@
         /// <summary>
         /// App ID of Steam, received from the Main Page
         /// </summary>
-        private int steamId; 
+        private int steamId;
 
         /// <summary>
         /// Connection stage identifiers
@@ -65,6 +66,9 @@
         private BackgroundWorker bw = new BackgroundWorker();
         private String stageFailureText;
 
+        private IPAddress resolvedHost;
+        private AutoResetEvent stopWaitHandle = new AutoResetEvent(false);
+
         #endregion Class Variables
 
         #region Init
@@ -91,20 +95,24 @@
             string parameter = string.Empty;
 
 
+            // Audio/video stream source init
             AvStream = new AvStreamSource(frameWidth, frameHeight);
             StreamDisplay.SetSource(AvStream);
             StreamDisplay.AutoPlay = true;
             StreamDisplay.Play();
 
-            bw.WorkerReportsProgress = false;
-            bw.WorkerSupportsCancellation = false;
-
+            // Background Worker Init
+            bw.WorkerReportsProgress = true;
+            bw.WorkerSupportsCancellation = true;
             bw.DoWork += new DoWorkEventHandler(bwDoWork);
             bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bwRunWorkerCompleted);
 
             Waitgrid.Visibility = Visibility.Visible;
             currentStateText.Visibility = Visibility.Visible;
+            // Run the background worker that starts the connection
+
             bw.RunWorkerAsync();
+
         }
 
         #endregion Init
@@ -162,7 +170,7 @@
 
         public void ClStageStarting(int stage)
         {
-            String stateText = ""; 
+            String stateText = "";
             switch (stage)
             {
                 case STAGE_PLATFORM_INIT:
@@ -294,7 +302,7 @@
             LimelightCommonRuntimeComponent.StartConnection(addr, streamConfig, clCallbacks, drCallbacks, arCallbacks);
 
             // If one of the stages failed, tell the background worker to cancel
-            if(stageFailureText != null)
+            if (stageFailureText != null)
             {
                 Debug.WriteLine("Stage failed - background worker cancelled");
                 e.Cancel = true;
@@ -307,7 +315,7 @@
         void bwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             this.Waitgrid.Visibility = Visibility.Collapsed;
-            this.currentStateText.Visibility = Visibility.Collapsed; 
+            this.currentStateText.Visibility = Visibility.Collapsed;
 
             // Check to see if an error occurred in the background process.
             if (e.Error != null)
@@ -323,23 +331,23 @@
             }
 
             // If the connection attempt was cancelled by a failed stage
-            else if(e.Cancelled) 
+            else if (e.Cancelled)
             {
                 // Inform the user of the failure via a message box
-                MessageBoxResult result = MessageBox.Show(stageFailureText, "Failure Starting Connection",  MessageBoxButton.OK);
+                MessageBoxResult result = MessageBox.Show(stageFailureText, "Failure Starting Connection", MessageBoxButton.OK);
                 if (result == MessageBoxResult.OK)
                 {
                     // Return to the settings page
                     NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
                 }
             }
-                
+
             // Everything completed normally - bring the user to the stream frame
             else
             {
                 Debug.WriteLine("Background Worker Successfully Completed");
 
-                StreamDisplay.Visibility = Visibility.Visible; 
+                StreamDisplay.Visibility = Visibility.Visible;
             }
         }
 
@@ -353,7 +361,7 @@
         private void touchDownEvent(object sender, System.Windows.Input.ManipulationStartedEventArgs e)
         {
             MouseState ms = Mouse.GetState();
-            hasMoved = false; 
+            hasMoved = false;
         }
 
         private void touchUpEvent(object sender, System.Windows.Input.ManipulationCompletedEventArgs e)
@@ -362,14 +370,15 @@
             {
                 // We haven't moved so send a click
 
-                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, (int)MouseButton.Left); 
+                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, (int)MouseButton.Left);
 
                 // Sleep here because some games do input detection by polling
                 try
                 {
                     Thread.Sleep(100);
                 }
-                catch (Exception ex) {
+                catch (Exception ex)
+                {
                     Debug.WriteLine("Thread.sleep threw exception " + ex.StackTrace);
                 }
 
@@ -396,9 +405,9 @@
         /// <param name="stateText"></param>
         private void setStateText(string stateText)
         {
-            currentStateText.Text = stateText; 
+            currentStateText.Text = stateText;
         }
 
-        #endregion Private Methods
     }
+        #endregion Private Methods
 }

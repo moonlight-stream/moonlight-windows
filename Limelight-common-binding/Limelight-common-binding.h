@@ -189,11 +189,12 @@ namespace Limelight_common_binding
 	public:
 		static int StartConnection(unsigned int hostAddress, LimelightStreamConfiguration ^streamConfig,
 			LimelightConnectionListener ^clCallbacks, LimelightDecoderRenderer ^drCallbacks, LimelightAudioRenderer ^arCallbacks);
+
 		static void StopConnection(void);
-
 		static int SendMouseMoveEvent(short deltaX, short deltaY);
-
 		static int SendMouseButtonEvent(unsigned char action, int button);
 		static int SendKeyboardEvent(short keyCode, unsigned char keyAction, unsigned char modifiers);
+		static int sendControllerInput(short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX, 
+			short leftStickY, short rightStickX, short rightStickY);
 	};
 }
