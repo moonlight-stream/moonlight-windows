@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -22,6 +23,7 @@ namespace Limelight
     /// </summary>
     public partial class MainPage : PhoneApplicationPage
     {
+
         BackgroundWorker bw = new BackgroundWorker(); 
         /// <summary>
         /// Initializes a new instance of the MainPage class.
@@ -29,6 +31,12 @@ namespace Limelight
         public MainPage()
         {
             InitializeComponent();
+            LoadSettings(); 
+
+            // Set up background worker for pairing
+            bw.WorkerSupportsCancellation = true;
+            bw.DoWork += new DoWorkEventHandler(bwDoWork);
+            bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bwRunWorkerCompleted);
         }
 
         #region Event Handlers
@@ -37,6 +45,7 @@ namespace Limelight
         /// </summary>
         private void StreamButton_Click(object sender, RoutedEventArgs e)
         {
+            SaveSettings(); 
             Debug.WriteLine("Start Streaming button pressed");
 
             // Save the user's host input and send it to the streamframe page
@@ -49,10 +58,40 @@ namespace Limelight
         /// </summary>
         private void PairButton_Click(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine("Pairing...");
-            // TODO call currently non-existent pair method
-            // TODO tell the user that the device is pairing
+            SaveSettings(); 
+            bw.RunWorkerAsync(); 
         }
+
+        /// <summary>
+        /// Save the settings the user has set so they can be persisted
+        /// </summary>
+        private void SaveSettings()
+        {
+            IsolatedStorageSettings settings = IsolatedStorageSettings.ApplicationSettings;
+            // Save hostname text box
+            if (!settings.Contains("hostname"))
+            {
+                settings.Add("hostname", host_textbox.Text);
+            }
+            else
+            {
+                settings["hostname"] = host_textbox.Text;
+            }
+            settings.Save();
+        }
+
+        /// <summary>
+        /// Load the user settings
+        /// </summary>
+        private void LoadSettings()
+        {
+            // Load hostname
+            if (IsolatedStorageSettings.ApplicationSettings.Contains("hostname"))
+            {
+                host_textbox.Text = IsolatedStorageSettings.ApplicationSettings["hostname"] as string;
+            }
+        }
+
         #endregion Event Handlers
 
         #region Background Worker
