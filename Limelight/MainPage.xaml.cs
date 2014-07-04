@@ -1,20 +1,11 @@
-﻿using Limelight.Resources;
-using Limelight_common_binding;
-using Microsoft.Phone.Controls;
-using Microsoft.Phone.Reactive;
+﻿using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.IsolatedStorage;
-using System.Linq;
-using System.Net;
-using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Navigation;
-using System.Windows.Threading;
 
 namespace Limelight
 {
@@ -24,7 +15,9 @@ namespace Limelight
     public partial class MainPage : PhoneApplicationPage
     {
 
-        BackgroundWorker bw = new BackgroundWorker(); 
+        BackgroundWorker bw = new BackgroundWorker();
+        int steamId = 0; 
+
         /// <summary>
         /// Initializes a new instance of the MainPage class.
         /// </summary>
@@ -47,10 +40,17 @@ namespace Limelight
         {
             SaveSettings(); 
             Debug.WriteLine("Start Streaming button pressed");
+            if (steamId != 0)
+            {
+                // Save the user's host input and send it to the streamframe page
+                PhoneApplicationService.Current.State["host"] = host_textbox.Text;
+                NavigationService.Navigate(new Uri("/StreamFrame.xaml?steamId="+steamId, UriKind.Relative));
+            }
+            else
+            {
+                MessageBox.Show("Device not paired correctly: Steam not found");
+            }
 
-            // Save the user's host input and send it to the streamframe page
-            PhoneApplicationService.Current.State["host"] = host_textbox.Text; 
-            NavigationService.Navigate(new Uri("/StreamFrame.xaml", UriKind.Relative));
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Limelight
         private void PairButton_Click(object sender, RoutedEventArgs e)
         {
             SaveSettings(); 
-            bw.RunWorkerAsync(); 
+            bw.RunWorkerAsync(host_textbox.Text); 
         }
 
         /// <summary>
@@ -101,11 +101,24 @@ namespace Limelight
         /// </summary>
         private void bwDoWork(object sender, DoWorkEventArgs e)
         {
-            Debug.WriteLine("Doing work");
-            // TODO do the pair thing
-            NvHttp.GetMacAddressString(); 
+            Debug.WriteLine("Pairing ");
+            // Create NvHttp object with the user input as the URL
+            NvHttp nv = new NvHttp((string)e.Argument);
+            XmlQuery pairInfo = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + nv.GetDeviceName());
+            if (String.Compare(pairInfo.XmlAttribute("sessionid"), "0") == 0 )
+            {
+                MessageBox.Show("Pairing Failed");
+                bw.CancelAsync();
+            }
+            else
+            {
+                XmlQuery appList = new XmlQuery(nv.baseUrl + "/applist?uniqueid=" + nv.GetDeviceName());
+                string steamIdStr = appList.XmlAttributeFromElement("ID", appList.XmlAttributeElement("App"));
+                steamId = Convert.ToInt32(steamIdStr);
+                Debug.WriteLine(steamId);
+            }
         }
-
+       
         // <summary>
         /// Runs once the background worker completes
         /// </summary>
@@ -114,16 +127,16 @@ namespace Limelight
             // Check to see if an error occurred in the background process.
             if (e.Error != null)
             {
-                Debug.WriteLine("Error while performing pairing.");
+                MessageBox.Show("Pairing error: " + e.Error.Message);
             }
 
-            // If the connection attempt was cancelled by a failed stage
+            // If the connection attempt was manually cancelled
             else if (e.Cancelled)
             {
-                Debug.WriteLine("Pairing cancelled.");
+                MessageBox.Show("Pairing error");
             }
 
-            // Everything completed normally - bring the user to the stream frame
+            // Everything completed normally
             else
             {
                 Debug.WriteLine("Pairing background Worker Successfully Completed");

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Net.NetworkInformation;
+using System.Linq; 
 
 namespace Limelight
 {
@@ -11,7 +12,6 @@ namespace Limelight
     {
         private String uniqueId;
 	    private String deviceName;
-        private String hostString; 
         private ManualResetEvent completeEvent;
 
 	    public const int PORT = 47989;
@@ -25,28 +25,18 @@ namespace Limelight
             ResolveHostName(hostnameString);
             this.baseUrl = "http://" + resolvedHost.ToString() + ":" + PORT;
             this.deviceName = GetDeviceName();
-            this.uniqueId = GetMacAddressString();
+            this.uniqueId = GetDeviceName();
             Debug.WriteLine(deviceName);
             Debug.WriteLine(uniqueId);
         }
 
         /// <summary>
-        /// Get the local device's mac address
+        /// Get the local device's name
         /// </summary>
         /// <returns>Mac address</returns>
-        public static String GetMacAddressString()
+        public String GetDeviceName()
         {
-            byte[] myDeviceID = (byte[])Microsoft.Phone.Info.DeviceExtendedProperties.GetValue("DeviceUniqueId");
-            return BitConverter.ToString(myDeviceID); 
-        }
-
-        /// <summary>
-        /// Gets the local device's name
-        /// </summary>
-        /// <returns>Device name</returns>
-        public static String GetDeviceName()
-        {
-            return (String)Microsoft.Phone.Info.DeviceExtendedProperties.GetValue("DeviceName");
+            return Microsoft.Phone.Info.DeviceStatus.DeviceName;
         }
 
         /// <summary>

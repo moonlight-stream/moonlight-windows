@@ -11,7 +11,8 @@
     using System.ComponentModel;
     using Microsoft.Phone.Shell;
     using Microsoft.Phone.Net.NetworkInformation;
-    using System.Threading.Tasks; 
+    using System.Threading.Tasks;
+    using System.Windows.Navigation; 
 
     /// <summary>
     /// UI Frame that contains the media element that streams Steam
@@ -19,6 +20,11 @@
     public partial class StreamFrame : PhoneApplicationPage
     {
         #region Class Variables
+
+        /// <summary>
+        /// App ID of Steam, received from the Main Page
+        /// </summary>
+        private int steamId; 
 
         /// <summary>
         /// Connection stage identifiers
@@ -63,18 +69,27 @@
 
         #region Init
 
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            if (this.NavigationContext.QueryString.ContainsKey("steamId"))
+            {
+                steamId = Convert.ToInt32(this.NavigationContext.QueryString["steamId"]);
+                Debug.WriteLine(steamId);
+            }
+            else
+            {
+                Debug.WriteLine("Error passing Steam ID");
+            }
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="StreamFrame"/> class. 
         /// </summary>
         public StreamFrame()
         {
             InitializeComponent();
+            string parameter = string.Empty;
 
-            // Set up the XML query object with serverinfo
-            // TODO the real url
-
-
-            // TODO Convince the app to run synchronously 
 
             AvStream = new AvStreamSource(frameWidth, frameHeight);
             StreamDisplay.SetSource(AvStream);
@@ -91,6 +106,7 @@
             currentStateText.Visibility = Visibility.Visible;
             bw.RunWorkerAsync();
         }
+
         #endregion Init
 
         #region Callbacks
@@ -259,8 +275,11 @@
             String hostnameString = (String)PhoneApplicationService.Current.State["host"];
             Dispatcher.BeginInvoke(new Action(() => setStateText("Resolving hostname...")));
             NvHttp nv = new NvHttp(hostnameString);
+            // Get the server info
+            XmlQuery serverInfo = new XmlQuery(nv.baseUrl + "/serverinfo");
 
-            ServerInfo serverInfo = new ServerInfo(nv.baseUrl + "/serverinfo");
+            // Launch Steam
+            XmlQuery launchGame = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetDeviceName() + "&appid=" + steamId);
 
             // Set up callbacks
             LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 10000, 1024); // TODO a magic number. Get FPS from the settings
@@ -321,7 +340,6 @@
 
                 StreamDisplay.Visibility = Visibility.Visible; 
             }
-
         }
 
         #endregion Background Worker

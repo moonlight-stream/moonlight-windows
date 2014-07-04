@@ -103,6 +103,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>AppResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="XmlQuery.cs" />
     <Compile Include="StreamFrame.xaml.cs">
       <DependentUpon>StreamFrame.xaml</DependentUpon>
     </Compile>
