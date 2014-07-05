@@ -33,18 +33,19 @@ namespace Limelight
         /// <returns>The server info XML as a string</returns>
         private void GetXml()
         {
+            Debug.WriteLine(uri);
             if (rawXmlString == null)
             {
                 WebClient client = new WebClient();
                 client.DownloadStringCompleted += new DownloadStringCompletedEventHandler(XmlCallback);
                 client.DownloadStringAsync(uri);
-
                     
                 // Wait for the callback to complete
                 completeEvent.WaitOne();
+                // We don't need this anymore - dispose
                 completeEvent.Dispose(); 
             }
-            // If no error occured, keep on going
+            // If no error occured, convert the string to a more easily-parsable XDocument
             if (err == null)
             {
                 this.rawXml = XDocument.Parse(rawXmlString); 
@@ -53,8 +54,8 @@ namespace Limelight
         /// <summary>
         /// Given a tag, return the first XML attribute contained in this tag as a string
         /// </summary>
-        /// <param name="tag"></param>
-        /// <returns></returns>
+        /// <param name="tag">Tag containing the desired attribute</param>
+        /// <returns>The first attribute within the given tag</returns>
         public string XmlAttribute(string tag)
         {
             // TODO handle not found
@@ -64,24 +65,13 @@ namespace Limelight
         }
 
         /// <summary>
-        /// Given a tag, return the first XML attribute contained in this tag as an XElement
-        /// </summary>
-        /// <param name="tag"></param>
-        /// <returns></returns>
-        public XElement XmlAttributeElement(string tag)
-        {
-            // TODO handle not found
-            var query = from c in rawXml.Descendants(tag) select c;
-            return query.FirstOrDefault(); 
-        }
-       
-        /// <summary>
         /// Given an XElement and a tag, search within that element for the first attribute contained within the tag
         /// </summary>
         /// <param name="tag">XML tag</param>
         /// <param name="element">XElement to search within</param>
-        /// <returns></returns>
-        public string XmlAttributeFromElement(string tag, XElement element){
+        /// <returns>The first attribute within the given tag in the XElement</returns>
+        public string XmlAttribute(string tag, XElement element)
+        {
             // TODO handle not found
             var query = from c in element.Descendants(tag) select c;
             string attribute = query.FirstOrDefault().Value;
@@ -89,9 +79,21 @@ namespace Limelight
         }
 
         /// <summary>
+        /// Given a tag, return the first XML attribute contained in this tag as an XElement
+        /// </summary>
+        /// <param name="tag">Tag containing the desired attribute</param>
+        /// <returns>The first attribute within the given tag</returns>
+        public XElement XmlAttributeElement(string tag)
+        {
+            // TODO handle not found
+            var query = from c in rawXml.Descendants(tag) select c;
+            return query.FirstOrDefault(); 
+        }
+
+        /// <summary>
         /// Returns the XML error message for the caller
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Error message string. If no error, returns null</returns>
         public string GetErrorMessage()
         {
             return err; 
@@ -102,17 +104,22 @@ namespace Limelight
         /// </summary>
         private void XmlCallback(object sender, DownloadStringCompletedEventArgs e)
         {
-            // TODO error check
+            // If an error occurred downloading the XML, fail
             if (e.Error != null) {
-                ExitFailure(err);
+                ExitFailure(e.Error.Message);
             }
+                // Otherwise, get the XML String
             else
             {
                 this.rawXmlString = e.Result;
             }
+            // Unblock the thread
             completeEvent.Set();
         }
-
+        /// <summary>
+        /// If XML query fails, set an error message for the caller
+        /// </summary>
+        /// <param name="failureMessage">Error message</param>
         private void ExitFailure(string failureMessage)
         {
             Debug.WriteLine("Failed: " + failureMessage);
@@ -120,7 +127,9 @@ namespace Limelight
         }
 
         #region IDisposable implementation
-
+        /// <summary>
+        /// Dispose of the ManualResetEvent
+        /// </summary>
         protected virtual void Dispose(bool managed)
         {
             if (managed)

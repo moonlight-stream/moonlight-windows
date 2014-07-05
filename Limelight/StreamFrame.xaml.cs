@@ -282,7 +282,13 @@
             NvHttp nv = new NvHttp(hostnameString);
 
             // Launch Steam
-            XmlQuery launchGame = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetDeviceName() + "&appid=" + steamId);
+            XmlQuery launchApp = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetDeviceName() + "&appid=" + steamId);
+            if (launchApp.GetErrorMessage() != null)
+            {
+                Debug.WriteLine("Can't find steam");
+                stageFailureText = "Error launching Steam";
+                e.Cancel = true;
+            }
 
             // Set up callbacks
             LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 10000, 1024); // TODO a magic number. Get FPS from the settings
@@ -304,7 +310,7 @@
             }
         }
 
-        // <summary>
+        /// <summary>
         /// Runs once the background worker completes
         /// </summary>
         void bwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -345,10 +351,9 @@
                 StreamDisplay.Visibility = Visibility.Visible;
             }
         }
-
         #endregion Background Worker
 
-        #region Private Methods
+        #region Touch events
 
         /// <summary>
         /// Touch event initiated
@@ -359,6 +364,9 @@
             hasMoved = false;
         }
 
+        /// <summary>
+        /// Event handler for mouse click - send mouse event to the streaming PC
+        /// </summary>
         private void touchUpEvent(object sender, System.Windows.Input.ManipulationCompletedEventArgs e)
         {
             if (!hasMoved)
@@ -382,6 +390,9 @@
             }
         }
 
+        /// <summary>
+        /// Event handler for mouse movement - send mouse move event to the streaming PC
+        /// </summary>
         private void touchMoveEvent(object sender, System.Windows.Input.ManipulationDeltaEventArgs e)
         {
             MouseState ms = Mouse.GetState();
@@ -393,16 +404,21 @@
                 LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(ms.X - e.DeltaManipulation.Translation.X), (short)(ms.Y - e.DeltaManipulation.Translation.Y));
             }
         }
+        #endregion Touch events
 
+        #region Helper methods
         /// <summary>
         /// Let the dispatcher set the state text on the progress bar
         /// </summary>
-        /// <param name="stateText"></param>
+        /// <param name="stateText">The text to display on the progress bar</param>
         private void setStateText(string stateText)
         {
             currentStateText.Text = stateText;
         }
 
+        /// <summary>
+        /// Clean up resources
+        /// </summary>
         private void cleanup()
         {
             this.steamId = 0;
@@ -411,5 +427,5 @@
         }
 
     }
-        #endregion Private Methods
+        #endregion Helper Methods
 }

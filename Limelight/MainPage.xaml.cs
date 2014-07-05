@@ -14,8 +14,12 @@ namespace Limelight
     /// </summary>
     public partial class MainPage : PhoneApplicationPage
     {
-        BackgroundWorker bw = new BackgroundWorker();
-        int steamId = 0; 
+        private BackgroundWorker pairBw = new BackgroundWorker();
+        private BackgroundWorker streamBw = new BackgroundWorker(); 
+        /// <summary>
+        /// Steam App ID
+        /// </summary>
+        private int steamId = 0; 
 
         /// <summary>
         /// Initializes a new instance of the MainPage class.
@@ -26,10 +30,15 @@ namespace Limelight
             LoadSettings(); 
 
             // Set up background worker for pairing
-            bw.WorkerSupportsCancellation = true;
-            bw.DoWork += new DoWorkEventHandler(bwDoWork);
-            bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bwRunWorkerCompleted);
-        }
+            pairBw.WorkerSupportsCancellation = true;
+            pairBw.DoWork += new DoWorkEventHandler(pairBwDoWork);
+            pairBw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(pairBwRunWorkerCompleted);
+
+            // Set up background worker for stream setup
+            streamBw.WorkerSupportsCancellation = true;
+            streamBw.DoWork += new DoWorkEventHandler(streamBwDoWork);
+            streamBw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(streamBwRunWorkerCompleted);
+        } 
 
         #region Event Handlers
         /// <summary>
@@ -39,27 +48,7 @@ namespace Limelight
         {
             SaveSettings(); 
             Debug.WriteLine("Start Streaming button pressed");
-            NvHttp nv = new NvHttp(host_textbox.Text);
-            XmlQuery pairState = new XmlQuery(nv.baseUrl + "/pairstate?uniqueid=" + nv.GetDeviceName());
-            if (pairState.GetErrorMessage() != null)
-            {
-                MessageBox.Show("Failed to get pair state");
-            }
-            else if (String.Compare(pairState.XmlAttribute("paired"), "0") == 0)
-            {
-                MessageBox.Show("Device not paired");
-            }
-            else if (steamId == 0)
-            {
-                MessageBox.Show("Failed to find Steam");
-            } 
-            else
-            {
-                // Save the user's host input and send it to the streamframe page
-                PhoneApplicationService.Current.State["host"] = host_textbox.Text;
-                NavigationService.Navigate(new Uri("/StreamFrame.xaml?steamId="+steamId, UriKind.Relative));
-            }
-
+            streamBw.RunWorkerAsync(host_textbox.Text); 
         }
 
         /// <summary>
@@ -67,10 +56,12 @@ namespace Limelight
         /// </summary>
         private void PairButton_Click(object sender, RoutedEventArgs e)
         {
-            bw.RunWorkerAsync(host_textbox.Text);
+            pairBw.RunWorkerAsync(host_textbox.Text);
             SaveSettings(); 
         }
+        #endregion Event Handlers
 
+        #region Persistent Settings
         /// <summary>
         /// Save the settings the user has set so they can be persisted
         /// </summary>
@@ -90,25 +81,93 @@ namespace Limelight
         }
 
         /// <summary>
-        /// Load the user settings
+        /// Load persisted settings
         /// </summary>
         private void LoadSettings()
         {
-            // Load hostname
+            // Load hostname into the textbox, if any
             if (IsolatedStorageSettings.ApplicationSettings.Contains("hostname"))
             {
                 host_textbox.Text = IsolatedStorageSettings.ApplicationSettings["hostname"] as string;
             }
         }
+        #endregion Persistent Settings
 
-        #endregion Event Handlers
-
-        #region Background Worker
+        #region Background Workers
 
         /// <summary>
-        /// Event handler for Background Worker's doWork event.
+        /// Runs upon completion of checking pair state
         /// </summary>
-        private void bwDoWork(object sender, DoWorkEventArgs e)
+        private void streamBwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            Debug.WriteLine("BW done");
+            if (e.Error != null)
+            {
+                MessageBox.Show("Error getting device pair state. Check the hostname and try again");
+                Debug.WriteLine("Stream BW Error");
+            }
+            else if (e.Cancelled)
+            {
+                Debug.WriteLine("Stream BW Cancelled");
+            }
+            else
+            {
+                // Save the user's host input and send it to the streamframe page
+                PhoneApplicationService.Current.State["host"] = host_textbox.Text;
+                NavigationService.Navigate(new Uri("/StreamFrame.xaml?steamId=" + steamId, UriKind.Relative));
+            }
+            Debug.WriteLine("Stream BW completed");
+        }
+
+        /// <summary>
+        /// When the user presses "Start Streaming Steam", first check that they are paired in the background worker
+        /// </summary>
+        private void streamBwDoWork(object sender, DoWorkEventArgs e)
+        {
+            NvHttp nv = new NvHttp((string)e.Argument);
+            XmlQuery pairState = new XmlQuery(nv.baseUrl + "/pairstate?uniqueid=" + nv.GetDeviceName());
+            if (pairState.GetErrorMessage() != null)
+            {
+                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Failed to get pair state")));
+                e.Cancel = true; 
+            }
+            else if (String.Compare(pairState.XmlAttribute("paired"), "0") == 0)
+            {
+                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Device not paired")));
+                e.Cancel = true; 
+            }
+            // TODO This is gross repeated code - fix it
+            if (steamId == 0)
+            {
+                XmlQuery appList = new XmlQuery(nv.baseUrl + "/applist?uniqueid=" + nv.GetDeviceName());
+                // Error querying app list
+                if (appList.GetErrorMessage() != null)
+                {
+                    Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("App list query failed: " + appList.GetErrorMessage())));
+                    e.Cancel = true;
+                }
+                // App list query went well - try to get the steam ID
+                else
+                {
+                    string steamIdStr = appList.XmlAttribute("ID", appList.XmlAttributeElement("App"));
+                    // Steam ID failed
+                    if (appList.GetErrorMessage() != null)
+                    {
+                        Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Failed to get Steam ID: " + appList.GetErrorMessage())));
+                        e.Cancel = true;
+                    }
+                    // We're in the clear - save the Steam app ID
+                    {
+                        steamId = Convert.ToInt32(steamIdStr);
+                    }
+                }
+            }                
+        }
+
+        /// <summary>
+        /// Pair with the hostname in the textbox
+        /// </summary>
+        private void pairBwDoWork(object sender, DoWorkEventArgs e)
         {
             Debug.WriteLine("Pairing ");
             // Create NvHttp object with the user input as the URL
@@ -117,13 +176,13 @@ namespace Limelight
             if (pairInfo.GetErrorMessage() != null)
             {
                 Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Pairing failed: " + pairInfo.GetErrorMessage())));
-                bw.CancelAsync();
+                e.Cancel = true;  
             }
             // Session ID = 0; pairing failed
             else if (String.Compare(pairInfo.XmlAttribute("sessionid"), "0") == 0 )
             {
                 Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Pairing failed: Session ID = 0")));
-                bw.CancelAsync();
+                e.Cancel = true; 
             }
                 // Session ID is okay - try to get the app list
             else
@@ -133,16 +192,17 @@ namespace Limelight
                 if (appList.GetErrorMessage() != null)
                 {
                     Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("App list query failed: " + appList.GetErrorMessage())));
-                    bw.CancelAsync();
+                    e.Cancel = true; 
                 }
                     // App list query went well - try to get the steam ID
                 else
                 {
-                    string steamIdStr = appList.XmlAttributeFromElement("ID", appList.XmlAttributeElement("App"));
+                    string steamIdStr = appList.XmlAttribute("ID", appList.XmlAttributeElement("App"));
                     // Steam ID failed
                     if (appList.GetErrorMessage() != null)
                     {
                         Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Failed to get Steam ID: " + appList.GetErrorMessage())));
+                        e.Cancel = true; 
                     }
                         // We're in the clear - save the Steam app ID and tell the user all went well
                     else
@@ -154,21 +214,15 @@ namespace Limelight
             }
         }
        
-        // <summary>
+        /// <summary>
         /// Runs once the background worker completes
         /// </summary>
-        void bwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        void pairBwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             // Check to see if an error occurred in the background process.
             if (e.Error != null)
             {
                 MessageBox.Show("Pairing error: " + e.Error.Message);
-            }
-
-            // If the connection attempt was manually cancelled
-            else if (e.Cancelled)
-            {
-                MessageBox.Show("Pairing error");
             }
 
             // Everything completed normally
@@ -178,6 +232,6 @@ namespace Limelight
             }
         }
 
-        #endregion Background Worker
+        #endregion Background Workers
     }
 }
