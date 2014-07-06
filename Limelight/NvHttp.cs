@@ -1,10 +1,7 @@
 ﻿using Microsoft.Phone.Net.NetworkInformation;
 using System;
-using System.Diagnostics;
 using System.Net;
 using System.Threading;
-using System.Net.NetworkInformation;
-using System.Linq; 
 
 namespace Limelight
 {

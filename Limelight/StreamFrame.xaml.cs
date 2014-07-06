@@ -1,23 +1,19 @@
 ﻿namespace Limelight
 {
-    using System.Net;
-    using System.Threading;
-    using System.Windows;
     using Limelight_common_binding;
     using Microsoft.Phone.Controls;
-    using System.Diagnostics;
+    using Microsoft.Phone.Shell;
     using Microsoft.Xna.Framework.Input;
     using System;
     using System.ComponentModel;
-    using Microsoft.Phone.Shell;
-    using Microsoft.Phone.Net.NetworkInformation;
-    using System.Threading.Tasks;
+    using System.Diagnostics;
+    using System.Threading;
+    using System.Windows;
     using System.Windows.Navigation; 
 
     /// <summary>
-    /// UI Frame that contains the media element that streams Steam
+    /// UI Frame that contains the streaming media element
     /// </summary>
-
     public partial class StreamFrame : PhoneApplicationPage
     {
         #region Class Variables
@@ -165,6 +161,10 @@
             AvStream.EnqueueAudioSamples(data);
         }
 
+        /// <summary>
+        /// Stage beginning callback. Updates the connection progress bar with the current stage
+        /// </summary>
+        /// <param name="stage"></param>
         public void ClStageStarting(int stage)
         {
             String stateText = "";
@@ -206,11 +206,20 @@
             Deployment.Current.Dispatcher.BeginInvoke(new Action(() => setStateText(stateText)));
         }
 
+        /// <summary>
+        /// Connection stage complete callback
+        /// </summary>
+        /// <param name="stage">Stage number</param>
         public void ClStageComplete(int stage)
         {
 
         }
 
+        /// <summary>
+        /// Connection stage failed callback
+        /// </summary>
+        /// <param name="stage">Stage number</param>
+        /// <param name="errorCode">Error code for stage failure</param>
         public void ClStageFailed(int stage, int errorCode)
         {
             switch (stage)
@@ -248,11 +257,18 @@
             }
         }
 
+        /// <summary>
+        /// Connection stage started callback
+        /// </summary>
         public void ClConnectionStarted()
         {
 
         }
 
+        /// <summary>
+        /// Connection stage terminated callback
+        /// </summary>
+        /// <param name="errorCode">Error code for connection terminated</param>
         public void ClConnectionTerminated(int errorCode)
         {
             Debug.WriteLine("Connection terminated: " + errorCode);
@@ -272,7 +288,7 @@
         #region Background Worker
 
         /// <summary>
-        /// Event handler for Background Worker's doWork event.
+        /// Event handler for Background Worker's doWork event. Starts the connection.
         /// </summary>
         private void bwDoWork(object sender, DoWorkEventArgs e)
         {
@@ -425,7 +441,6 @@
             AvStream.Dispose();
             hasMoved = false; 
         }
-
     }
         #endregion Helper Methods
 }
