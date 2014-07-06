@@ -8,16 +8,19 @@ using System.Linq;
 
 namespace Limelight
 {
+    /// <summary>
+    /// Object containing the hostname and methods to resolve it
+    /// </summary>
     public class NvHttp : IDisposable
     {
+	    public const int PORT = 47989;
+	    public const int CONNECTION_TIMEOUT = 5000;
+        public String baseUrl { get; set; }
+        public IPAddress resolvedHost {get; set;}
 
         private ManualResetEvent completeEvent;
 
-	    public const int PORT = 47989;
-	    public const int CONNECTION_TIMEOUT = 5000;
-	    public String baseUrl;
-        public IPAddress resolvedHost {get; set;}
-
+        #region Public Methods
         public NvHttp(String hostnameString)
         {
             completeEvent = new ManualResetEvent(false);
@@ -33,6 +36,9 @@ namespace Limelight
         {
             return Microsoft.Phone.Info.DeviceStatus.DeviceName;
         }
+        #endregion Public Methods
+
+        #region Private Methods
 
         /// <summary>
         /// Resolve the GEForce PC hostname to an IP Address
@@ -63,6 +69,7 @@ namespace Limelight
             }
             completeEvent.Set();
         }
+        #endregion Private Methods
 
         #region IDisposable implementation
 

@@ -15,8 +15,9 @@ namespace Limelight
         private Uri uri;
         private XDocument rawXml;
         private string rawXmlString;
-        private string err = null; 
+        private string err = null;
 
+        #region Public Methods
         /// <summary>
         ///  Initializes a new instance of the <see cref="XmlQuery"/> class. 
         /// </summary>
@@ -27,35 +28,7 @@ namespace Limelight
             completeEvent = new ManualResetEvent(false);
             GetXml(); 
         }
-        /// <summary>
-        /// Gets the Xml as a string from the URL provided
-        /// </summary>
-        /// <returns>The server info XML as a string</returns>
-        private void GetXml()
-        {
-            Debug.WriteLine(uri);
-            if (rawXmlString == null)
-            {
-                WebClient client = new WebClient();
-                client.DownloadStringCompleted += new DownloadStringCompletedEventHandler(XmlCallback);
-                client.DownloadStringAsync(uri);
-                    
-                // Wait for the callback to complete
-                completeEvent.WaitOne();
-                // We don't need this anymore - dispose
-                completeEvent.Dispose(); 
-            }
-            // If no error occured, convert the string to a more easily-parsable XDocument
-            if (err == null)
-            {
-                this.rawXml = XDocument.Parse(rawXmlString); 
-            }
-        }
-        /// <summary>
-        /// Given a tag, return the first XML attribute contained in this tag as a string
-        /// </summary>
-        /// <param name="tag">Tag containing the desired attribute</param>
-        /// <returns>The first attribute within the given tag</returns>
+ 
         public string XmlAttribute(string tag)
         {
             // TODO handle not found
@@ -98,7 +71,38 @@ namespace Limelight
         {
             return err; 
         }
+        #endregion Public Methods
 
+        #region Private Methods
+        /// <summary>
+        /// Gets the Xml as a string from the URL provided
+        /// </summary>
+        /// <returns>The server info XML as a string</returns>
+        private void GetXml()
+        {
+            Debug.WriteLine(uri);
+            if (rawXmlString == null)
+            {
+                WebClient client = new WebClient();
+                client.DownloadStringCompleted += new DownloadStringCompletedEventHandler(XmlCallback);
+                client.DownloadStringAsync(uri);
+
+                // Wait for the callback to complete
+                completeEvent.WaitOne();
+                // We don't need this anymore - dispose
+                completeEvent.Dispose();
+            }
+            // If no error occured, convert the string to a more easily-parsable XDocument
+            if (err == null)
+            {
+                this.rawXml = XDocument.Parse(rawXmlString);
+            }
+        }
+        /// <summary>
+        /// Given a tag, return the first XML attribute contained in this tag as a string
+        /// </summary>
+        /// <param name="tag">Tag containing the desired attribute</param>
+        /// <returns>The first attribute within the given tag</returns>
         /// <summary>
         /// Sets the xmlString field to the XML string we just downloaded
         /// </summary>
@@ -125,6 +129,7 @@ namespace Limelight
             Debug.WriteLine("Failed: " + failureMessage);
             err = failureMessage; 
         }
+        #endregion Private Methods
 
         #region IDisposable implementation
         /// <summary>
