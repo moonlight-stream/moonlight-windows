@@ -20,8 +20,9 @@
         <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,662"/>
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Margin="10,106,14,28">
-            <Button x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="43,172,36,381" FontWeight="Bold" FontSize="30" Click="StreamButton_Click" Width="377"/>
-            <Button x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="43,258,36,295" FontWeight="Bold" FontSize="30" Click="PairButton_Click" Width="377"/>
+            <Button x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="39,205,40,348" FontWeight="Bold" FontSize="30" Click="StreamButton_Click" Width="377"/>
+            <Button x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="39,291,40,262" FontWeight="Bold" FontSize="30" Click="PairButton_Click" Width="377"/>
+            <TextBlock x:Name="status_text" HorizontalAlignment="Left" Height="33" Margin="51,157,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="348" TextAlignment="Center"/>
         </Grid>
 
         <RadioButton x:Name="_60fps_button" Content="60 FPS (may increase lag)" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="157,581,0,0" GroupName="fps" RenderTransformOrigin="0.559,0.464"/>

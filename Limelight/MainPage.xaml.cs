@@ -46,7 +46,8 @@ namespace Limelight
         /// </summary>
         private void StreamButton_Click(object sender, RoutedEventArgs e)
         {
-            SaveSettings(); 
+            SaveSettings();
+            status_text.Text = "Checking pair state...";
             Debug.WriteLine("Start Streaming button pressed");
             streamBw.RunWorkerAsync(host_textbox.Text); 
         }
