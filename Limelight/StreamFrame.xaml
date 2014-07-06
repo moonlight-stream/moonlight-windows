@@ -29,7 +29,7 @@
         </Grid>
 
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0"/>
-        <MediaElement x:Name="StreamDisplay" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" ManipulationStarted="touchDownEvent" ManipulationCompleted="touchUpEvent" ManipulationDelta="touchMoveEvent" Grid.RowSpan="2" Visibility="Collapsed"/>
+        <MediaElement x:Name="StreamDisplay" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" ManipulationStarted="TouchDownEvent" ManipulationCompleted="TouchUpEvent" ManipulationDelta="TouchMoveEvent" Grid.RowSpan="2" Visibility="Collapsed"/>
 
     </Grid>
 </phone:PhoneApplicationPage>

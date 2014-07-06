@@ -65,7 +65,9 @@
         #endregion Class Variables
 
         #region Init
-
+        /// <summary>
+        /// Get the Steam App ID passed from the previous page
+        /// </summary>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             if (this.NavigationContext.QueryString.ContainsKey("steamId"))
@@ -87,7 +89,6 @@
             InitializeComponent();
             string parameter = string.Empty;
 
-
             // Audio/video stream source init
             AvStream = new AvStreamSource(frameWidth, frameHeight);
             StreamDisplay.SetSource(AvStream);
@@ -100,10 +101,11 @@
             bw.DoWork += new DoWorkEventHandler(bwDoWork);
             bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bwRunWorkerCompleted);
 
+            // Show the progress bar
             Waitgrid.Visibility = Visibility.Visible;
             currentStateText.Visibility = Visibility.Visible;
-            // Run the background worker that starts the connection
 
+            // Run the background worker that starts the connection
             bw.RunWorkerAsync();
 
         }
@@ -203,7 +205,7 @@
             }
             // Send the stage change to the UI thread. 
             // The dispatcher might not be quick enough for the user to see every stage
-            Deployment.Current.Dispatcher.BeginInvoke(new Action(() => setStateText(stateText)));
+            Deployment.Current.Dispatcher.BeginInvoke(new Action(() => SetStateText(stateText)));
         }
 
         /// <summary>
@@ -294,7 +296,7 @@
         {
 
             String hostnameString = (String)PhoneApplicationService.Current.State["host"];
-            Dispatcher.BeginInvoke(new Action(() => setStateText("Resolving hostname...")));
+            Dispatcher.BeginInvoke(new Action(() => SetStateText("Resolving hostname...")));
             NvHttp nv = new NvHttp(hostnameString);
 
             // Launch Steam
@@ -341,7 +343,7 @@
                 MessageBoxResult result = MessageBox.Show(e.Error.Message);
                 if (result == MessageBoxResult.OK)
                 {
-                    cleanup(); 
+                    Cleanup(); 
                     // Return to the settings page
                     NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));                    
                 }
@@ -355,7 +357,7 @@
                 if (result == MessageBoxResult.OK)
                 {
                     // Return to the settings page
-                    cleanup(); 
+                    Cleanup(); 
                     NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
                 }
             }
@@ -369,12 +371,12 @@
         }
         #endregion Background Worker
 
-        #region Touch events
+        #region Touch Events
 
         /// <summary>
         /// Touch event initiated
         /// </summary>
-        private void touchDownEvent(object sender, System.Windows.Input.ManipulationStartedEventArgs e)
+        private void TouchDownEvent(object sender, System.Windows.Input.ManipulationStartedEventArgs e)
         {
             MouseState ms = Mouse.GetState();
             hasMoved = false;
@@ -383,7 +385,7 @@
         /// <summary>
         /// Event handler for mouse click - send mouse event to the streaming PC
         /// </summary>
-        private void touchUpEvent(object sender, System.Windows.Input.ManipulationCompletedEventArgs e)
+        private void TouchUpEvent(object sender, System.Windows.Input.ManipulationCompletedEventArgs e)
         {
             if (!hasMoved)
             {
@@ -409,7 +411,7 @@
         /// <summary>
         /// Event handler for mouse movement - send mouse move event to the streaming PC
         /// </summary>
-        private void touchMoveEvent(object sender, System.Windows.Input.ManipulationDeltaEventArgs e)
+        private void TouchMoveEvent(object sender, System.Windows.Input.ManipulationDeltaEventArgs e)
         {
             MouseState ms = Mouse.GetState();
 
@@ -420,14 +422,14 @@
                 LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(ms.X - e.DeltaManipulation.Translation.X), (short)(ms.Y - e.DeltaManipulation.Translation.Y));
             }
         }
-        #endregion Touch events
+        #endregion Touch Events
 
         #region Helper methods
         /// <summary>
         /// Let the dispatcher set the state text on the progress bar
         /// </summary>
         /// <param name="stateText">The text to display on the progress bar</param>
-        private void setStateText(string stateText)
+        private void SetStateText(string stateText)
         {
             currentStateText.Text = stateText;
         }
@@ -435,7 +437,7 @@
         /// <summary>
         /// Clean up resources
         /// </summary>
-        private void cleanup()
+        private void Cleanup()
         {
             this.steamId = 0;
             AvStream.Dispose();

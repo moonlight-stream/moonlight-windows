@@ -28,7 +28,12 @@ namespace Limelight
             completeEvent = new ManualResetEvent(false);
             GetXml(); 
         }
- 
+
+        /// <summary>
+        /// Given a tag, return the first XML attribute contained in this tag as a string
+        /// </summary>
+        /// <param name="tag">Tag containing the desired attribute</param>
+        /// <returns>The first attribute within the given tag</returns>
         public string XmlAttribute(string tag)
         {
             // TODO handle not found
@@ -98,11 +103,7 @@ namespace Limelight
                 this.rawXml = XDocument.Parse(rawXmlString);
             }
         }
-        /// <summary>
-        /// Given a tag, return the first XML attribute contained in this tag as a string
-        /// </summary>
-        /// <param name="tag">Tag containing the desired attribute</param>
-        /// <returns>The first attribute within the given tag</returns>
+
         /// <summary>
         /// Sets the xmlString field to the XML string we just downloaded
         /// </summary>
