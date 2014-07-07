@@ -2,33 +2,52 @@
 
 Note: Limelight Windows Phone is in development and is not considered stable. 
 
-#####What is it? 
-Limelight is an open source implementation of NVIDIA's GameStream, as used by the NVIDIA Shield,
-but built for Windows Phone 8. 
+Limelight is an open source implementation of NVIDIA's GameStream, as used by the NVIDIA Shield.
+We reverse engineered the Shield streaming software, and created a version that can be run on any Windows Phone device.
 
-#####What does this mean for you? 
-Limelight allows you to stream your full collection of Steam games from your GFE compatible PC to any of your supported devices.
+Limelight will allow you to stream your full collection of games from your Windows PC to your Windows Phone device,
+in your own home, or over the internet.
 
-This app streams games from a GameStream-compatible PC on your local network. After initial pairing (not yet implemented in Limelight WP), Limelight will launch and stream the Steam Big-Picture interface where you can launch any game that has been added to Steam. Video will be streamed back to your Windows Phone device. Mouse input is sent from your Windows Phone to the PC.
+##Features
 
-To have a good experience, you need a mid to high-end wireless router (preferably dual-band 802.11n or better) with a good wireless connection to your Windows Phone.
+* Streams any of your games from your PC to your Android device
+* Automatically finds GameStream-compatible PCs on your network
 
-#####PC Requirements:
-- NVIDIA GeForce GTX 600/700/800 series GPU running the primary display
-- NVIDIA GeForce Experience 1.7 or later
-- Steam enrolled in beta updates
-- Solid connection to wireless router (Ethernet recommended)
+##Features in development
+* Video and Audio rendering
+* MOGA controller support
 
-If you are running recent GeForce drivers (334.xx and 335.xx) or your video stops for several seconds while streaming, you should roll back to 332.21. There is a driver bug that affects the official SHIELD streaming app and Limelight (and possibly other software using NVENC).
+##Installation
 
-#####Windows Phone Requirements: 
-- Windows Phone 8
+* Limelight Windows Phone is in development and not yet available for free download in the Store. If you want to try it in the meantime, download the source and deploy the app to your phone. 
+* Download [GeForce Experience](http://www.geforce.com/geforce-experience) and install on your Windows PC
 
-#####Contribute: 
+##Requirements
+
+* [GameStream compatible](http://shield.nvidia.com/play-pc-games/) computer with GTX 600/700 series GPU
+* Windows Phone device running Windows Phone 8 or higher
+
+##Usage
+
+* Turn on GameStream in the GFE settings
+* If you are connecting from outside the same network, turn on internet
+  streaming
+* When on the same network as your PC, open Limelight and tap on your PC in the list and then tap "Pair With PC"
+* Accept the pairing confirmation on your PC
+* Tap your PC again to view the list of apps to stream
+* Play games!
+
+
+#Contribute: 
 - Fork us and set up a solution in Visual Studio
 - Add [Limelight Common](https://github.com/limelight-stream/limelight-common-c) as a project in your solution
 - Make changes and send us a pull request!
 
-#####Other Official Versions:
+##Authors
+
+* [Michelle Bergeron](https://github.com/mrb113)
+* [Cameron Gutman](https://github.com/cgutman)
+
+##Other Official Versions:
 [Limelight](https://github.com/limelight-stream) also has an Android
 implementation, and versions for PC and iOS are currently in development.
