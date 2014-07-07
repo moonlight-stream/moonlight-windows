@@ -107,7 +107,6 @@
 
             // Run the background worker that starts the connection
             bw.RunWorkerAsync();
-
         }
 
         #endregion Init

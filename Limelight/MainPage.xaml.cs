@@ -1,11 +1,16 @@
 ﻿using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.IsolatedStorage;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Navigation;
+using Zeroconf;
 
 namespace Limelight
 {
@@ -19,6 +24,8 @@ namespace Limelight
         private BackgroundWorker pairBw = new BackgroundWorker();
         private BackgroundWorker streamBw = new BackgroundWorker();
         private NvHttp nv;
+        //public static List<KeyValuePair<string, string>> computerList = new List<KeyValuePair<string, string>>(); 
+        public static List<Computer> computerList = new List<Computer>(); 
         private int steamId = 0;
         #endregion Class variables
 
@@ -30,7 +37,7 @@ namespace Limelight
         public MainPage()
         {
             InitializeComponent();
-            LoadSettings(); 
+            LoadSettings();
 
             // Set up background worker for pairing
             pairBw.WorkerSupportsCancellation = true;
@@ -40,8 +47,19 @@ namespace Limelight
             // Set up background worker for stream setup
             streamBw.WorkerSupportsCancellation = true;
             streamBw.DoWork += new DoWorkEventHandler(StreamBwDoWork);
-            streamBw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(StreamBwRunWorkerCompleted);
+            streamBw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(StreamBwRunWorkerCompleted); 
         }
+
+    /// <summary>
+    /// Once all the page elements are loaded, run mDNS discovery
+    /// </summary>
+        private void Loaded(object sender, RoutedEventArgs e)
+        {
+            Task t = Task.Run(() => EnumerateEligibleMachines());
+            t.Wait();
+            computerPicker.ItemsSource = computerList;
+        }
+
         #endregion Constructor
 
         #region Event Handlers
@@ -53,7 +71,8 @@ namespace Limelight
             SaveSettings();
             status_text.Text = "Checking pair state...";
             Debug.WriteLine("Start Streaming button pressed");
-            streamBw.RunWorkerAsync(host_textbox.Text); 
+            Computer selected = (Computer)computerPicker.SelectedItem;
+            streamBw.RunWorkerAsync(selected.ipAddress); 
         }
 
         /// <summary>
@@ -63,11 +82,14 @@ namespace Limelight
         {
             SaveSettings(); 
             status_text.Text = "Pairing...";
-            pairBw.RunWorkerAsync(host_textbox.Text);
+            Computer selected = (Computer)computerPicker.SelectedItem;
+            pairBw.RunWorkerAsync(selected.ipAddress);
         }
         #endregion Event Handlers  
 
         #region Background Workers
+
+
         /// <summary>
         /// When the user presses "Start Streaming Steam", first check that they are paired in the background worker
         /// </summary>
@@ -106,8 +128,8 @@ namespace Limelight
                 NavigationService.Navigate(new Uri("/StreamFrame.xaml?steamId=" + steamId, UriKind.Relative));
             }
             Debug.WriteLine("Stream BW completed");
+            
         }
-
 
         /// <summary>
         /// Pair with the hostname in the textbox
@@ -193,6 +215,7 @@ namespace Limelight
         /// </summary>
         private void LoadSettings()
         {
+            // TODO unsure where hostname textbox will fit into the new UI with mDNS
             // Load hostname into the textbox, if any
             if (IsolatedStorageSettings.ApplicationSettings.Contains("hostname"))
             {
@@ -301,6 +324,24 @@ namespace Limelight
             // Everything was successful
             Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Pairing completed successfully")));
             return true; 
+        }
+        /// <summary>
+        /// Uses mDNS to enumerate the machines on the network eligible to stream from
+        /// </summary>
+        /// <returns></returns>
+        private async Task EnumerateEligibleMachines()
+        {
+            // Create a list of KeyValue pairs <computer ID, IP address> 
+            Debug.WriteLine("Enumerating machines...");
+            ILookup<string, string> domains = await ZeroconfResolver.BrowseDomainsAsync();
+            var responses = await ZeroconfResolver.ResolveAsync(domains.Select(g => g.Key));
+            foreach (var resp in responses)
+            { 
+                // TODO check if GFE is running
+                Computer toAdd = new Computer(resp.DisplayName, resp.IPAddress);
+                computerList.Add(toAdd);
+                Debug.WriteLine(resp);
+            }
         }
         #endregion Helper Methods
     }
