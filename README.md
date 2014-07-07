@@ -37,11 +37,11 @@ in your own home, or over the internet.
 * Tap your PC again to view the list of apps to stream
 * Play games!
 
-
-#Contribute: 
+##Contribute: 
 - Fork us and set up a solution in Visual Studio
 - Add [Limelight Common](https://github.com/limelight-stream/limelight-common-c) as a project in your solution
-- Make changes and send us a pull request!
+- Write code
+- Send Pull Requests
 
 ##Authors
 
