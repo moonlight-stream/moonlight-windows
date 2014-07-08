@@ -1,16 +1,16 @@
-﻿namespace Limelight
-{
-    using Limelight_common_binding;
-    using Microsoft.Phone.Controls;
-    using Microsoft.Phone.Shell;
-    using Microsoft.Xna.Framework.Input;
-    using System;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Threading;
-    using System.Windows;
-    using System.Windows.Navigation; 
+﻿using Limelight_common_binding;
+using Microsoft.Phone.Controls;
+using Microsoft.Phone.Shell;
+using Microsoft.Xna.Framework.Input;
+using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Threading;
+using System.Windows;
+using System.Windows.Navigation; 
 
+namespace Limelight
+{
     /// <summary>
     /// UI Frame that contains the streaming media element
     /// </summary>
@@ -299,6 +299,7 @@
             NvHttp nv = new NvHttp(hostnameString);
 
             // Launch Steam
+            Dispatcher.BeginInvoke(new Action(() => SetStateText("Launching Steam...")));
             XmlQuery launchApp = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetDeviceName() + "&appid=" + steamId);
             if (launchApp.GetErrorMessage() != null)
             {

@@ -6,10 +6,10 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.IsolatedStorage;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Navigation;
+using System.Windows.Threading;
 using Zeroconf;
 
 namespace Limelight
@@ -21,12 +21,18 @@ namespace Limelight
     {
         #region Class variables
 
+        private const int MDNS_POLLING_INTERVAL = 6; 
+
         private BackgroundWorker pairBw = new BackgroundWorker();
         private BackgroundWorker streamBw = new BackgroundWorker();
         private NvHttp nv;
-        //public static List<KeyValuePair<string, string>> computerList = new List<KeyValuePair<string, string>>(); 
-        public static List<Computer> computerList = new List<Computer>(); 
         private int steamId = 0;
+        private DispatcherTimer mDnsTimer = new DispatcherTimer();
+
+        private static List<Computer> computerList = new List<Computer>();
+        private static List<string> placeholderText = new List<string> { "Discovery service is running..." };
+        private Computer nullComputer = new Computer("No computers found", null);
+
         #endregion Class variables
 
         #region Constructor
@@ -38,6 +44,11 @@ namespace Limelight
         {
             InitializeComponent();
             LoadSettings();
+            computerPicker.ItemsSource = placeholderText; 
+
+            // Set up timer for mDNS polling
+            mDnsTimer.Interval = TimeSpan.FromSeconds(MDNS_POLLING_INTERVAL);
+            mDnsTimer.Tick += OnTimerTick;
 
             // Set up background worker for pairing
             pairBw.WorkerSupportsCancellation = true;
@@ -50,19 +61,42 @@ namespace Limelight
             streamBw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(StreamBwRunWorkerCompleted); 
         }
 
-    /// <summary>
-    /// Once all the page elements are loaded, run mDNS discovery
-    /// </summary>
+        /// <summary>
+        /// Once all the page elements are loaded, run mDNS discovery
+        /// </summary>
         private void Loaded(object sender, RoutedEventArgs e)
         {
             Task t = Task.Run(() => EnumerateEligibleMachines());
             t.Wait();
             computerPicker.ItemsSource = computerList;
+            // Start regularly polling for machines
+            mDnsTimer.Start();
+        }
+
+        /// <summary>
+        /// When we leave the page, stop mDNS polling
+        /// </summary>
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            Debug.WriteLine("Stopping mDNS");
+            mDnsTimer.Stop(); 
+            base.OnNavigatedFrom(e);
         }
 
         #endregion Constructor
 
         #region Event Handlers
+        /// <summary>
+        /// When the timer ticks, poll for machines with mDNS
+        /// </summary>
+        private void OnTimerTick(object sender, EventArgs e)
+        {
+            Task t = Task.Run(() => EnumerateEligibleMachines());
+            Deployment.Current.Dispatcher.BeginInvoke(new Action(() => {
+                computerPicker.ItemsSource = computerList;
+            }));            
+        }
+
         /// <summary>
         /// Executed when the user presses "Start Streaming Steam!"
         /// </summary>
@@ -96,8 +130,10 @@ namespace Limelight
         private void StreamBwDoWork(object sender, DoWorkEventArgs e)
         {
             nv = new NvHttp((string)e.Argument);
+
             // If device is already paired, don't cancel. Otherwise, e.cancel = true.
             e.Cancel = QueryPairState() ? false : true;
+
             // If we haven't cancelled and don't have the steam ID, query app list to get it
             if (!e.Cancel && steamId == 0)
             {
@@ -331,16 +367,39 @@ namespace Limelight
         /// <returns></returns>
         private async Task EnumerateEligibleMachines()
         {
-            // Create a list of KeyValue pairs <computer ID, IP address> 
+            // Make a local copy of the computer list
+            // The UI thread will populate the listbox with computerList whenever it pleases, so we don't want it to take the one we're modifying
+            List<Computer> computerListLocal = new List<Computer>(computerList); 
+
+            // Ignore all computers we may have found in the past
+            computerListLocal.Clear(); 
             Debug.WriteLine("Enumerating machines...");
+
+            // Let Zeroconf do its magic and find everything it can with mDNS
             ILookup<string, string> domains = await ZeroconfResolver.BrowseDomainsAsync();
             var responses = await ZeroconfResolver.ResolveAsync(domains.Select(g => g.Key));
+
+            // Go through every response we received and grab only the ones running nvstream
             foreach (var resp in responses)
             { 
-                // TODO check if GFE is running
-                Computer toAdd = new Computer(resp.DisplayName, resp.IPAddress);
-                computerList.Add(toAdd);
-                Debug.WriteLine(resp);
+                // TODO not local? 
+                if (resp.Services.ContainsKey("_nvstream._tcp.local."))
+                {
+                    Computer toAdd = new Computer(resp.DisplayName, resp.IPAddress);                   
+                    if (!computerListLocal.Exists(x => x.ipAddress == resp.IPAddress))
+                    {
+                        computerListLocal.Add(toAdd);
+                        Debug.WriteLine(resp);
+                    }                    
+                }
+            }
+
+            // We're done messing with the list - it's okay for the UI thread to take now
+            computerList = computerListLocal; 
+            if (computerList.Count == 0)
+            {
+                computerList.Add(nullComputer);
+                Debug.WriteLine("None found");
             }
         }
         #endregion Helper Methods
