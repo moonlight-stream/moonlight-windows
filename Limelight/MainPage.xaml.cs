@@ -32,6 +32,7 @@ namespace Limelight
         private static List<Computer> computerList = new List<Computer>();
         private static List<string> placeholderText = new List<string> { "Discovery service is running..." };
         private Computer nullComputer = new Computer("No computers found", null);
+        private Computer selected; 
 
         #endregion Class variables
 
@@ -105,7 +106,7 @@ namespace Limelight
             SaveSettings();
             status_text.Text = "Checking pair state...";
             Debug.WriteLine("Start Streaming button pressed");
-            Computer selected = (Computer)computerPicker.SelectedItem;
+            selected = (Computer)computerPicker.SelectedItem;
             streamBw.RunWorkerAsync(selected.ipAddress); 
         }
 
@@ -116,7 +117,7 @@ namespace Limelight
         {
             SaveSettings(); 
             status_text.Text = "Pairing...";
-            Computer selected = (Computer)computerPicker.SelectedItem;
+            selected = (Computer)computerPicker.SelectedItem;
             pairBw.RunWorkerAsync(selected.ipAddress);
         }
         #endregion Event Handlers  
@@ -160,7 +161,7 @@ namespace Limelight
             else
             {
                 // Save the user's host input and send it to the streamframe page
-                PhoneApplicationService.Current.State["host"] = host_textbox.Text;
+                PhoneApplicationService.Current.State["host"] = selected.ipAddress; 
                 NavigationService.Navigate(new Uri("/StreamFrame.xaml?steamId=" + steamId, UriKind.Relative));
             }
             Debug.WriteLine("Stream BW completed");

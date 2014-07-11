@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace Limelight
     /// </summary>
     public class AvStreamSource : MediaStreamSource, IDisposable
     {
+        #region Audio/Video Sample Constructors
         /// <summary>
         /// Audio Sample object
         /// </summary>
@@ -48,6 +50,9 @@ namespace Limelight
             internal IBuffer buffer { get; private set; }
             internal ulong frameNumber { get; private set; }
         }
+        #endregion Audio/Video Sample Constructors
+
+        #region Class Variables
 
         private int frameWidth;
         private int frameHeight;
@@ -64,6 +69,7 @@ namespace Limelight
         private object nalQueueLock = new object();
         private object audioQueueLock = new object();
 
+        #endregion Class Variables
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AvStreamSource"/> class. 
@@ -82,38 +88,7 @@ namespace Limelight
             this.AudioBufferLength = 15;
         }
 
-        /// <summary>
-        /// Shuts down the video stream
-        /// </summary>
-        public void Shutdown()
-        {
-            shutdownEvent.Set();
-            if (outstandingGetVideoSampleCount > 0)
-            {
-                lock (nalQueueLock)
-                {
-                    // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
-                    // an empty MediaStreamSample here.
-                    MediaStreamSample mediaStreamSamp = new MediaStreamSample(
-                        videoDesc, null, 0, 0, 0, emptySampleDict);
-                    ReportGetSampleCompleted(mediaStreamSamp);
-                    outstandingGetVideoSampleCount = 0;
-                }
-            }
-            if (outstandingGetAudioSampleCount > 0)
-            {
-                lock (audioQueueLock)
-                {
-                    // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
-                    // an empty MediaStreamSample here.
-                    MediaStreamSample mediaStreamSamp = new MediaStreamSample(
-                        audioDesc, null, 0, 0, 0, emptySampleDict);
-                    ReportGetSampleCompleted(mediaStreamSamp);
-                    outstandingGetAudioSampleCount = 0;
-                }
-            }
-        }
-
+        #region Enqueue
         private void EnqueueNal(byte[] buf, int nalStart, int nalEnd, ulong frameNumber)
         {
             int nalLength = nalEnd - nalStart;
@@ -153,6 +128,10 @@ namespace Limelight
         /// <param name="buf">Buffer for the video stream</param>
         public void EnqueueVideoSamples(byte[] buf)
         {
+            EnqueueNal(buf, 0, buf.Length, frameNumber++);
+            SendVideoSamples();
+            return;
+
             int i;
 
             int currentNalStart = -1;
@@ -242,7 +221,7 @@ namespace Limelight
                 SendAudioSamples();
             }
         }
-
+        #endregion Enqueue
         private void SubmitAudioSample(AudioSample audioSample)
         {
             Stream sampleStream = WindowsRuntimeBufferExtensions.AsStream(audioSample.buffer);
@@ -333,11 +312,6 @@ namespace Limelight
 
                 lock (nalQueueLock)
                 {
-                    if (nalQueue.Count() % 10 == 0)
-                    {
-                        //Debug.WriteLine("Queued NALs: " + nalQueue.Count());
-                    }
-
                     if (nalQueue.Count() == 0)
                     {
                         return;
@@ -351,6 +325,7 @@ namespace Limelight
             }
         }
 
+        #region Prepare Stream
         /// <summary>
         /// Prepare the video stream for rendering
         /// </summary>
@@ -364,40 +339,16 @@ namespace Limelight
             streamAttributes[MediaStreamAttributeKeys.VideoFourCC] = "H264";
             streamAttributes[MediaStreamAttributeKeys.Height] = frameHeight.ToString();
             streamAttributes[MediaStreamAttributeKeys.Width] = frameWidth.ToString();
+            Debug.WriteLine("Prepare Video");
 
             MediaStreamDescription msd =
                 new MediaStreamDescription(MediaStreamType.Video, streamAttributes);
 
             videoDesc = msd;
         }
-
-        private string ByteToBase16Str(byte inputByte)
-        {
-            return inputByte.ToString("X2");
-        }
-
-        private string ShortToBase16Str(short inputShort)
-        {
-            byte[] bytes = new byte[2];
-            bytes[0] = (byte)(inputShort & 0xFF);
-            bytes[1] = (byte)(inputShort >> 8);
-            return ByteToBase16Str(bytes[0]) + ByteToBase16Str(bytes[1]);
-        }
-
-        private string IntToBase16Str(int inputInt)
-        {
-            byte[] bytes = new byte[4];
-
-            bytes[0] = (byte)(inputInt & 0xFF);
-            bytes[1] = (byte)(inputInt >> 8);
-            bytes[2] = (byte)(inputInt >> 16);
-            bytes[3] = (byte)(inputInt >> 24);
-            return ByteToBase16Str(bytes[0]) + ByteToBase16Str(bytes[1]) +
-                ByteToBase16Str(bytes[2]) + ByteToBase16Str(bytes[3]);
-        }
-
+        
         /// <summary>
-        /// Prepare the audio stream 
+        /// Prepare the audio stream
         /// </summary>
         private void PrepareAudio()
         {
@@ -414,12 +365,15 @@ namespace Limelight
                 ShortToBase16Str(16) + // wBitsPerSample = 16
                 ShortToBase16Str(0); // cbSize = 0
 
+            // Set the description for the audio stream
             MediaStreamDescription msd =
                 new MediaStreamDescription(MediaStreamType.Audio, streamAttributes);
 
             audioDesc = msd;
         }
+        #endregion Prepare Stream
 
+        #region MediaStreamSource Override Methods
         /// <summary>
         /// Performs asynchronous streaming of the media
         /// </summary>
@@ -433,9 +387,9 @@ namespace Limelight
 
             // Set attributes and list our stream as available
             PrepareVideo();
-            PrepareAudio();
+            //PrepareAudio();
             availableStreams.Add(videoDesc);
-            availableStreams.Add(audioDesc);
+            //availableStreams.Add(audioDesc);
 
             // A zero timespan is an infinite stream
             sourceAttributes[MediaSourceAttributesKeys.Duration] =
@@ -453,6 +407,7 @@ namespace Limelight
         /// <param name="mediaStreamType">Audio or video stream</param>
         protected override void GetSampleAsync(MediaStreamType mediaStreamType)
         {
+            // Audio stream
             if (mediaStreamType == MediaStreamType.Audio)
             {
                 AudioSample audioSample;
@@ -469,9 +424,10 @@ namespace Limelight
                         return;
                     }
                 }
-
+                // Submit the sample for playing
                 SubmitAudioSample(audioSample);
             }
+                // Video stream
             else if (mediaStreamType == MediaStreamType.Video)
             {
                 VideoSample videoSample;
@@ -489,6 +445,9 @@ namespace Limelight
                     }
                 }
 
+                Thread.Sleep(30);
+
+                // Submit the sample for rendering
                 SubmitVideoSample(videoSample);
             }
         }
@@ -528,7 +487,87 @@ namespace Limelight
             //Debug.WriteLine("Seeking to " + seekToTime);
             ReportSeekCompleted(seekToTime); 
         }
+        #endregion MediaStreamSource Override Methods
 
+        #region Cleanup
+        /// <summary>
+        /// Shuts down the video stream
+        /// </summary>
+        public void Shutdown()
+        {
+            shutdownEvent.Set();
+            if (outstandingGetVideoSampleCount > 0)
+            {
+                lock (nalQueueLock)
+                {
+                    // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
+                    // an empty MediaStreamSample here.
+                    MediaStreamSample mediaStreamSamp = new MediaStreamSample(
+                        videoDesc, null, 0, 0, 0, emptySampleDict);
+                    ReportGetSampleCompleted(mediaStreamSamp);
+                    outstandingGetVideoSampleCount = 0;
+                }
+            }
+            if (outstandingGetAudioSampleCount > 0)
+            {
+                lock (audioQueueLock)
+                {
+                    // ReportGetSampleCompleted must be called after GetSampleAsync to avoid memory leak. So, send
+                    // an empty MediaStreamSample here.
+                    MediaStreamSample mediaStreamSamp = new MediaStreamSample(
+                        audioDesc, null, 0, 0, 0, emptySampleDict);
+                    ReportGetSampleCompleted(mediaStreamSamp);
+                    outstandingGetAudioSampleCount = 0;
+                }
+            }
+            // TODO is this the right place to dispose? 
+            shutdownEvent.Dispose(); 
+        }
+        #endregion Cleanup
+
+        #region Helper Methods
+        /// <summary>
+        /// Converts a byte to a base 16 string
+        /// </summary>
+        /// <param name="inputByte">The byte to convert</param>
+        /// <returns>Input byte as a base 16 string</returns>
+        private string ByteToBase16Str(byte inputByte)
+        {
+            return inputByte.ToString("X2");
+        }
+
+        /// <summary>
+        /// Converts a short to a base 16 string
+        /// </summary>
+        /// <param name="inputShort">The short to convert</param>
+        /// <returns>Input short as a base 16 string</returns>
+        private string ShortToBase16Str(short inputShort)
+        {
+            byte[] bytes = new byte[2];
+            bytes[0] = (byte)(inputShort & 0xFF);
+            bytes[1] = (byte)(inputShort >> 8);
+            return ByteToBase16Str(bytes[0]) + ByteToBase16Str(bytes[1]);
+        }
+
+        /// <summary>
+        /// Converts an into to a base 16 string
+        /// </summary>
+        /// <param name="inputInt">The integer to convert</param>
+        /// <returns>Input integer as a base 16 string</returns>
+        private string IntToBase16Str(int inputInt)
+        {
+            byte[] bytes = new byte[4];
+
+            bytes[0] = (byte)(inputInt & 0xFF);
+            bytes[1] = (byte)(inputInt >> 8);
+            bytes[2] = (byte)(inputInt >> 16);
+            bytes[3] = (byte)(inputInt >> 24);
+            return ByteToBase16Str(bytes[0]) + ByteToBase16Str(bytes[1]) +
+                ByteToBase16Str(bytes[2]) + ByteToBase16Str(bytes[3]);
+        }
+        #endregion Helper Methods
+
+        #region IDisposible Implementation
         protected virtual void Dispose(bool managed)
         {
             if (managed)
@@ -542,5 +581,6 @@ namespace Limelight
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+        #endregion IDisposible Implementation
     }
 }
