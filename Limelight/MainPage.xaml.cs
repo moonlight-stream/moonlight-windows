@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO.IsolatedStorage;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Navigation;
@@ -292,30 +293,32 @@ namespace Limelight
         /// <returns>True if the operation succeeded, false otherwise</returns>
         private bool QueryAppList()
         {
-            XmlQuery appList = new XmlQuery(nv.baseUrl + "/applist?uniqueid=" + nv.GetDeviceName());
-            // Error querying app list
-            if (appList.GetErrorMessage() != null)
+            XmlQuery appList;
+            string steamIdStr;
+            try
             {
-                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("App list query failed: " + appList.GetErrorMessage())));
+               appList = new XmlQuery(nv.baseUrl + "/applist?uniqueid=" + nv.GetDeviceName());
+            }
+            catch (WebException e)
+            {
+                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("App list query failed: " + e.Message)));
                 return false;
             }
             // App list query went well - try to get the steam ID
-            else
+            try
             {
-                string steamIdStr = appList.XmlAttribute("ID", appList.XmlAttributeElement("App"));
+                  steamIdStr = appList.XmlAttribute("ID", appList.XmlAttributeElement("App"));
+
+            } catch (WebException e){
                 // Steam ID lookup failed
-                if (appList.GetErrorMessage() != null)
-                {
-                    Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Failed to get Steam ID: " + appList.GetErrorMessage())));
-                    return false; 
-                }
-                // We're in the clear - save the Steam app ID
-                else
-                {
-                    steamId = Convert.ToInt32(steamIdStr);
-                    return true; 
-                }
+                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Failed to get Steam ID: " + e.Message)));
+                return false; 
             }
+
+                // We're in the clear - save the Steam app ID
+
+            steamId = Convert.ToInt32(steamIdStr);
+            return true; 
         }
 
         /// <summary>
@@ -324,14 +327,19 @@ namespace Limelight
         /// <returns>True if the operation succeeded, false otherwise</returns>
         bool QueryPairState()
         {
-            XmlQuery pairState = new XmlQuery(nv.baseUrl + "/pairstate?uniqueid=" + nv.GetDeviceName());
-            if (pairState.GetErrorMessage() != null)
+            XmlQuery pairState;
+            try
             {
-                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Failed to get pair state: " + pairState.GetErrorMessage())));
+                pairState = new XmlQuery(nv.baseUrl + "/pairstate?uniqueid=" + nv.GetDeviceName());
+            }
+            catch (WebException e)
+            {
+                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Failed to get pair state: " + e.Message)));
                 return false; 
             }
-                // Check if the device is paired by checking the XML attribute within the <paired> tag
-            else if (String.Compare(pairState.XmlAttribute("paired"), "0") == 0)
+             
+            // Check if the device is paired by checking the XML attribute within the <paired> tag
+            if (String.Compare(pairState.XmlAttribute("paired"), "0") == 0)
             {
                 Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Device not paired")));
                 return false; 
@@ -346,14 +354,18 @@ namespace Limelight
         private bool Pair()
         {
             // Making the XML query to this URL does the actual pairing
-            XmlQuery pairInfo = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + nv.GetDeviceName());
-            if (pairInfo.GetErrorMessage() != null)
+            XmlQuery pairInfo;
+            try 
             {
-                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Pairing failed: " + pairInfo.GetErrorMessage())));
+                pairInfo = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + nv.GetDeviceName());
+            }
+            catch (WebException e)
+            {
+                Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Pairing failed: " + e.Message)));
                 return false;
             }
             // Session ID = 0; pairing failed
-            else if (String.Compare(pairInfo.XmlAttribute("sessionid"), "0") == 0)
+            if (String.Compare(pairInfo.XmlAttribute("sessionid"), "0") == 0)
             {
                 Deployment.Current.Dispatcher.BeginInvoke(new Action(() => MessageBox.Show("Pairing failed: Session ID = 0")));
                 return false; 
@@ -383,7 +395,6 @@ namespace Limelight
             // Go through every response we received and grab only the ones running nvstream
             foreach (var resp in responses)
             { 
-                // TODO not local? 
                 if (resp.Services.ContainsKey("_nvstream._tcp.local."))
                 {
                     Computer toAdd = new Computer(resp.DisplayName, resp.IPAddress);                   

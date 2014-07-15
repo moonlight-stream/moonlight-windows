@@ -72,10 +72,7 @@ namespace Limelight
         /// Returns the XML error message for the caller
         /// </summary>
         /// <returns>Error message string. If no error, returns null</returns>
-        public string GetErrorMessage()
-        {
-            return err; 
-        }
+
         #endregion Public Methods
 
         #region Private Methods
@@ -101,6 +98,11 @@ namespace Limelight
             if (err == null)
             {
                 this.rawXml = XDocument.Parse(rawXmlString);
+            }
+            else
+            {
+                // Uh oh - throw an exception for the caller to handle
+                throw new WebException(err);
             }
         }
 
