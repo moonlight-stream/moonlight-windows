@@ -5,7 +5,9 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Navigation; 
 
@@ -59,7 +61,6 @@ namespace Limelight
         /// <summary>
         /// Background worker and callbacks
         /// </summary>
-        private BackgroundWorker bw = new BackgroundWorker();
         private String stageFailureText;
 
         #endregion Class Variables
@@ -87,6 +88,8 @@ namespace Limelight
         public StreamFrame()
         {
             InitializeComponent();
+            
+            // TODO what uses this? 
             string parameter = string.Empty;
 
             // Audio/video stream source init
@@ -95,18 +98,10 @@ namespace Limelight
             StreamDisplay.AutoPlay = true;
             StreamDisplay.Play();
 
-            // Background Worker Init
-            bw.WorkerReportsProgress = true;
-            bw.WorkerSupportsCancellation = true;
-            bw.DoWork += new DoWorkEventHandler(bwDoWork);
-            bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bwRunWorkerCompleted);
-
             // Show the progress bar
             Waitgrid.Visibility = Visibility.Visible;
             currentStateText.Visibility = Visibility.Visible;
 
-            // Run the background worker that starts the connection
-            bw.RunWorkerAsync();
         }
 
         #endregion Init
@@ -286,26 +281,41 @@ namespace Limelight
 
         #endregion Callbacks
 
-        #region Background Worker
+        #region Connection
 
         /// <summary>
         /// Event handler for Background Worker's doWork event. Starts the connection.
         /// </summary>
-        private void bwDoWork(object sender, DoWorkEventArgs e)
+        private async Task StartConnection()
         {
-
+            NvHttp nv = null; 
             String hostnameString = (String)PhoneApplicationService.Current.State["host"];
             Dispatcher.BeginInvoke(new Action(() => SetStateText("Resolving hostname...")));
-            NvHttp nv = new NvHttp(hostnameString);
-
+            // Resolve the hostname
+            // TODO we're already resolving the hostname - why not just pass it to this page? 
+            try
+            {
+                nv = new NvHttp(hostnameString);
+            }
+            catch (ArgumentNullException)
+            {
+                stageFailureText = "Error resolving hostname";
+                ConnectionFailed(); 
+            }
+                
+            XmlQuery launchApp; 
             // Launch Steam
             Dispatcher.BeginInvoke(new Action(() => SetStateText("Launching Steam...")));
-            XmlQuery launchApp = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetDeviceName() + "&appid=" + steamId);
-            if (launchApp.GetErrorMessage() != null)
+            try
+            {
+                launchApp = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetDeviceName() + "&appid=" + steamId);
+            }
+            catch (WebException)
             {
                 Debug.WriteLine("Can't find steam");
                 stageFailureText = "Error launching Steam";
-                e.Cancel = true;
+                ConnectionFailed();
+                return; 
             }
 
             // Set up callbacks
@@ -323,53 +333,42 @@ namespace Limelight
             // If one of the stages failed, tell the background worker to cancel
             if (stageFailureText != null)
             {
-                Debug.WriteLine("Stage failed - background worker cancelled");
-                e.Cancel = true;
+                Debug.WriteLine("Stage failed");
+                ConnectionFailed();
+                return; 
+            }
+            else
+            {
+                ConnectionSuccess();
+            }
+        }
+
+        private void ConnectionFailed()
+        {
+            this.Waitgrid.Visibility = Visibility.Collapsed;
+            this.currentStateText.Visibility = Visibility.Collapsed;
+            // Inform the user of the failure via a message box
+            MessageBoxResult result = MessageBox.Show(stageFailureText, "Failure Starting Connection", MessageBoxButton.OK);
+            if (result == MessageBoxResult.OK)
+            {
+                // Return to the settings page
+                Cleanup();
+                // TODO this will need fixing with the new framework
+                NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
             }
         }
 
         /// <summary>
-        /// Runs once the background worker completes
+        /// Runs if starting the connection was successful. 
         /// </summary>
-        void bwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void ConnectionSuccess()
         {
+            Debug.WriteLine("Connection Successfully Completed");
             this.Waitgrid.Visibility = Visibility.Collapsed;
             this.currentStateText.Visibility = Visibility.Collapsed;
-
-            // Check to see if an error occurred in the background process.
-            if (e.Error != null)
-            {
-                Debug.WriteLine("Error while performing background operation.");
-                MessageBoxResult result = MessageBox.Show(e.Error.Message);
-                if (result == MessageBoxResult.OK)
-                {
-                    Cleanup(); 
-                    // Return to the settings page
-                    NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));                    
-                }
-            }
-
-            // If the connection attempt was cancelled by a failed stage
-            else if (e.Cancelled)
-            {
-                // Inform the user of the failure via a message box
-                MessageBoxResult result = MessageBox.Show(stageFailureText, "Failure Starting Connection", MessageBoxButton.OK);
-                if (result == MessageBoxResult.OK)
-                {
-                    // Return to the settings page
-                    Cleanup(); 
-                    NavigationService.Navigate(new Uri("/MainPage.xaml", UriKind.Relative));
-                }
-            }
-
-            // Everything completed normally - bring the user to the stream frame
-            else
-            {
-                Debug.WriteLine("Connection Background Worker Successfully Completed");
-                StreamDisplay.Visibility = Visibility.Visible;
-            }
+            StreamDisplay.Visibility = Visibility.Visible;
         }
-        #endregion Background Worker
+        #endregion Connection
 
         #region Touch Events
 
@@ -442,6 +441,11 @@ namespace Limelight
             this.steamId = 0;
             AvStream.Dispose();
             hasMoved = false; 
+        }
+
+        private async void Loaded(object sender, RoutedEventArgs e)
+        {
+            await StartConnection(); 
         }
     }
         #endregion Helper Methods

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Phone.Controls;
+using Microsoft.Phone.Net.NetworkInformation;
 using Microsoft.Phone.Shell;
 using System;
 using System.Collections.Generic;
@@ -7,6 +8,7 @@ using System.Diagnostics;
 using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Navigation;
@@ -22,10 +24,8 @@ namespace Limelight
     {
         #region Class variables
 
-        private const int MDNS_POLLING_INTERVAL = 6; 
+        private const int MDNS_POLLING_INTERVAL = 5; 
 
-        private BackgroundWorker pairBw = new BackgroundWorker();
-        private BackgroundWorker streamBw = new BackgroundWorker();
         private NvHttp nv;
         private int steamId = 0;
         private DispatcherTimer mDnsTimer = new DispatcherTimer();
@@ -52,24 +52,16 @@ namespace Limelight
             mDnsTimer.Interval = TimeSpan.FromSeconds(MDNS_POLLING_INTERVAL);
             mDnsTimer.Tick += OnTimerTick;
 
-            // Set up background worker for pairing
-            pairBw.WorkerSupportsCancellation = true;
-            pairBw.DoWork += new DoWorkEventHandler(PairBwDoWork);
-            pairBw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(PairBwRunWorkerCompleted);
-
-            // Set up background worker for stream setup
-            streamBw.WorkerSupportsCancellation = true;
-            streamBw.DoWork += new DoWorkEventHandler(StreamBwDoWork);
-            streamBw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(StreamBwRunWorkerCompleted); 
         }
 
         /// <summary>
         /// Once all the page elements are loaded, run mDNS discovery
         /// </summary>
-        private void Loaded(object sender, RoutedEventArgs e)
+        private async void Loaded(object sender, RoutedEventArgs e)
         {
-            Task t = Task.Run(() => EnumerateEligibleMachines());
-            t.Wait();
+            Debug.WriteLine("Loaded");
+            await EnumerateEligibleMachines();
+            
             computerPicker.ItemsSource = computerList;
             // Start regularly polling for machines
             mDnsTimer.Start();
@@ -91,123 +83,171 @@ namespace Limelight
         /// <summary>
         /// When the timer ticks, poll for machines with mDNS
         /// </summary>
-        private void OnTimerTick(object sender, EventArgs e)
+        private async void OnTimerTick(object sender, EventArgs e)
         {
-            Task t = Task.Run(() => EnumerateEligibleMachines());
-            Deployment.Current.Dispatcher.BeginInvoke(new Action(() => {
-                computerPicker.ItemsSource = computerList;
-            }));            
+            await EnumerateEligibleMachines();
+            Dispatcher.BeginInvoke(() => computerPicker.ItemsSource = computerList);            
         }
 
         /// <summary>
         /// Executed when the user presses "Start Streaming Steam!"
         /// </summary>
-        private void StreamButton_Click(object sender, RoutedEventArgs e)
+        private async void StreamButton_Click(object sender, RoutedEventArgs e)
         {
-            SaveSettings();
-            status_text.Text = "Checking pair state...";
             Debug.WriteLine("Start Streaming button pressed");
+
+            // Stop enumerating machines while we're trying to check pair state
+            mDnsTimer.Stop();
+            SaveSettings();
+
+            // Don't let the user mash the buttons
+            PairButton.IsEnabled = false;
+            StreamButton.IsEnabled = false;
+            _60fps_button.IsEnabled = false;
+            _30fps_button.IsEnabled = false;
+            _720p_button.IsEnabled = false;
+            _1080p_button.IsEnabled = false; 
+
+            status_text.Text = "Checking pair state...";
             selected = (Computer)computerPicker.SelectedItem;
-            streamBw.RunWorkerAsync(selected.ipAddress); 
+
+            // Check the pair state
+            await StreamSetup(selected.IpAddress);
+            Dispatcher.BeginInvoke(() => status_text.Text = "");                 
+            mDnsTimer.Start(); 
+
+            // User can use the buttons again
+            PairButton.IsEnabled = true;
+            StreamButton.IsEnabled = true;
+            _60fps_button.IsEnabled = true;
+            _30fps_button.IsEnabled = true;
+            _720p_button.IsEnabled = true;
+            _1080p_button.IsEnabled = true; 
         }
 
         /// <summary>
         /// Executed when the user presses "Pair"
         /// </summary>
-        private void PairButton_Click(object sender, RoutedEventArgs e)
+        private async void PairButton_Click(object sender, RoutedEventArgs e)
         {
+            // Stop polling timer while we're pairing
+            mDnsTimer.Stop(); 
+            // Don't let the user mash the buttons
+            // TODO check on an actual network
+                PairButton.IsEnabled = false;
+                StreamButton.IsEnabled = false; 
+            
+            
+            
             SaveSettings(); 
             status_text.Text = "Pairing...";
             selected = (Computer)computerPicker.SelectedItem;
-            pairBw.RunWorkerAsync(selected.ipAddress);
+            await Pair(selected.IpAddress);
+
+            // User can use the buttons again
+            Dispatcher.BeginInvoke(() =>
+            {
+                status_text.Text = "";
+                PairButton.IsEnabled = true;
+                StreamButton.IsEnabled = true;
+            }
+            ); 
+
         }
         #endregion Event Handlers  
 
-        #region Background Workers
-
+        #region Server Query
 
         /// <summary>
         /// When the user presses "Start Streaming Steam", first check that they are paired in the background worker
         /// </summary>
-        private void StreamBwDoWork(object sender, DoWorkEventArgs e)
+        private async Task StreamSetup(string uri)
         {
-            nv = new NvHttp((string)e.Argument);
+            try
+            {
+                nv = new NvHttp(uri);
+            }
+            catch (ArgumentNullException)
+            {
+                // TODO will not being able to await cause big problems here? 
+                StreamSetupFailed();
+                return;
+            }
 
-            // If device is already paired, don't cancel. Otherwise, e.cancel = true.
-            e.Cancel = QueryPairState() ? false : true;
+            // If device is already paired, return.             
+            if (!await Task.Run(() => QueryPairState()))
+            {
+                await StreamSetupFailed();
+                return;
+            }
 
             // If we haven't cancelled and don't have the steam ID, query app list to get it
-            if (!e.Cancel && steamId == 0)
+            if (steamId == 0)
             {
-                // If queryAppList is successful, don't cancel. Otherwise, e.cancel = true. 
-                e.Cancel = QueryAppList() ? false : true;
+                // If queryAppList fails, return
+                if (!await Task.Run(() => QueryAppList()))
+                {
+                    await StreamSetupFailed();
+                    return;
+                }
             }
+            await StreamSetupComplete(); 
         }
 
         /// <summary>
-        /// Runs upon completion of checking pair state when the user presses "Start Streaming Steam!"
+        /// Runs upon successful completion of checking pair state when the user presses "Start Streaming Steam!"
         /// </summary>
-        private void StreamBwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private async Task StreamSetupComplete()
         {
-            status_text.Text = ""; 
-            if (e.Error != null)
-            {
-                MessageBox.Show("Error getting device pair state. Check the hostname and try again");
-                Debug.WriteLine("Stream BW Error");
-            }
-            else if (e.Cancelled)
-            {
-                Debug.WriteLine("Stream BW Cancelled");
-            }
-            else
-            {
-                // Save the user's host input and send it to the streamframe page
-                PhoneApplicationService.Current.State["host"] = selected.ipAddress; 
-                NavigationService.Navigate(new Uri("/StreamFrame.xaml?steamId=" + steamId, UriKind.Relative));
-            }
-            Debug.WriteLine("Stream BW completed");
-            
+            // Save the user's host input and send it to the streamframe page
+            PhoneApplicationService.Current.State["host"] = selected.IpAddress; 
+            // TODO this navigation will need fixing for the new framework
+            await Task.Run(() => NavigationService.Navigate(new Uri("/StreamFrame.xaml?steamId=" + steamId, UriKind.Relative)));                         
+        }
+
+        /// <summary>
+        /// Runs if checking pair state fails
+        /// </summary>
+        private async Task StreamSetupFailed()
+        {
+            Debug.WriteLine("Stream setup failed");
+            Dispatcher.BeginInvoke(() => MessageBox.Show("Device not paired"));       
         }
 
         /// <summary>
         /// Pair with the hostname in the textbox
         /// </summary>
-        private void PairBwDoWork(object sender, DoWorkEventArgs e)
+        private async Task Pair(string uri)
         {
             Debug.WriteLine("Pairing ");
             // Create NvHttp object with the user input as the URL
-            nv = new NvHttp((string)e.Argument);
-
-            // Pair with the server. If queryAppList is successful, don't cancel the background worker. Otherwise, e.cancel = true. 
-            e.Cancel = Pair() ? false : true; 
-
-
-            // If queryAppList is successful, don't cancel the background worker. Otherwise, e.cancel = true. 
-            if(!e.Cancel)
-                e.Cancel = QueryAppList() ? false : true;
-
-        }
-       
-        /// <summary>
-        /// Runs once the background worker completes
-        /// </summary>
-        private void PairBwRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            status_text.Text = "";
-            // Check to see if an error occurred in the background process.
-            if (e.Error != null)
+            try
             {
-                MessageBox.Show("Pairing error: " + e.Error.Message);
+                nv = new NvHttp(uri);
+            }
+            catch (ArgumentNullException)
+            {
+                Dispatcher.BeginInvoke(() => MessageBox.Show("Invalid hostname")); 
+                return; 
             }
 
-            // Everything completed normally
-            else
-            {
-                Debug.WriteLine("Pairing background Worker Successfully Completed");
+            // Hit the pairing server. If it fails, return.
+            if (!await Task.Run(() => PairHelper()))
+            {                
+                return; 
             }
+
+            // Query the app list from the server. If it fails, return
+            if (!await Task.Run(() => QueryAppList()))
+            {
+                return;
+            }
+            // Otherwise, everything was successful
+            Dispatcher.BeginInvoke(() =>            
+                MessageBox.Show("Pairing Successful")); 
         }
 
-        #endregion Background Workers
+        #endregion Server Queries
 
         #region Persistent Settings
         /// <summary>
@@ -216,16 +256,7 @@ namespace Limelight
         private void SaveSettings()
         {
             IsolatedStorageSettings settings = IsolatedStorageSettings.ApplicationSettings;
-            // Save hostname text box
-            if (!settings.Contains("hostname"))
-            {
-                settings.Add("hostname", host_textbox.Text);
-            }
-            else
-            {
-                settings["hostname"] = host_textbox.Text;
-            }
-
+            
             // Save fps radio button state
             if (!settings.Contains("fps"))
             {
@@ -252,13 +283,7 @@ namespace Limelight
         /// Load persisted settings. Called on page load. 
         /// </summary>
         private void LoadSettings()
-        {
-            // TODO unsure where hostname textbox will fit into the new UI with mDNS
-            // Load hostname into the textbox, if any
-            if (IsolatedStorageSettings.ApplicationSettings.Contains("hostname"))
-            {
-                host_textbox.Text = IsolatedStorageSettings.ApplicationSettings["hostname"] as string;
-            }
+        {            
             // Load fps radio button state
             if (IsolatedStorageSettings.ApplicationSettings.Contains("fps"))
             {
@@ -293,6 +318,7 @@ namespace Limelight
         /// <returns>True if the operation succeeded, false otherwise</returns>
         private bool QueryAppList()
         {
+            // todo ASYNC
             XmlQuery appList;
             string steamIdStr;
             try
@@ -351,7 +377,7 @@ namespace Limelight
         /// Pair with the server by hitting the pairing URL 
         /// </summary>
         /// <returns>True if the operation succeeded, false otherwise</returns>
-        private bool Pair()
+        private bool PairHelper()
         {
             // Making the XML query to this URL does the actual pairing
             XmlQuery pairInfo;
@@ -380,6 +406,7 @@ namespace Limelight
         /// <returns></returns>
         private async Task EnumerateEligibleMachines()
         {
+            // TODO save previous machines you've connected to
             // Make a local copy of the computer list
             // The UI thread will populate the listbox with computerList whenever it pleases, so we don't want it to take the one we're modifying
             List<Computer> computerListLocal = new List<Computer>(computerList); 
@@ -388,25 +415,53 @@ namespace Limelight
             computerListLocal.Clear(); 
             Debug.WriteLine("Enumerating machines...");
 
-            // Let Zeroconf do its magic and find everything it can with mDNS
-            ILookup<string, string> domains = await ZeroconfResolver.BrowseDomainsAsync();
-            var responses = await ZeroconfResolver.ResolveAsync(domains.Select(g => g.Key));
-
-            // Go through every response we received and grab only the ones running nvstream
-            foreach (var resp in responses)
-            { 
-                if (resp.Services.ContainsKey("_nvstream._tcp.local."))
+            // If there's no network, save time and don't do the time-consuming mDNS 
+            if (!DeviceNetworkInformation.IsNetworkAvailable)
+            {
+                Debug.WriteLine("Network not available");
+            } // TODO Zeroconf will fail if you're not on WiFi. Check if device is on wifi? 
+            else
+            {
+                // Let Zeroconf do its magic and find everything it can with mDNS
+                ILookup<string, string> domains = null;
+                try
                 {
-                    Computer toAdd = new Computer(resp.DisplayName, resp.IPAddress);                   
-                    if (!computerListLocal.Exists(x => x.ipAddress == resp.IPAddress))
-                    {
-                        computerListLocal.Add(toAdd);
-                        Debug.WriteLine(resp);
-                    }                    
+                    domains = await ZeroconfResolver.BrowseDomainsAsync();
                 }
-            }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("EXCEPTION " + e.Message);
+                }
+                IReadOnlyList<IZeroconfHost> responses = null;
+                try
+                {
+                    responses = await ZeroconfResolver.ResolveAsync(domains.Select(g => g.Key));
 
-            // We're done messing with the list - it's okay for the UI thread to take now
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Exception in ZeroconfResolver.ResolverAsyc (Expected if BrowseDomainsAsync excepted): " + e.Message);
+                }
+                if (responses != null)
+                {
+                    // Go through every response we received and grab only the ones running nvstream
+                    foreach (var resp in responses)
+                    {
+                        if (resp.Services.ContainsKey("_nvstream._tcp.local."))
+                        {
+                            Computer toAdd = new Computer(resp.DisplayName, resp.IPAddress);
+                            // If we don't have the computer already, add it
+                            if (!computerListLocal.Exists(x => x.IpAddress == resp.IPAddress))
+                            {
+                                computerListLocal.Add(toAdd);
+                                Debug.WriteLine(resp);
+                            }
+                        }
+                    }
+                }    
+            }                   
+
+            // We're done messing with the list - it's okay for the UI thread to update it now
             computerList = computerListLocal; 
             if (computerList.Count == 0)
             {
