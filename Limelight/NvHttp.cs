@@ -18,8 +18,16 @@ namespace Limelight
         private ManualResetEvent completeEvent;
 
         #region Public Methods
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NvHttp"/> class. 
+        /// </summary>
+        /// <param name="hostnameString">Hostname or IP address of the streaming machine</param>
         public NvHttp(String hostnameString)
         {
+            if (hostnameString == null)
+            {
+                throw new ArgumentNullException("Hostname cannot be null");
+            }
             completeEvent = new ManualResetEvent(false);
             ResolveHostName(hostnameString);
             this.baseUrl = "http://" + resolvedHost.ToString() + ":" + PORT;
@@ -64,7 +72,10 @@ namespace Limelight
                 var ipAddress = endpoints[0].Address;
                 this.resolvedHost = ipAddress;
             }
-            completeEvent.Set();
+            else
+            {
+                throw new WebException("IP Address Malformed"); 
+            }
         }
         #endregion Private Methods
 
