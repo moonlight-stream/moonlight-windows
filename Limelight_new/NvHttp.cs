@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using Windows.System.Profile;
 using Windows.Storage.Streams;
+using System.Threading.Tasks;
 
 namespace Limelight_new
 {
@@ -29,7 +30,7 @@ namespace Limelight_new
             {
                 throw new ArgumentNullException("Hostname cannot be null");
             }
-            ResolveHostName(hostnameString);
+            Task.Run(async () => await ResolveHostName(hostnameString)).Wait();
             this.baseUrl = "http://" + resolvedHost.ToString() + ":" + PORT;
         }
 
@@ -56,9 +57,9 @@ namespace Limelight_new
         /// Resolve the GEForce PC hostname to an IP Address
         /// </summary>
         /// <param name="hostName"></param>
-        private async void ResolveHostName(String hostName)
+        private async Task ResolveHostName(String hostName)
         {
-            HostName serverHost = new HostName("www.google.com");
+            HostName serverHost = new HostName(hostName);
             StreamSocket clientSocket = new Windows.Networking.Sockets.StreamSocket();
 
             // Try to connect to the remote host
