@@ -29,7 +29,6 @@ namespace Limelight_new
             {
                 throw new ArgumentNullException("Hostname cannot be null");
             }
-            completeEvent = new ManualResetEvent(false);
             ResolveHostName(hostnameString);
             this.baseUrl = "http://" + resolvedHost.ToString() + ":" + PORT;
         }
@@ -71,6 +70,5 @@ namespace Limelight_new
             this.resolvedHost = clientSocket.Information.RemoteAddress;
         }
         #endregion Private Methods
-
     }
 }

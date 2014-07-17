@@ -16,7 +16,6 @@ namespace Limelight_new
         private Uri uri;
         private XDocument rawXml;
         private string rawXmlString;
-        private string err = null;
 
         #region Public Methods
         /// <summary>
@@ -26,7 +25,7 @@ namespace Limelight_new
         public XmlQuery(string url)
         {
             uri = new Uri(url);
-            GetXml(); 
+            Task.Run(async () => await GetXml()); 
         }
 
         /// <summary>
@@ -84,7 +83,6 @@ namespace Limelight_new
                 // Throws HttpClientException if something goes wrong
                 rawXmlString = await client.GetStringAsync(uri);
                 this.rawXml = XDocument.Parse(rawXmlString);
-
             }
         }
         #endregion Private Methods
