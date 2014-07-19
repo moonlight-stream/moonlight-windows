@@ -157,35 +157,27 @@ namespace Limelight_new
         /// <summary>
         /// Executed when the user presses "Pair"
         /// </summary>
-        private void PairButton_Click(object sender, RoutedEventArgs e)
+        private async void PairButton_Click(object sender, RoutedEventArgs e)
         {
             // Stop polling timer while we're pairing
             mDnsTimer.Stop();
-            // Don't let the user mash the buttons
-            // TODO check on an actual network
-            PairButton.IsEnabled = false;
-            StreamButton.IsEnabled = false;
 
             SaveSettings();
             status_text.Text = "Pairing...";
             selected = (Computer)computerPicker.SelectedItem;
-
             // User hasn't selected anything 
             if (selected == null)
             {
+                status_text.Text = "";  
                 var dialog = new MessageDialog("No machine selected", "Pairing Failed");
-                dialog.ShowAsync(); 
+                await dialog.ShowAsync();
             }
             else
             {
-                Pair(selected.IpAddress);
+                await Pair(selected.IpAddress);
             }
 
-            // User can use the buttons again
-
-            status_text.Text = "";
-            PairButton.IsEnabled = true;
-            StreamButton.IsEnabled = true;
+            status_text.Text = ""; 
 
             mDnsTimer.Start(); 
         }

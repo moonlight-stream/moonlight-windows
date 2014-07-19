@@ -25,7 +25,7 @@ namespace Limelight_new
         public XmlQuery(string url)
         {
             uri = new Uri(url);
-            Task.Run(async () => await GetXml()); 
+            Task.Run(async () => await GetXml()).Wait(); 
         }
 
         /// <summary>
