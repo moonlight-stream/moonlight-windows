@@ -164,12 +164,6 @@
       <HintPath>..\packages\Zeroconf.2.0.0\lib\wp8\Zeroconf.Platform.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Limelight-common-binding\Limelight-common-binding.vcxproj">
-      <Project>{F150A355-04CA-4F3E-8295-3FDA0DA800D4}</Project>
-      <Name>Limelight-common-binding</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).$(TargetFrameworkVersion).Overrides.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\$(TargetFrameworkIdentifier)\$(TargetFrameworkVersion)\Microsoft.$(TargetFrameworkIdentifier).CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

@@ -112,7 +112,7 @@ namespace Limelight_new
         /// <summary>
         /// Executed when the user presses "Start Streaming Steam!"
         /// </summary>
-        private void StreamButton_Click(object sender, RoutedEventArgs e)
+        private async void StreamButton_Click(object sender, RoutedEventArgs e)
         {
             Debug.WriteLine("Start Streaming button pressed");
 
@@ -134,12 +134,12 @@ namespace Limelight_new
             if (selected == null)
             {
                 var dialog = new MessageDialog("No machine selected", "Streaming Failed");
-                dialog.ShowAsync(); 
+                await dialog.ShowAsync(); 
                 status_text.Text = "";               
             }
             else
             {
-                StreamSetup(selected.IpAddress);
+                await StreamSetup(selected.IpAddress);
             }
             // Check the pair state
             status_text.Text = "";
@@ -168,17 +168,18 @@ namespace Limelight_new
             // User hasn't selected anything 
             if (selected == null)
             {
-                status_text.Text = "";  
                 var dialog = new MessageDialog("No machine selected", "Pairing Failed");
                 await dialog.ShowAsync();
+                status_text.Text = "";  
+
             }
             else
             {
+                // Pair with the selected machine
                 await Pair(selected.IpAddress);
             }
 
             status_text.Text = ""; 
-
             mDnsTimer.Start(); 
         }
         #endregion Event Handlers  
@@ -225,13 +226,9 @@ namespace Limelight_new
         /// Runs upon successful completion of checking pair state when the user presses "Start Streaming Steam!"
         /// </summary>
         private async Task StreamSetupComplete()
-        {
-            // TODO create some object for the parameter to pass that's not a linked list
-            LinkedList<string> parameter = new LinkedList<string>();
-            parameter.AddFirst(selected.IpAddress);
-            parameter.AddLast(steamId.ToString());
-            
-            this.Frame.Navigate(typeof(StreamFrame), parameter);
+        {                       
+            // Pass the selected computer as the parameter
+            //this.Frame.Navigate(typeof(StreamFrame), selected);
         }
 
         /// <summary>
@@ -240,8 +237,8 @@ namespace Limelight_new
         private async Task StreamSetupFailed()
         {
             Debug.WriteLine("Stream setup failed");
-            var dialog = new MessageDialog("Device not paired"); 
-            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => await dialog.ShowAsync());
+            var dialog = new MessageDialog("Stream setup failed");
+            await dialog.ShowAsync();
         }
 
         /// <summary>
@@ -257,8 +254,8 @@ namespace Limelight_new
             }
             catch (Exception)
             {
-                var dialog = new MessageDialog("Invalid Hostname");
-                dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => await dialog.ShowAsync());
+                var dialog = new MessageDialog("Invalid Hostname", "Pairing Failed");
+                dialog.ShowAsync(); 
                 return;
             }
 
@@ -274,9 +271,8 @@ namespace Limelight_new
                 return;
             }
             // Otherwise, everything was successful
-            var successDialog = new MessageDialog("Pairing Successful");
-            // TODO do I even need the dispatcher for these message boxes? 
-            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => await successDialog.ShowAsync());
+            var successDialog = new MessageDialog("Pairing successful", "Success");
+            await successDialog.ShowAsync(); 
         }
 
         #endregion Server Queries
@@ -334,7 +330,6 @@ namespace Limelight_new
         /// <returns>True if the operation succeeded, false otherwise</returns>
         private async Task<bool> QueryAppList()
         {
-            // todo ASYNC
             XmlQuery appList;
             string steamIdStr;
             try
@@ -343,7 +338,7 @@ namespace Limelight_new
             }
             catch (Exception e)
             {
-                var dialog = new MessageDialog("Device not paired: " + e.Message);
+                var dialog = new MessageDialog("Device not paired: " + e.Message, "App List Query Failed");
                 dialog.ShowAsync(); 
                 return false;
             }
@@ -356,13 +351,12 @@ namespace Limelight_new
             catch (Exception e)
             {
                 // Steam ID lookup failed
-                var dialog = new MessageDialog("Failed to get Steam ID: " + e.Message);
+                var dialog = new MessageDialog("Failed to get Steam ID: " + e.Message, "Steam ID Lookup Failed");
                 dialog.ShowAsync(); 
                 return false;
             }
 
             // We're in the clear - save the Steam app ID
-
             steamId = Convert.ToInt32(steamIdStr);
             return true;
         }
@@ -389,7 +383,6 @@ namespace Limelight_new
             if (String.Compare(pairState.XmlAttribute("paired"), "0") == 0)
             {
                 var dialog = new MessageDialog("Device not paired");
-                // TODO is this a vaild hack to get around the exception awaiting thing? 
                 await dialog.ShowAsync(); 
                 return false;
             }
@@ -444,7 +437,7 @@ namespace Limelight_new
             // If there's no network, save time and don't do the time-consuming mDNS 
             if (!InternetAvailable)
             {
-                Debug.WriteLine("Network not available");
+                Debug.WriteLine("Network not available - skipping mDNS");
             } 
             else
             {
@@ -456,7 +449,7 @@ namespace Limelight_new
                 }
                 catch (Exception e)
                 {
-                    Debug.WriteLine("EXCEPTION " + e.Message);
+                    Debug.WriteLine("Browse Domains Async threw exception: " + e.Message);
                 }
                 IReadOnlyList<IZeroconfHost> responses = null;
                 try
@@ -475,7 +468,7 @@ namespace Limelight_new
                     {
                         if (resp.Services.ContainsKey("_nvstream._tcp.local."))
                         {
-                            Computer toAdd = new Computer(resp.DisplayName, resp.IPAddress);
+                            Computer toAdd = new Computer(resp.DisplayName, resp.IPAddress, steamId);
                             // If we don't have the computer already, add it
                             if (!computerListLocal.Exists(x => x.IpAddress == resp.IPAddress))
                             {

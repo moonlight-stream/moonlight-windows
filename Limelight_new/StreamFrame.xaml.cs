@@ -18,15 +18,10 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
-//using Limelight_common_binding;
-
-// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkID=390556
+using Limelight_common_binding;
 
 namespace Limelight_new
 {
-    /// <summary>
-    /// An empty page that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class StreamFrame : Page
     {
 
@@ -39,7 +34,8 @@ namespace Limelight_new
 
         /// <summary>
         /// Connection stage identifiers
-        /// </summary>
+        /// </summary> 
+
         private const int STAGE_NONE = 0;
         private const int STAGE_PLATFORM_INIT = 1;
         private const int STAGE_HANDSHAKE = 2;
@@ -79,10 +75,11 @@ namespace Limelight_new
         
         #region Init
         /// <summary>
-        /// Get the Steam App ID passed from the previous page
+        /// Get the computer information passed from the previous page
         /// </summary>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            // We only want to stream in landscape
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape;
 
             selected = (Computer)e.Parameter;           
@@ -97,7 +94,7 @@ namespace Limelight_new
 
             // Audio/video stream source init
             AvStream = new AvStreamSource(frameWidth, frameHeight);
-            //StreamDisplay.SetSource(AvStream, "TODO WHAT IS THE MIME TYPE");
+            StreamDisplay.SetMediaStreamSource(AvStream);
             StreamDisplay.AutoPlay = true;
             StreamDisplay.Play();
 
@@ -273,11 +270,12 @@ namespace Limelight_new
 
         public void ClDisplayMessage(String message)
         {
+            Debug.WriteLine("ClDisplayMessage: " + message);
         }
 
         public void ClDisplayTransientMessage(String message)
         {
-
+            Debug.WriteLine("ClDisplayTransientMessage: " + message);
         }
 
         #endregion Callbacks
@@ -317,18 +315,18 @@ namespace Limelight_new
             }
 
             // Set up callbacks
-            //LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 10000, 1024); // TODO a magic number. Get FPS from the settings
-            //LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
-            //LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArPlaySample);
-            //LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
-            //ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
+            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 10000, 1024); // TODO a magic number. Get FPS from the settings
+            LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
+            LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArPlaySample);
+            LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
+            ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
 
             // Call into Common to start the connection
             Debug.WriteLine("Starting connection");
-            // uint addr = (uint)nv.resolvedHost; // TODO how to get the addr as a uint
-            //LimelightCommonRuntimeComponent.StartConnection(addr, streamConfig, clCallbacks, drCallbacks, arCallbacks);
-
-            // If one of the stages failed, stop
+            uint addr = 0; 
+            //uint addr = (uint)nv.resolvedHost.ToString(); // TODO how to get the addr as a uint
+            LimelightCommonRuntimeComponent.StartConnection(addr, streamConfig, clCallbacks, drCallbacks, arCallbacks);
+            
             if (stageFailureText != null)
             {
                 Debug.WriteLine("Stage failed");
@@ -391,13 +389,14 @@ namespace Limelight_new
             {
                 // We haven't moved so send a click
                 // TODO what even is this pointer crap. How do I send a click? 
-                //LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, (int)MouseButton.Left);
+                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, (int)MouseButton.Left);
 
                 // Sleep here because some games do input detection by polling
                 try
                 {
                     // TODO how do we sleep
-                    // Thread.Sleep(100);
+                    //Thread.Sleep(100);
+                    
                 }
                 catch (Exception ex)
                 {
@@ -405,7 +404,7 @@ namespace Limelight_new
                 }
 
                 // Raise the mouse button
-                //LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release, (int)MouseButton.Left);
+                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release, (int)MouseButton.Left);
             }
 
         }
@@ -420,7 +419,7 @@ namespace Limelight_new
             var first = pointerCollection.FirstOrDefault();
             var last = pointerCollection.LastOrDefault();
 
-            // TODO is this check redundant? 
+            // TODO is this check redundant? Will the event trigger lie to me frequently enough (if ever) that it'll be an issue? 
             if (first.Position.X != last.Position.X || first.Position.Y != last.Position.Y)
             {
                 short x = (short)(last.Position.X - first.Position.X); 
@@ -428,9 +427,9 @@ namespace Limelight_new
                 Debug.WriteLine(x + " and " + y);
                 hasMoved = true;
                 // Send the values to the streaming PC so it can register mouse movement
-                //LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(x), (short)(y));
+                LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(x), (short)(y));
             }            
-
+            // TODO what even am I doing
         }
         #endregion Mouse Events
 
@@ -449,6 +448,8 @@ namespace Limelight_new
         /// </summary>
         private void Cleanup()
         {
+            // TODO will this be okay if we haven't started a connection? 
+            LimelightCommonRuntimeComponent.StopConnection(); 
             AvStream.Dispose();
             hasMoved = false; 
         }

@@ -81,11 +81,12 @@ namespace Limelight_new
             {
                 HttpClient client = new HttpClient();
                 // Throws HttpClientException if something goes wrong
+                // TODO make sure caller is trying this
+
                 rawXmlString = await client.GetStringAsync(uri);
                 this.rawXml = XDocument.Parse(rawXmlString);
             }
         }
         #endregion Private Methods
-
     }
 }

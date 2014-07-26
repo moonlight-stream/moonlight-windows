@@ -71,6 +71,7 @@ namespace Limelight
 
         #endregion Class Variables
 
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the <see cref="AvStreamSource"/> class. 
         /// </summary>
@@ -87,7 +88,7 @@ namespace Limelight
             // 15 is the minimum size
             this.AudioBufferLength = 15;
         }
-
+        #endregion Constructor
         #region Enqueue
         private void EnqueueNal(byte[] buf, int nalStart, int nalEnd, ulong frameNumber)
         {
@@ -130,6 +131,7 @@ namespace Limelight
         {
             EnqueueNal(buf, 0, buf.Length, frameNumber++);
             SendVideoSamples();
+            // TODO remember to get rid of this return
             return;
 
             int i;

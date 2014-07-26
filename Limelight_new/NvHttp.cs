@@ -30,6 +30,7 @@ namespace Limelight_new
             {
                 throw new ArgumentNullException("Hostname cannot be null");
             }
+            // TODO where's hostname resolution exception handling happening
             Task.Run(async () => await ResolveHostName(hostnameString)).Wait();
             this.baseUrl = "http://" + resolvedHost.ToString() + ":" + PORT;
         }
@@ -63,12 +64,11 @@ namespace Limelight_new
             StreamSocket clientSocket = new Windows.Networking.Sockets.StreamSocket();
 
             // Try to connect to the remote host
+            // TODO do we need try/catch here? 
             await clientSocket.ConnectAsync(serverHost, "http");
 
-            // Now try the clientSocket.Information property
-            // e.g. clientSocket.Information.RemoteAddress
-            // to get the ip address
             this.resolvedHost = clientSocket.Information.RemoteAddress;
+           
         }
         #endregion Private Methods
     }

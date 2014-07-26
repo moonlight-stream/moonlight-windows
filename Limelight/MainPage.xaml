@@ -12,7 +12,7 @@
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
     SupportedOrientations="Portrait" 
-    shell:SystemTray.IsVisible="True" Orientation="Portrait" Loaded="Loaded">
+    shell:SystemTray.IsVisible="True" Orientation="Landscape" Loaded="Loaded">
 
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent">

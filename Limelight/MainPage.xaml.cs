@@ -65,6 +65,9 @@ namespace Limelight
             computerPicker.ItemsSource = computerList;
             // Start regularly polling for machines
             mDnsTimer.Start();
+            NvHttp test = new NvHttp("www.google.com");
+            MessageBox.Show(test.resolvedHost.ToString());
+
         }
 
         /// <summary>
