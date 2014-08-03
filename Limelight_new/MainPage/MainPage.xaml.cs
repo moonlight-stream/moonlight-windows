@@ -174,65 +174,6 @@
         }
         #endregion Event Handlers  
 
-        #region Server Query
-
-        /// <summary>
-        /// When the user presses "Start Streaming Steam", first check that they are paired in the background worker
-        /// </summary>
-        private async Task StreamSetup(string uri)
-        {
-            try
-            {
-                nv = new NvHttp(uri);
-            }
-            catch (Exception)
-            {
-                // TODO will not being able to await cause problems here? 
-                StreamSetupFailed();
-                return;
-            }
-
-            // If device is already paired, return.             
-            if (!await Task.Run(() => QueryPairState()))
-            {
-                await StreamSetupFailed();
-                return;
-            }
-
-            // If we haven't cancelled and don't have the steam ID, query app list to get it
-            if (steamId == 0)
-            {
-                // If queryAppList fails, return
-                if (!await Task.Run(() => QueryAppList()))
-                {
-                    await StreamSetupFailed();
-                    return;
-                }
-            }
-            await StreamSetupComplete();
-        }
-
-        /// <summary>
-        /// Runs upon successful completion of checking pair state when the user presses "Start Streaming Steam!"
-        /// </summary>
-        private async Task StreamSetupComplete()
-        {                       
-            // Pass the selected computer as the parameter
-            //this.Frame.Navigate(typeof(StreamFrame), selected);
-        }
-
-        /// <summary>
-        /// Runs if checking pair state fails
-        /// </summary>
-        private async Task StreamSetupFailed()
-        {
-            Debug.WriteLine("Stream setup failed");
-            var dialog = new MessageDialog("Stream setup failed");
-            await dialog.ShowAsync();
-        }
-
-        #endregion Server Queries
-
         #region Persistent Settings
         /// <summary>
         /// Save page settings so the user doesn't have to select them each time she opens the app
@@ -278,45 +219,5 @@
             }
         }
         #endregion Persistent Settings
-
-        #region Helper Methods
-        /// <summary>
-        /// Query the app list on the server to get the Steam App ID
-        /// </summary>
-        /// <returns>True if the operation succeeded, false otherwise</returns>
-        private async Task<bool> QueryAppList()
-        {
-            XmlQuery appList;
-            string steamIdStr;
-            try
-            {
-                appList = new XmlQuery(nv.baseUrl + "/applist?uniqueid=" + nv.GetDeviceName());
-            }
-            catch (Exception e)
-            {
-                var dialog = new MessageDialog("Device not paired: " + e.Message, "App List Query Failed");
-                dialog.ShowAsync(); 
-                return false;
-            }
-            // App list query went well - try to get the steam ID
-            try
-            {
-                steamIdStr = await Task.Run(() => appList.XmlAttribute("ID", appList.XmlAttributeElement("App")));
-
-            }
-            catch (Exception e)
-            {
-                // Steam ID lookup failed
-                var dialog = new MessageDialog("Failed to get Steam ID: " + e.Message, "Steam ID Lookup Failed");
-                dialog.ShowAsync(); 
-                return false;
-            }
-
-            // We're in the clear - save the Steam app ID
-            steamId = Convert.ToInt32(steamIdStr);
-            return true;
-        }
-
-        #endregion Helper Methods
     }
 }
