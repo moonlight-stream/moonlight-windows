@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WindowsRuntime.HttpClientFilters</name>
+    </assembly>
+    <members>
+        <member name="T:WindowsRuntime.HttpClientFilters.WinRtHttpClientHandler">
+            <summary>
+                An HttpMessageHandler that lets you use the Windows Runtime IHttpFilter types
+            </summary>
+        </member>
+    </members>
+</doc>
