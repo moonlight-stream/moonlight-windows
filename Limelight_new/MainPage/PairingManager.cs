@@ -5,6 +5,17 @@
     using System.Threading.Tasks;
     using Windows.UI.Popups;
     using Windows.UI.Xaml.Controls;
+    using Windows.Security.Cryptography;
+    using Windows.Storage.Streams;
+    using Windows.Security.Cryptography.Core;
+    using Org.BouncyCastle.Asn1;
+    using Org.BouncyCastle.Crypto;
+    using Org.BouncyCastle.Crypto.Parameters;
+    using Org.BouncyCastle.OpenSsl;
+    using Org.BouncyCastle.Security;
+    using Org.BouncyCastle.Utilities.Encoders;
+    using System.Text;
+    using Org.BouncyCastle.Crypto.Paddings;
 
     /// <summary>
     /// Performs pairing with the streaming machine
@@ -87,7 +98,7 @@
             await successDialog.ShowAsync();
             return true;
         }
-#endregion Pairing
+        #endregion Pairing
 
         #region XML Queries
         /// <summary>
@@ -119,5 +130,7 @@
         }
 
         #endregion XML Queries
+
+
     }
 }
