@@ -10,8 +10,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 namespace Limelight_new
-{
-    
+{    
     /// <summary>
     /// Object containing the hostname and methods to resolve it
     /// </summary>
