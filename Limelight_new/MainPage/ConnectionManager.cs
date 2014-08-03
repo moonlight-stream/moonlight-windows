@@ -20,15 +20,23 @@
             }
             catch (Exception)
             {
-                // TODO will not being able to await cause problems here? 
-                StreamSetupFailed();
+                StreamSetupFailed("Invalid Hostname");
                 return;
+            }
+           
+            try
+            {
+                await nv.GetServerIPAddress();
+            }
+            catch (Exception)
+            {
+                StreamSetupFailed("Unable to get streaming machine's IP addresss"); 
             }
 
             // If device is already paired, return.             
-            if (!await Task.Run(() => QueryPairState()))
+            if (!await QueryPairState())
             {
-                await StreamSetupFailed();
+                await StreamSetupFailed("Pair state query failed");
                 return;
             }
 
@@ -38,7 +46,7 @@
                 // If queryAppList fails, return
                 if (!await Task.Run(() => QueryAppList()))
                 {
-                    await StreamSetupFailed();
+                    await StreamSetupFailed("App list query failed");
                     return;
                 }
             }
@@ -57,10 +65,10 @@
         /// <summary>
         /// Runs if checking pair state fails
         /// </summary>
-        private async Task StreamSetupFailed()
+        private async Task StreamSetupFailed(string message)
         {
             Debug.WriteLine("Stream setup failed");
-            var dialog = new MessageDialog("Stream setup failed");
+            var dialog = new MessageDialog(message, "Stream setup failed");
             await dialog.ShowAsync();
         }
 

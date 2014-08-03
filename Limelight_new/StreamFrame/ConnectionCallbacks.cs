@@ -5,7 +5,7 @@
     using Windows.UI.Xaml.Controls;
     public sealed partial class StreamFrame : Page
     {
-        #region Callbacks
+        #region Decoder Renderer
         public void DrSetup(int width, int height, int redrawRate, int drFlags)
         {
 
@@ -30,7 +30,9 @@
         {
             //AvStream.EnqueueVideoSamples(data);
         }
+#endregion Decoder Renderer
 
+        #region Audio Renderer
         public void ArInit()
         {
 
@@ -55,7 +57,9 @@
         {
             //AvStream.EnqueueAudioSamples(data);
         }
+#endregion Audio Renderer
 
+        #region Connection Listener
         /// <summary>
         /// Stage beginning callback. Updates the connection progress bar with the current stage
         /// </summary>
@@ -176,9 +180,6 @@
         {
             Debug.WriteLine("ClDisplayTransientMessage: " + message);
         }
-
-        #endregion Callbacks
-
-
+#endregion Connection Listener
     }
 }

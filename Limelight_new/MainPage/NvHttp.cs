@@ -1,59 +1,46 @@
-﻿using Windows.Networking;
-using Windows.Networking.Sockets; 
-using System;
-using System.Net;
-using System.Threading;
-using Windows.System.Profile;
-using Windows.Storage.Streams;
-using System.Threading.Tasks;
+﻿using System;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Windows.Networking;
+using Windows.Networking.Sockets;
+using Windows.System.Profile;
 
 namespace Limelight_new
 {    
     /// <summary>
-    /// Object containing the hostname and methods to resolve it
+    /// Object that obtains the base URL for http requests
     /// </summary>
-    public class NvHttp 
+    public class NvHttp
     {
-        private Regex IP = new Regex(@"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
+        #region Class Variables
+
         public const int PORT = 47989;
 	    public const int CONNECTION_TIMEOUT = 5000;
-        public String baseUrl { get; set; }
-        public string resolvedHost {get; set;}
+        public string baseUrl { get; set; }
+        public string serverIP {get; set; }
 
-        #region Public Methods
+        private string hostname;
+        private Regex IP = new Regex(@"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
+
+        #endregion Class Variables
+
+        #region Constructor
         /// <summary>
         /// Initializes a new instance of the <see cref="NvHttp"/> class. 
         /// </summary>
         /// <param name="hostnameString">Hostname or IP address of the streaming machine</param>
-        public NvHttp(String hostnameString)
+        public NvHttp(string hostnameString)
         {
             if (string.IsNullOrWhiteSpace(hostnameString))
             {
                 throw new ArgumentNullException("Invalid hostname");
             }
-            Debug.WriteLine("Resolving host");
-            Match ipAddr = null; 
-
-            // Check if it's an IP address as-is based on a regex match
-            try {
-              ipAddr = IP.Match(hostnameString);
-            } catch (Exception ex){
-                Debug.WriteLine("Exception: " + ex.Message);
-            }
-            if(ipAddr.Success) {
-                this.resolvedHost = hostnameString; 
-            }
-            else
-            {
-                Task.Run(async () => await ResolveHostName(hostnameString)).Wait();
-            }
-
-
-            this.baseUrl = "http://" + resolvedHost + ":" + PORT;
+            this.hostname = hostnameString; 
         }
+        #endregion Constructor
 
+        #region Getters
         /// Get the local device's name
         /// </summary>
         /// <returns>Unique ID for the device</returns>
@@ -68,9 +55,37 @@ namespace Limelight_new
 
             return BitConverter.ToString(bytes); 
         }
-        #endregion Public Methods
 
-        #region Private Methods
+        public async Task GetServerIPAddress()
+        {
+            Match ipAddr = null;
+
+            // Check if it's an IP address as-is based on a regex match
+            try
+            {
+                ipAddr = IP.Match(this.hostname);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Exception: " + ex.Message);
+            }
+
+            // If the regex matched, we already have the IP string we need.
+            if (ipAddr.Success)
+            {
+                this.serverIP = this.hostname;
+            }
+            // Else, we need to resolve the hostname. 
+            else
+            {
+                await ResolveHostName(this.hostname);
+            }
+
+            this.baseUrl = "http://" + serverIP + ":" + PORT;
+        }
+        #endregion Getters
+
+        #region Hostname resolution
 
         /// <summary>
         /// Resolve the GEForce PC hostname to an IP Address
@@ -82,20 +97,20 @@ namespace Limelight_new
             StreamSocket clientSocket = new Windows.Networking.Sockets.StreamSocket();
 
             // Try to connect to the remote host
-            // TODO do we need try/catch here? 
             try
             {
                 await clientSocket.ConnectAsync(serverHost, "http");
 
             }
+                // TODO properly handle this exception
             catch (Exception e)
             {
-                Debug.WriteLine("Problem!!! " + e.Message);
+                Debug.WriteLine("Exception: " + e.Message);
             }
 
-            this.resolvedHost = clientSocket.Information.RemoteAddress.ToString();
+            this.serverIP = clientSocket.Information.RemoteAddress.ToString();
            
         }
-        #endregion Private Methods
+        #endregion Hostname resolution
     }
 }

@@ -3,8 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Threading.Tasks;
-    using Windows.Storage;
     using Windows.UI.Core;
     using Windows.UI.Popups;
     using Windows.UI.Xaml;
@@ -30,6 +28,8 @@
 
 
         #endregion Class variables
+
+        #region Constructor
         public MainPage()
         {
             this.InitializeComponent();
@@ -42,6 +42,7 @@
             mDnsTimer.Interval = TimeSpan.FromSeconds(MDNS_POLLING_INTERVAL);
             mDnsTimer.Tick += OnTimerTick;
         }
+        #endregion Constuctor
 
         #region Event Handlers
         /// <summary>
@@ -174,50 +175,5 @@
         }
         #endregion Event Handlers  
 
-        #region Persistent Settings
-        /// <summary>
-        /// Save page settings so the user doesn't have to select them each time she opens the app
-        /// </summary>
-        private void SaveSettings()
-        {
-            var settings = ApplicationData.Current.RoamingSettings;
-
-            // Save fps radio button state
-            
-            settings.Values["fps"] = _30fps_button.IsChecked;
-            settings.Values["pixels"] = _720p_button.IsChecked;
-        }
-
-        /// <summary>
-        /// Load persisted settings. Called on page load. 
-        /// </summary>
-        private void LoadSettings()
-        {
-            // Load fps radio button state
-            if (ApplicationData.Current.RoamingSettings.Values.ContainsKey("fps"))
-            {
-                if ((bool)ApplicationData.Current.RoamingSettings.Values["fps"])
-                {
-                    _30fps_button.IsChecked = true;
-                }
-                else
-                {
-                    _60fps_button.IsChecked = true;
-                }
-            }
-            // Load fps radio button state
-            if (ApplicationData.Current.RoamingSettings.Values.ContainsKey("pixels"))
-            {
-                if ((bool)ApplicationData.Current.RoamingSettings.Values["pixels"])
-                {
-                    _720p_button.IsChecked = true;
-                }
-                else
-                {
-                    _1080p_button.IsChecked = true;
-                }
-            }
-        }
-        #endregion Persistent Settings
     }
 }
