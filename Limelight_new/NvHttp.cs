@@ -6,18 +6,22 @@ using System.Threading;
 using Windows.System.Profile;
 using Windows.Storage.Streams;
 using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Limelight_new
 {
+    
     /// <summary>
     /// Object containing the hostname and methods to resolve it
     /// </summary>
     public class NvHttp 
     {
-	    public const int PORT = 47989;
+        private Regex IP = new Regex(@"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
+        public const int PORT = 47989;
 	    public const int CONNECTION_TIMEOUT = 5000;
         public String baseUrl { get; set; }
-        public HostName resolvedHost {get; set;}
+        public string resolvedHost {get; set;}
 
         #region Public Methods
         /// <summary>
@@ -26,16 +30,31 @@ namespace Limelight_new
         /// <param name="hostnameString">Hostname or IP address of the streaming machine</param>
         public NvHttp(String hostnameString)
         {
-            if (hostnameString == null)
+            if (string.IsNullOrWhiteSpace(hostnameString))
             {
-                throw new ArgumentNullException("Hostname cannot be null");
+                throw new ArgumentNullException("Invalid hostname");
             }
-            // TODO where's hostname resolution exception handling happening
-            Task.Run(async () => await ResolveHostName(hostnameString)).Wait();
-            this.baseUrl = "http://" + resolvedHost.ToString() + ":" + PORT;
+            Debug.WriteLine("Resolving host");
+            Match ipAddr = null; 
+
+            // Check if it's an IP address as-is based on a regex match
+            try {
+              ipAddr = IP.Match(hostnameString);
+            } catch (Exception ex){
+                Debug.WriteLine("Exception: " + ex.Message);
+            }
+            if(ipAddr.Success) {
+                this.resolvedHost = hostnameString; 
+            }
+            else
+            {
+                Task.Run(async () => await ResolveHostName(hostnameString)).Wait();
+            }
+
+
+            this.baseUrl = "http://" + resolvedHost + ":" + PORT;
         }
 
-        /// <summary>
         /// Get the local device's name
         /// </summary>
         /// <returns>Unique ID for the device</returns>
@@ -65,9 +84,17 @@ namespace Limelight_new
 
             // Try to connect to the remote host
             // TODO do we need try/catch here? 
-            await clientSocket.ConnectAsync(serverHost, "http");
+            try
+            {
+                await clientSocket.ConnectAsync(serverHost, "http");
 
-            this.resolvedHost = clientSocket.Information.RemoteAddress;
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Problem!!! " + e.Message);
+            }
+
+            this.resolvedHost = clientSocket.Information.RemoteAddress.ToString();
            
         }
         #endregion Private Methods

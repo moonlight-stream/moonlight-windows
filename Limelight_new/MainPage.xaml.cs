@@ -92,6 +92,7 @@ namespace Limelight_new
         private async void Loaded(object sender, object e)
         {
             Debug.WriteLine("Loaded");
+            
             await EnumerateEligibleMachines();
 
             computerPicker.ItemsSource = computerList;
@@ -105,8 +106,13 @@ namespace Limelight_new
         /// </summary>
         private async void OnTimerTick(object sender, object e)
         {
+            Debug.WriteLine(computerPicker.SelectedIndex);
             await EnumerateEligibleMachines();
-            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => computerPicker.ItemsSource = computerList);
+            // Update the list only if the user hasn't selected anything - FIXME this is a workaround
+            if (computerPicker.SelectedIndex < 0)
+            {
+                await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => computerPicker.ItemsSource = computerList);
+            }
         }
 
         /// <summary>
@@ -250,7 +256,7 @@ namespace Limelight_new
             // Create NvHttp object with the user input as the URL
             try
             {
-                nv = new NvHttp(uri);
+                await Task.Run(() => nv = new NvHttp(uri))                ;
             }
             catch (Exception)
             {
@@ -485,6 +491,14 @@ namespace Limelight_new
             if (computerList.Count == 0)
             {
                 computerPicker.PlaceholderText = "No computers found";
+            }
+            else if (computerList.Count == 1)
+            {
+                computerPicker.PlaceholderText = "1 computer found...";
+            }
+            else
+            {
+                computerPicker.PlaceholderText = computerList.Count + " computers found...";
             }
         }
 
