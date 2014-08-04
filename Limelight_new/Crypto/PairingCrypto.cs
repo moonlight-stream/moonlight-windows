@@ -16,6 +16,7 @@
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        /* 
         #region Sign and Verify
         private static string Sign(String data, String privateModulusHexString, String privateExponentHexString)
         {
@@ -43,23 +44,24 @@
             // Make the key
             RsaKeyParameters key = MakeKey(publicModulusHexString, publicExponentHexString, false);
 
-            /* Init alg */
+            // Init alg 
             ISigner signer = SignerUtilities.GetSigner("SHA256withRSA");
 
-            /* Populate key */
+            // Populate key 
             signer.Init(false, key);
 
-            /* Get the signature into bytes */
+            // Get the signature into bytes
             var expectedSig = Convert.FromBase64String(expectedSignature);
 
-            /* Get the bytes to be signed from the string */
+            // Get the bytes to be signed from the string
             var msgBytes = Encoding.UTF8.GetBytes(data);
 
-            /* Calculate the signature and see if it matches */
+            // Calculate the signature and see if it matches
             signer.BlockUpdate(msgBytes, 0, msgBytes.Length);
             return signer.VerifySignature(expectedSig);
         }
-        #endregion Sign and Verify
+        #endregion Sign and Verify */
+    
 
         #region AES Encrypt/Decrypt
 

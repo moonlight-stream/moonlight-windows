@@ -2,10 +2,13 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
+using Windows.Web.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Windows.Security.Cryptography.Certificates;
+using Windows.Web.Http.Filters;
+using System.Collections.Generic;
 namespace Limelight_new
 {
     /// <summary>
@@ -16,6 +19,7 @@ namespace Limelight_new
         private Uri uri;
         private XDocument rawXml;
         private string rawXmlString;
+        private Windows.Web.Http.HttpClient client; 
 
         #region Public Methods
         /// <summary>
@@ -25,7 +29,14 @@ namespace Limelight_new
         public XmlQuery(string url)
         {
             uri = new Uri(url);
-            Task.Run(async () => await GetXml()).Wait(); 
+            HttpBaseProtocolFilter filter = new HttpBaseProtocolFilter();
+            // TODO add ignorable errors
+            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Untrusted);
+            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.InvalidName);
+            
+            client = new Windows.Web.Http.HttpClient(filter);
+            // TODO get rid of this gross .Wait(). Maybe caller should just call GetXml(); 
+            Task.Run(async () => await GetXml()).Wait();
         }
 
         /// <summary>
@@ -79,11 +90,15 @@ namespace Limelight_new
             Debug.WriteLine(uri);
             if (rawXmlString == null)
             {
-                HttpClient client = new HttpClient();
-                // Throws HttpClientException if something goes wrong
-                // TODO make sure caller is trying this
-
-                rawXmlString = await client.GetStringAsync(uri);
+                try
+                {
+                    rawXmlString = await client.GetStringAsync(uri);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.Message);
+                }
+                Debug.WriteLine(rawXmlString);
                 this.rawXml = XDocument.Parse(rawXmlString);
             }
         }

@@ -3,19 +3,12 @@
     using System;
     using System.Diagnostics;
     using System.Threading.Tasks;
+    using Windows.Security.Cryptography.Certificates;
     using Windows.UI.Popups;
     using Windows.UI.Xaml.Controls;
-    using Windows.Security.Cryptography;
-    using Windows.Storage.Streams;
-    using Windows.Security.Cryptography.Core;
-    using Org.BouncyCastle.Asn1;
-    using Org.BouncyCastle.Crypto;
-    using Org.BouncyCastle.Crypto.Parameters;
-    using Org.BouncyCastle.OpenSsl;
-    using Org.BouncyCastle.Security;
-    using Org.BouncyCastle.Utilities.Encoders;
-    using System.Text;
-    using Org.BouncyCastle.Crypto.Paddings;
+    using Windows.Web.Http.Filters;
+    using WindowsRuntime.HttpClientFilters;
+    
 
     /// <summary>
     /// Performs pairing with the streaming machine
@@ -74,23 +67,17 @@
         /// <returns>True if the operation succeeded, false otherwise</returns>
         private async Task<bool> PairHelper()
         {
+            
             // Making the XML query to this URL does the actual pairing
             XmlQuery pairInfo;
             try
             {
-                pairInfo = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + nv.GetDeviceName());
+                pairInfo = new XmlQuery(nv.baseUrl + "/serverinfo?uniqueid=" + nv.GetDeviceName());
             }
             catch (Exception e)
             {
                 var dialog = new MessageDialog(e.Message, "Pairing Failed");
                 dialog.ShowAsync();
-                return false;
-            }
-            // Session ID = 0; pairing failed
-            if (String.Compare(pairInfo.XmlAttribute("sessionid"), "0") == 0)
-            {
-                var dialog = new MessageDialog("Session ID = 0", "Pairing Failed");
-                await dialog.ShowAsync();
                 return false;
             }
             // Everything was successful
@@ -130,7 +117,6 @@
         }
 
         #endregion XML Queries
-
 
     }
 }
