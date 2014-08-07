@@ -4,6 +4,7 @@
     using System.Diagnostics;
     using System.Threading.Tasks;
     using Windows.Security.Cryptography.Certificates;
+    using Windows.Security.Cryptography.Core;
     using Windows.UI.Popups;
     using Windows.UI.Xaml.Controls;
     using Windows.Web.Http.Filters;
@@ -15,6 +16,8 @@
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private CryptographicKey aesKey; 
+
         #region Pairing
         /// <summary>
         /// Pair with the hostname in the textbox
@@ -46,7 +49,8 @@
             }
 
             // Hit the pairing server. If it fails, return.
-            if (!await PairHelper())
+            // FIXME real things for PIN
+            if (!await PairHelper(nv.GetDeviceName(), "0000"))
             {
                 return;
             }
@@ -65,20 +69,36 @@
         /// Pair with the server by hitting the pairing URL 
         /// </summary>
         /// <returns>True if the operation succeeded, false otherwise</returns>
-        private async Task<bool> PairHelper()
+        private async Task<bool> PairHelper(String uniqueId, String pin)
         {
-            
-            // Making the XML query to this URL does the actual pairing
+            // Generate a salt for hashing the PIN
+            byte[] salt = GenerateRandomBytes(16);
+
+            // Combine the salt and pin, then create an AES key from them
+            byte[] saltAndPin = SaltPin(salt, pin);
+            aesKey = GenerateAesKey(saltAndPin);
+
+            // Send the salt and get the server cert
+
             XmlQuery pairInfo;
             try
             {
-                pairInfo = new XmlQuery(nv.baseUrl + "/serverinfo?uniqueid=" + nv.GetDeviceName());
+                pairInfo = null; 
+                // TODO pem
+                //pairInfo = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + uniqueId + 
+                //"&devicename=roth&updateState=1&phrase=getservercert&salt=" + bytesToHex(salt) + "&clientcert=" + bytesToHex(pemCertBytes));
             }
             catch (Exception e)
             {
                 var dialog = new MessageDialog(e.Message, "Pairing Failed");
                 dialog.ShowAsync();
                 return false;
+            }
+            // We aren't paired properly - hit the unpair URL
+            if (!pairInfo.XmlAttribute("paired").Equals("0"))
+            {
+                Unpair(); 
+                // TODO get server cert here
             }
             // Everything was successful
             var successDialog = new MessageDialog("Pairing completed successfully", "Pairing Completed");

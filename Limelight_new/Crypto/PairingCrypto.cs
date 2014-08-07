@@ -1,4 +1,4 @@
-﻿namespace Limelight_new.Crypto
+﻿namespace Limelight_new
 {
     using Org.BouncyCastle.Crypto;
     using Org.BouncyCastle.Crypto.Parameters;
@@ -30,7 +30,7 @@
             // Get the bytes to be signed from the string 
             var bytes = Encoding.UTF8.GetBytes(data);
 
-            //Calc the signatur
+            //Calc the signature
             sig.BlockUpdate(bytes, 0, bytes.Length);
             byte[] signature = sig.GenerateSignature();
 
@@ -65,7 +65,7 @@
 
         #region AES Encrypt/Decrypt
 
-        private static byte[] encryptAesEcb(byte[] message, CryptographicKey key)
+        private static byte[] EncryptAes(byte[] message, CryptographicKey key)
         {
 
             IBuffer encrypted;
@@ -89,7 +89,7 @@
             return encryptedMsg;
         }
 
-        private static byte[] decrypt(byte[] encrypted, CryptographicKey key)
+        private static byte[] DecryptAes(byte[] encrypted, CryptographicKey key)
         {
             IBuffer encryptedBuf = CryptographicBuffer.CreateFromByteArray(encrypted);
             IBuffer iv = null; 
@@ -111,7 +111,7 @@
         /// </summary>
         /// <param name="length">Length of the desired number in bytes</param>
         /// <returns></returns>
-        private byte[] generateRandomBytes(uint length)
+        private byte[] GenerateRandomBytes(uint length)
         {
             IBuffer buffer = CryptographicBuffer.GenerateRandom(length);
             byte[] rand = new byte[length];
@@ -119,13 +119,45 @@
             return rand;
         }
 
+        private static const char[] hexArray = "0123456789ABCDEF".ToCharArray();
+
+        /// <summary>
+        /// Convert a byte array to a hexidecimal string
+        /// </summary>
+        /// <param name="bytes">Byte array to convert</param>
+        /// <returns>Resulting hexidecimal string</returns>
+        private static string bytesToHex(byte[] bytes)
+        {
+            char[] hexChars = new char[bytes.Length * 2];
+	        for ( int j = 0; j < bytes.Length; j++ ) {
+	            int v = bytes[j] & 0xFF;
+	            hexChars[j * 2] = hexArray[v >> 4];
+	            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+	        }
+	        return new String(hexChars);
+        }
+
+        private static byte[] HexToBytes(string s)
+        {
+            int len = s.Length;
+            byte[] data = new byte[len / 2];
+            // TODO make this work in C#
+            for (int i = 0; i < len; i += 2)
+            {
+               // data[i / 2] = (byte)((Character.digit(s.charAt(i), 16) << 4)
+                //                     + Character.digit(s.charAt(i + 1), 16));
+            }
+            return data;
+        }
+
+
         /// <summary>
         /// Combine the PIN with the salt
         /// </summary>
         /// <param name="salt">The salt</param>
         /// <param name="pin">The PIN</param>
-        /// <returns></returns>
-        private static byte[] saltPin(byte[] salt, string pin)
+        /// <returns>Salted PIN</returns>
+        private static byte[] SaltPin(byte[] salt, string pin)
         {
             byte[] saltedPin = new byte[salt.Length + pin.Length];
             Array.Copy(salt, 0, saltedPin, 0, salt.Length);
@@ -138,7 +170,7 @@
         /// </summary>
         /// <param name="data">The data to hash</param>
         /// <returns></returns>
-        private static IBuffer toSHA1Bytes(byte[] data)
+        private static IBuffer ToSHA1Bytes(byte[] data)
         {
             IBuffer messageBuffer = CryptographicBuffer.ConvertStringToBinary(data.ToString(), BinaryStringEncoding.Utf8);
 
@@ -168,7 +200,7 @@
             SymmetricKeyAlgorithmProvider Algorithm = SymmetricKeyAlgorithmProvider.OpenAlgorithm(SymmetricAlgorithmNames.AesEcb);
 
             // Generate a symmetric key.
-            IBuffer keyMaterial = toSHA1Bytes(data);
+            IBuffer keyMaterial = ToSHA1Bytes(data);
             try
             {
                 key = Algorithm.CreateSymmetricKey(keyMaterial);
@@ -180,9 +212,129 @@
             }
             return key;
         }
-
         #endregion Crypto Helpers
 
-    }
 
+       #region Challenges
+        private bool Challenges(string uniqueId)
+        {
+        // Generate a random challenge and encrypt it with our AES key
+		byte[] randomChallenge = GenerateRandomBytes(16);
+		byte[] encryptedChallenge = EncryptAes(randomChallenge, aesKey);
+
+		// Send the encrypted challenge to the server
+		XmlQuery challengeResp = new XmlQuery(nv.baseUrl + 
+				"/pair?uniqueid="+uniqueId+"&devicename=roth&updateState=1&clientchallenge="+bytesToHex(encryptedChallenge));
+        // If we're not paired, there's a problem. 
+		if (!challengeResp.XmlAttribute("paired").Equals("1")) {
+            try
+            {
+                challengeResp = new XmlQuery(nv.baseUrl + "/unpair?uniqueid=" + uniqueId);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Error hitting unpair URL " + e.StackTrace);
+            }
+			return false;
+		}
+
+            // Decode the server's response and subsequent challenge
+            byte[] encServerChallengeResponse = HexToBytes(challengeResp.XmlAttribute("challengeresponse"));
+            byte[] decServerChallengeResponse = DecryptAes(encServerChallengeResponse, aesKey);
+
+            byte[] serverResponse, serverChallenge;
+            //Array.ConstrainedCopy(decServerChallengeResponse, 0, serverResponse, 20, serverResponse.Length + decServerChallengeResponse.Length);
+            //Array.ConstrainedCopy(decServerChallengeResponse, 20, serverChallenge, 36, serverChallenge.Length + decServerChallengeResponse.Length);
+
+
+            // Using another 16 bytes secret, compute a challenge response hash using the secret, our cert sig, and the challenge
+            byte[] clientSecret = GenerateRandomBytes(16);
+           // byte[] challengeRespHash = ToSHA1Bytes(concatBytes(concatBytes(serverChallenge, cert.getSignature()), clientSecret));
+            //byte[] challengeRespEncrypted = EncryptAes(challengeRespHash, aesKey);
+            XmlQuery secretResp = null; //new XmlQuery(nv.baseUrl +
+                    //"/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&serverchallengeresp=" + bytesToHex(challengeRespEncrypted));
+            if (!secretResp.XmlAttribute("paired").Equals("1"))
+            {
+                Unpair(); 
+                return false;
+            }
+
+            // Get the server's signed secret
+            byte[] serverSecretResp = HexToBytes(secretResp.XmlAttribute("pairingsecret"));
+            byte[] serverSecret; byte[] serverSignature; 
+            //Array.Copy(serverSecretResp, 0, serverSecret, 0, 16);
+           //Array.Copy(serverSecretResp, 0, serverSignature, 0, 256);
+
+            /* TODO this section
+            // Ensure the authenticity of the data
+            if (!verifySignature(serverSecret, serverSignature, serverCert))
+            {
+                // Cancel the pairing process
+                Unpair(); 
+                // Looks like a MITM
+                return false;
+            }
+
+            // Ensure the server challenge matched what we expected (aka the PIN was correct)
+            byte[] serverChallengeRespHash = ToSHA1Bytes(concatBytes(concatBytes(randomChallenge, serverCert.getSignature()), serverSecret));
+            if (!Array.Equals(serverChallengeRespHash, serverResponse))
+            {
+                // Cancel the pairing process
+                Unpair(); 
+                // Probably got the wrong PIN
+                return false;
+            }
+
+            // Send the server our signed secret
+            byte[] clientPairingSecret = concatBytes(clientSecret, signData(clientSecret, pk));
+            XmlQuery clientSecretResp = new XmlQuery(nv.baseUrl +
+                    "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&clientpairingsecret=" + bytesToHex(clientPairingSecret));
+            if (!clientSecretResp.XmlAttribute("paired").Equals("1"))
+            {
+                Unpair();
+                return false; 
+            }
+
+            // Do the initial challenge (seems neccessary for us to show as paired)
+            XmlQuery pairChallenge; 
+            try
+            {
+                pairChallenge = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&phrase=pairchallenge");
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Pair challenge failed " + e.StackTrace);
+                return false; 
+            }
+            if (!pairChallenge.XmlAttribute("paired").Equals("1"))
+            {
+                Unpair();
+                return false; 
+            } */
+            return true; 
+        } 
+
+        private void Unpair()
+        {
+            XmlQuery unpair;
+            try
+            {
+                unpair = new XmlQuery(nv.baseUrl + "/unpair?uniqueid=" + nv.GetDeviceName());
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Error hitting unpair URL " + e.StackTrace);
+            }
+        }
+
+        private static byte[] concatBytes(byte[] a, byte[] b)
+        {
+            byte[] c = new byte[a.Length + b.Length];
+            Array.Copy(a, 0, c, 0, a.Length);
+            Array.Copy(b, 0, c, a.Length, b.Length);
+            return c;
+        }
+    #endregion Challenges
+
+    }
 }
