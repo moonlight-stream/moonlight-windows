@@ -2,20 +2,24 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using Windows.Web.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Xml.Linq;
+using Windows.Security.Cryptography.Certificates;
+using Windows.Web.Http.Filters;
+using System.Collections.Generic;
 namespace Limelight
 {
     /// <summary>
     /// XmlQuery object contains an XML string and methods to parse it
     /// </summary>
-    public class XmlQuery : IDisposable
+    public class XmlQuery
     {
-        private ManualResetEvent completeEvent;
         private Uri uri;
         private XDocument rawXml;
         private string rawXmlString;
-        private string err = null;
+        private Windows.Web.Http.HttpClient client; 
 
         #region Public Methods
         /// <summary>
@@ -25,8 +29,14 @@ namespace Limelight
         public XmlQuery(string url)
         {
             uri = new Uri(url);
-            completeEvent = new ManualResetEvent(false);
-            GetXml(); 
+            HttpBaseProtocolFilter filter = new HttpBaseProtocolFilter();
+            // TODO add ignorable errors
+            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Untrusted);
+            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.InvalidName);
+            
+            client = new Windows.Web.Http.HttpClient(filter);
+            // TODO get rid of this gross .Wait(). Maybe caller should just call GetXml(); 
+            Task.Run(async () => await GetXml()).Wait();
         }
 
         /// <summary>
@@ -68,14 +78,6 @@ namespace Limelight
             return query.FirstOrDefault(); 
         }
 
-        /// <summary>
-        /// Returns the XML error message for the caller
-        /// </summary>
-        /// <returns>Error message string. If no error, returns null</returns>
-        public string GetErrorMessage()
-        {
-            return err; 
-        }
         #endregion Public Methods
 
         #region Private Methods
@@ -83,73 +85,23 @@ namespace Limelight
         /// Gets the Xml as a string from the URL provided
         /// </summary>
         /// <returns>The server info XML as a string</returns>
-        private void GetXml()
+        private async Task GetXml()
         {
             Debug.WriteLine(uri);
             if (rawXmlString == null)
             {
-                WebClient client = new WebClient();
-                client.DownloadStringCompleted += new DownloadStringCompletedEventHandler(XmlCallback);
-                client.DownloadStringAsync(uri);
-
-                // Wait for the callback to complete
-                completeEvent.WaitOne();
-                // We don't need this anymore - dispose
-                completeEvent.Dispose();
-            }
-            // If no error occured, convert the string to a more easily-parsable XDocument
-            if (err == null)
-            {
+                try
+                {
+                    rawXmlString = await client.GetStringAsync(uri);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.Message);
+                }
+                Debug.WriteLine(rawXmlString);
                 this.rawXml = XDocument.Parse(rawXmlString);
             }
         }
-
-        /// <summary>
-        /// Sets the xmlString field to the XML string we just downloaded
-        /// </summary>
-        private void XmlCallback(object sender, DownloadStringCompletedEventArgs e)
-        {
-            // If an error occurred downloading the XML, fail
-            if (e.Error != null) {
-                ExitFailure(e.Error.Message);
-            }
-                // Otherwise, get the XML String
-            else
-            {
-                this.rawXmlString = e.Result;
-            }
-            // Unblock the thread
-            completeEvent.Set();
-        }
-        /// <summary>
-        /// If XML query fails, set an error message for the caller
-        /// </summary>
-        /// <param name="failureMessage">Error message</param>
-        private void ExitFailure(string failureMessage)
-        {
-            Debug.WriteLine("Failed: " + failureMessage);
-            err = failureMessage; 
-        }
         #endregion Private Methods
-
-        #region IDisposable implementation
-        /// <summary>
-        /// Dispose of the ManualResetEvent
-        /// </summary>
-        protected virtual void Dispose(bool managed)
-        {
-            if (managed)
-            {
-                completeEvent.Dispose();
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion IDisposable implementation
     }
 }

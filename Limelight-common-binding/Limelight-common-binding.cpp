@@ -1,4 +1,6 @@
-﻿#include "Limelight-common-binding.h"
+﻿/* Binding between the main Limelight app and Limelight Common */
+
+#include "Limelight-common-binding.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +9,8 @@
 #include <Objbase.h> 
 #include <string>
 
+// Tell the linker to link using these libraries
+// FIXME it builds, but the linker spews warnings. Fix build config.
 #pragma comment(lib, "limelight-common.lib")
 #pragma comment(lib, "ws2_32.lib")
 
@@ -28,6 +32,7 @@ static LimelightConnectionListener ^s_ClCallbacks;
 #define MAX_FRAME_SIZE 1048576
 static char* s_FrameBuffer;
 
+/* Each of these methods call into the appropriate Limelight Common method */
 void DrShimSetup(int width, int height, int redrawRate, void* context, int drFlags) {
 	s_FrameBuffer = (char*)malloc(MAX_FRAME_SIZE);
 	s_DrCallbacks->Setup(width, height, redrawRate, drFlags);
@@ -191,5 +196,6 @@ int LimelightCommonRuntimeComponent::SendKeyboardEvent(short keyCode, unsigned c
 int LimelightCommonRuntimeComponent::sendControllerInput(short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX,
 	short leftStickY, short rightStickX, short rightStickY){
 	// TODO waiting on Common code to handle controller input
+	// ^^ Is this TODO still true? 
 	return(0);
 }
