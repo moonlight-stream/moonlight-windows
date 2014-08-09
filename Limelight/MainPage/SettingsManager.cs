@@ -1,4 +1,4 @@
-﻿namespace Limelight_new
+﻿namespace Limelight
 {
     using Windows.Storage;
     using Windows.UI.Xaml.Controls;

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Zeroconf; 
 
-namespace Limelight_new
+namespace Limelight
 {
     /// <summary>
     /// Computer object containing name and IP address

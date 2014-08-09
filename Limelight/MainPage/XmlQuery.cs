@@ -9,7 +9,7 @@ using System.Xml.Linq;
 using Windows.Security.Cryptography.Certificates;
 using Windows.Web.Http.Filters;
 using System.Collections.Generic;
-namespace Limelight_new
+namespace Limelight
 {
     /// <summary>
     /// XmlQuery object contains an XML string and methods to parse it

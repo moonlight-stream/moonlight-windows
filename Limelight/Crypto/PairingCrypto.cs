@@ -1,4 +1,4 @@
-﻿namespace Limelight_new
+﻿namespace Limelight
 {
     using Org.BouncyCastle.Crypto;
     using Org.BouncyCastle.Crypto.Parameters;
@@ -16,6 +16,8 @@
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private static char[] hexArray = "0123456789ABCDEF".ToCharArray();
+
         /* 
         #region Sign and Verify
         private static string Sign(String data, String privateModulusHexString, String privateExponentHexString)
@@ -119,7 +121,6 @@
             return rand;
         }
 
-        private static const char[] hexArray = "0123456789ABCDEF".ToCharArray();
 
         /// <summary>
         /// Convert a byte array to a hexidecimal string

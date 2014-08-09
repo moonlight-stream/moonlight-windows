@@ -1,4 +1,4 @@
-﻿namespace Limelight_new
+﻿namespace Limelight
 {
     using Limelight_common_binding;
     using System;

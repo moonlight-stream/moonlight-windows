@@ -6,7 +6,7 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.System.Profile;
 
-namespace Limelight_new
+namespace Limelight
 {    
     /// <summary>
     /// Object that obtains the base URL for http requests

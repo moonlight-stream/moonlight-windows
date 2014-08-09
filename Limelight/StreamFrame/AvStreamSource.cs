@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Windows.Media.Core;
 using Windows.Storage.Streams;
 
-namespace Limelight_new
+namespace Limelight
 {
     // FIXME use 8.1/RT version of this
     class AvStreamSource : IDisposable , IMediaSource

@@ -3,7 +3,7 @@
   <Identity Name="2ae80a2b-8264-4942-b3a1-2e52ac9b048f" Publisher="CN=Michelle" Version="1.0.0.0" />
   <mp:PhoneIdentity PhoneProductId="2ae80a2b-8264-4942-b3a1-2e52ac9b048f" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>Limelight_new</DisplayName>
+    <DisplayName>Limelight</DisplayName>
     <PublisherDisplayName>Michelle</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -15,8 +15,8 @@
     <Resource Language="x-generate" />
   </Resources>
   <Applications>
-    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Limelight_new.App">
-      <m3:VisualElements DisplayName="Limelight_new" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="Limelight_new" ForegroundText="light" BackgroundColor="transparent">
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="Limelight.App">
+      <m3:VisualElements DisplayName="Limelight" Square150x150Logo="Assets\Logo.png" Square44x44Logo="Assets\SmallLogo.png" Description="Limelight" ForegroundText="light" BackgroundColor="transparent">
         <m3:DefaultTile Wide310x150Logo="Assets\WideLogo.png" Square71x71Logo="Assets\Square71x71Logo.png">
         </m3:DefaultTile>
         <m3:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="green" />

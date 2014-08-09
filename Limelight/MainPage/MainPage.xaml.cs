@@ -1,4 +1,4 @@
-﻿namespace Limelight_new
+﻿namespace Limelight
 {
     using System;
     using System.Collections.Generic;
