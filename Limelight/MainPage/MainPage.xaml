@@ -1,0 +1,24 @@
+﻿<Page
+    x:Class="Limelight.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Limelight"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Loaded">
+
+    <ScrollViewer>
+
+		<Grid><Button x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="49,244,41,288" FontWeight="Bold" FontSize="25" Click="StreamButton_Click" Width="294" Height="82"/>
+			<Button x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="49,333,41,202" FontWeight="Bold" FontSize="25" Click="PairButton_Click" Width="294" Height="79" />
+			<TextBlock x:Name="status_text" HorizontalAlignment="Center" Height="40" Margin="49,186,41,388" TextWrapping="Wrap" VerticalAlignment="Center" Width="294" TextAlignment="Center" FontSize="18"/>
+			<RadioButton x:Name="_60fps_button" Content="60 FPS (may increase lag)" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="fps" RenderTransformOrigin="0.559,0.464" Width="242" Margin="128,540,14,16"/>
+			<RadioButton x:Name="_30fps_button" Content="30 FPS" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="fps" IsChecked="True" Margin="16,540,200,16"/>
+			<RadioButton x:Name="_1080p_button" Content="1080p (may increase lag)" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" Width="256" Margin="128,446,0,110"/>
+			<RadioButton x:Name="_720p_button" Content="720p" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" IsChecked="True" Margin="16,446,200,110"/>
+			<TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top" Margin="17,12,40,508" FontSize="80" Height="94"/>
+			<ComboBox x:Name="computerPicker" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,111,16,428" Header="Discovered Machines" PlaceholderText="Discovery service is running..." Width="358"/>
+		</Grid>
+	</ScrollViewer>
+</Page>

@@ -1,0 +1,22 @@
+﻿<Page
+    x:Class="Limelight.StreamFrame"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Limelight"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" PointerPressed="MouseDown" PointerReleased="MouseUp" PointerMoved="MouseMove">
+
+    <Grid>
+        <Grid x:Name="Waitgrid" Grid.Row="0" Background="Black" Margin="12,10,-12,31" Grid.RowSpan="2">
+
+            <TextBlock x:Name="currentStateText" TextWrapping="Wrap" VerticalAlignment="Top" Margin="198,215,198,0" Height="82" TextAlignment="Center" FontSize="20"/>
+            <ProgressBar x:Name="progressDots" Height="80" VerticalAlignment="Top" Margin="198,162,198,0" IsIndeterminate="True" Foreground="#FF0AE500"/>
+        </Grid>
+
+        <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0"/>
+        <MediaElement x:Name="StreamDisplay" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" Grid.RowSpan="2" Visibility="Collapsed"/>
+
+    </Grid>
+</Page>
