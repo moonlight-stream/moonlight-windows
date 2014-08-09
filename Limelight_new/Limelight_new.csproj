@@ -133,9 +133,6 @@
     <Reference Include="crypto">
       <HintPath>..\packages\crypto.1.7.0.0\lib\portable-net40+sl50+win+WindowsPhoneApp81+wp80\crypto.dll</HintPath>
     </Reference>
-    <Reference Include="WindowsRuntime.HttpClientFilters">
-      <HintPath>..\packages\WinRtHttpClientHandler.1.0\lib\portable-win81+wpa81\WindowsRuntime.HttpClientFilters.dll</HintPath>
-    </Reference>
     <Reference Include="Zeroconf, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Zeroconf.2.1.1\lib\portable-win81+wpa81\Zeroconf.dll</HintPath>

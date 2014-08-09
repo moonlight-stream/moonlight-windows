@@ -8,8 +8,6 @@
     using Windows.UI.Popups;
     using Windows.UI.Xaml.Controls;
     using Windows.Web.Http.Filters;
-    using WindowsRuntime.HttpClientFilters;
-    
 
     /// <summary>
     /// Performs pairing with the streaming machine
