@@ -99,7 +99,18 @@ namespace Limelight
                     Debug.WriteLine(e.Message);
                 }
                 Debug.WriteLine(rawXmlString);
-                this.rawXml = XDocument.Parse(rawXmlString);
+                try
+                {
+                    this.rawXml = XDocument.Parse(rawXmlString);
+
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.Message);
+                    Debug.WriteLine(ex.StackTrace);
+                    Debug.WriteLine(ex.InnerException);
+                }
+
             }
         }
         #endregion Private Methods

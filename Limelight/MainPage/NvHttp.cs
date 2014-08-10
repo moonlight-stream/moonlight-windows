@@ -15,7 +15,7 @@ namespace Limelight
     {
         #region Class Variables
 
-        public const int PORT = 47984;
+        public const int PORT = 47989; // FIXME: 47984
 	    public const int CONNECTION_TIMEOUT = 5000;
         public string baseUrl { get; set; }
         public string serverIP {get; set; }
@@ -81,7 +81,7 @@ namespace Limelight
                 await ResolveHostName(this.hostname);
             }
 
-            this.baseUrl = "https://" + serverIP + ":" + PORT;
+            this.baseUrl = "http://" + serverIP + ":" + PORT; // FIXME: https
         }
         #endregion Getters
 

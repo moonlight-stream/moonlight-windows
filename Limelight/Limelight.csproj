@@ -7,8 +7,8 @@
     <ProjectGuid>{51672764-EF28-4998-BAFC-5FBE2530A24C}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Limelight_new</RootNamespace>
-    <AssemblyName>Limelight_new</AssemblyName>
+    <RootNamespace>Limelight</RootNamespace>
+    <AssemblyName>Limelight</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformVersion>8.1</TargetPlatformVersion>
     <MinimumVisualStudioVersion>12</MinimumVisualStudioVersion>
@@ -83,6 +83,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Crypto\PairingCrypto.cs" />
+    <Compile Include="Crypto\WPCryptoProvider.cs" />
     <Compile Include="MainPage\SettingsManager.cs" />
     <Compile Include="StreamFrame\AvStreamSource.cs" />
     <Compile Include="MainPage\Computer.cs" />
@@ -139,8 +140,11 @@
       <Name>Limelight-common-binding</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <Folder Include="Assets\" />
+    <Content Include="Assets\Logo.scale-100.png" />
+    <Content Include="Assets\Logo.scale-140.png" />
+    <Content Include="Assets\Logo.scale-240.png" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
