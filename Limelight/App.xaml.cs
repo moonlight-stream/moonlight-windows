@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
+using System.Diagnostics;
 
 // The Blank Application template is documented at http://go.microsoft.com/fwlink/?LinkId=391641
 
@@ -33,6 +34,13 @@ namespace Limelight
         /// </summary>
         public App()
         {
+
+            UnhandledException += (sender, e) =>
+            {
+                Debug.WriteLine(e.Message);
+                Debug.WriteLine(e.Exception.StackTrace);
+            };
+
             this.InitializeComponent();
             this.Suspending += this.OnSuspending;
         }

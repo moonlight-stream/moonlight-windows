@@ -45,7 +45,9 @@
                 dialog.ShowAsync();
                 return;
             }
-            
+            // "Please don't do this ever, but it's only okay because Cameron said so" -Cameron Gutman
+            getClientCertificate(); 
+
             if (await QueryPairState())
             {
                 Debug.WriteLine("Already paired");
@@ -81,7 +83,7 @@
             }
 
             // Check if the device is paired by checking the XML attribute within the <paired> tag
-            if (String.Compare(pairState.XmlAttribute("PairStatus"), "0") == 0)
+            if (String.Compare(pairState.XmlAttribute("PairStatus"), "1") != 0)
             {
                 Debug.WriteLine("Not paired");
                 return false;

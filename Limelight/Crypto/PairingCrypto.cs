@@ -1,5 +1,6 @@
 ﻿namespace Limelight
 {
+    using Org.BouncyCastle.Pkcs;
     using Org.BouncyCastle.X509;
     using System;
     using System.Diagnostics;
@@ -81,8 +82,6 @@
 
         private bool Challenges(string uniqueId)
         {
-            // "Please don't do this ever, but it's only okay because Cameron said so" -Cameron Gutman
-            getClientCertificate(); 
             // Generate a salt for hashing the PIN
             byte[] salt = GenerateRandomBytes(16);
 
@@ -189,7 +188,7 @@
             {
                 Unpair();
                 return false; 
-            } 
+            }
             return true; 
         } 
 

@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using Windows.Security.Cryptography.Certificates;
 using Windows.Web.Http.Filters;
 using System.Collections.Generic;
+using Org.BouncyCastle.Pkcs;
 namespace Limelight
 {
     /// <summary>
@@ -29,12 +30,7 @@ namespace Limelight
         public XmlQuery(string url)
         {
             uri = new Uri(url);
-            HttpBaseProtocolFilter filter = new HttpBaseProtocolFilter();
-            // TODO add ignorable errors
-            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Untrusted);
-            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.InvalidName);
             
-            client = new Windows.Web.Http.HttpClient(filter);
             // TODO get rid of this gross .Wait(). Maybe caller should just call GetXml(); 
             Task.Run(async () => await GetXml()).Wait();
         }
@@ -87,6 +83,14 @@ namespace Limelight
         /// <returns>The server info XML as a string</returns>
         private async Task GetXml()
         {
+            HttpBaseProtocolFilter filter = new HttpBaseProtocolFilter();
+            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Untrusted);
+            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.InvalidName);
+
+            IEnumerable<Certificate> certificates = await CertificateStores.FindAllAsync(new CertificateQuery { FriendlyName = "Limelight-Client" });
+            filter.ClientCertificate = certificates.Single();
+
+            client = new Windows.Web.Http.HttpClient(filter);
             Debug.WriteLine(uri);
             if (rawXmlString == null)
             {

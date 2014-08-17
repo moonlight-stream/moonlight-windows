@@ -4,14 +4,21 @@
     using Org.BouncyCastle.Crypto;
     using Org.BouncyCastle.Crypto.Generators;
     using Org.BouncyCastle.Math;
-    using Org.BouncyCastle.Security;
     using Org.BouncyCastle.OpenSsl;
+    using Org.BouncyCastle.Pkcs;
+    using Org.BouncyCastle.Security;
     using Org.BouncyCastle.X509;
     using System;
+    using System.Diagnostics;
     using System.IO;
     using System.Text;
+    using System.Threading.Tasks;
+    using Windows.Security.Cryptography.Certificates;
+    using Windows.Storage;
+    using Windows.Storage.Streams;
     using Windows.UI.Xaml.Controls;
-    using System.Diagnostics;
+    using System.Runtime.InteropServices.WindowsRuntime;
+    using Windows.Security.Cryptography;
 
     /// <summary>
     /// Functions for signing and verifying data
@@ -87,7 +94,7 @@
                 Debug.WriteLine(ex.StackTrace);
             }
 
-            SaveCertKeyPair(); 
+            Task.Run(async () => await SaveCertKeyPair()).Wait(); 
         }
 
         private X509Certificate extractPlainCert(XmlQuery q, String tag)
@@ -146,5 +153,31 @@
             return gen.GenerateKeyPair();
         }
         #endregion Sign and Verify
+
+        #region Cert Store
+        private async Task AddToWinCertStore()
+        {
+            Pkcs12Store store = new Pkcs12Store();
+            string friendlyName = "Limelight-Client";
+            var certEntry = new X509CertificateEntry(cert);
+            store.SetCertificateEntry(friendlyName, certEntry);
+
+            var keyEntry = new AsymmetricKeyEntry(keyPair.Private);
+            store.SetKeyEntry(friendlyName, keyEntry, new[] { certEntry }); 
+
+            // Copy the Pkcs12Store to a stream using an arbitrary password
+            const string password = "password";
+            var stream = new MemoryStream();
+            store.Save(stream, password.ToCharArray(), new SecureRandom());
+
+            // Write to .PFX string
+            byte[] arr = stream.ToArray();
+
+            IBuffer buf = arr.AsBuffer();
+            string pfx = CryptographicBuffer.EncodeToBase64String(buf);
+
+            await CertificateEnrollmentManager.ImportPfxDataAsync(pfx, password, ExportOption.NotExportable, KeyProtectionLevel.NoConsent, InstallOptions.None, friendlyName);
+        }
+        #endregion Cert Store
     }
 }

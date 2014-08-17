@@ -34,6 +34,7 @@
         {
             this.InitializeComponent();
 
+
             this.NavigationCacheMode = NavigationCacheMode.Required;
             dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
             LoadSettings();
@@ -68,7 +69,6 @@
         {
             Debug.WriteLine("Stopping mDNS");
             mDnsTimer.Stop();
-            base.OnNavigatedFrom(e);
         }
 
         /// <summary>
@@ -162,18 +162,17 @@
                 var dialog = new MessageDialog("No machine selected", "Pairing Failed");
                 await dialog.ShowAsync();
                 status_text.Text = "";  
-
             }
             else
             {
                 // Pair with the selected machine
                 await Pair(selected.IpAddress);
+                
             }
 
             status_text.Text = ""; 
             mDnsTimer.Start(); 
         }
         #endregion Event Handlers  
-
     }
 }

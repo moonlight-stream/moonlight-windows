@@ -3,7 +3,13 @@
     using Org.BouncyCastle.Crypto;
     using Org.BouncyCastle.OpenSsl;
     using Org.BouncyCastle.X509;
+    using System;
+    using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
+    using System.Runtime.InteropServices.WindowsRuntime;
+    using System.Threading.Tasks;
+    using Windows.Security.Cryptography.Certificates;
     using Windows.Storage;
     using Windows.UI.Xaml.Controls;
 
@@ -59,17 +65,25 @@
         #endregion Persistent UI Settings
 
         #region Persistent Crypto Settings
-        private void SaveCertKeyPair()
+        private async Task SaveCertKeyPair()
         {
             var settings = ApplicationData.Current.RoamingSettings;
             PemWriter certWriter = new PemWriter(new StringWriter());
             PemWriter keyWriter = new PemWriter(new StringWriter());
 
+            keyWriter.WriteObject(keyPair);
+            keyWriter.Writer.Flush();
+
+            // Add the cert to the cert store. This changes the fingerprint so we read it
+            // back before we serialize it so we have the up to date cert.
+            await AddToWinCertStore();
+
+            // Read the modified cert from the cert store
+            IEnumerable<Certificate> certificates = await CertificateStores.FindAllAsync(new CertificateQuery { FriendlyName = "Limelight-Client" });
+            cert = new X509CertificateParser().ReadCertificate(certificates.Single().GetCertificateBlob().AsStream());
+
             certWriter.WriteObject(cert);
             certWriter.Writer.Flush();
-
-            keyWriter.WriteObject(keyPair);
-            keyWriter.Writer.Flush(); 
 
             // Line endings MUST be UNIX for the PC to accept the cert properly
             string keyStr = keyWriter.Writer.ToString();
@@ -79,7 +93,7 @@
             certStr = certStr.Replace("\r\n", "\n");
 
             settings.Values["cert"] = certStr;
-            settings.Values["key"] = keyStr; 
+            settings.Values["key"] = keyStr;
         }
 
         /// <summary>
