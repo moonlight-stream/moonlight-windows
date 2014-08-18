@@ -122,19 +122,20 @@
             status_text.Text = "Checking pair state...";
             selected = (Computer)computerPicker.SelectedItem;
             // User hasn't selected a machine
-            if (selected == null)
+            /* if (selected == null)
             {
                 var dialog = new MessageDialog("No machine selected", "Streaming Failed");
                 await dialog.ShowAsync(); 
                 status_text.Text = "";               
-            }
-            else
-            {
-                await StreamSetup(selected.IpAddress);
-            }
-            // Check the pair state
+            } */ 
+            //else
+            //{
+               //await StreamSetup(selected.IpAddress);
+            //}
+            this.Frame.Navigate(typeof(StreamFrame));
             status_text.Text = "";
-            mDnsTimer.Start();
+            //mDnsTimer.Start();
+
 
             // User can use the buttons again
             PairButton.IsEnabled = true;
@@ -167,7 +168,6 @@
             {
                 // Pair with the selected machine
                 await Pair(selected.IpAddress);
-                
             }
 
             status_text.Text = ""; 

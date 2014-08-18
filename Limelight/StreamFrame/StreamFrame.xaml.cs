@@ -6,8 +6,8 @@
     using System.Linq;
     using System.Threading.Tasks;
     using Windows.Graphics.Display;
-    using Windows.UI.Core;
-    using Windows.UI.Popups;
+    using Windows.Media.Core;
+    using Windows.Media.MediaProperties;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Input;
@@ -45,6 +45,7 @@
         private int frameWidth = 1280;
         private int frameHeight = 720;
 
+
         /// <summary>
         /// Mouse input
         /// </summary>
@@ -72,17 +73,12 @@
             InitializeComponent();
 
             // Audio/video stream source init
-            AvStream = new AvStreamSource(frameWidth, frameHeight);
-            StreamDisplay.SetMediaStreamSource(AvStream);
-            StreamDisplay.AutoPlay = true;
-            StreamDisplay.Play();
+            AvStream = new AvStreamSource();
 
             // Show the progress bar
             Waitgrid.Visibility = Visibility.Visible;
-            currentStateText.Visibility = Visibility.Visible;
-
+            currentStateText.Visibility = Visibility.Visible;  
         }
-
         #endregion Constructor
 
         #region Navigation Events
@@ -95,16 +91,34 @@
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape;
 
             selected = (Computer)e.Parameter;
+            Debug.WriteLine("We're here");
         }
-
+        
         /// <summary>
         /// Event handler for page loaded event
         /// </summary>
         private async void Loaded(object sender, RoutedEventArgs e)
         {
-            // TODO figure out why VS is yelling at me
-            await StartConnection();
-        }
+            StreamDisplay.Visibility = Visibility.Visible;
+            Waitgrid.Visibility = Visibility.Collapsed;
+            currentStateText.Visibility = Visibility.Collapsed; 
+            LimelightStreamConfiguration config = null; 
+            try
+            {
+                config = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 720, 1024);
+
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                Debug.WriteLine("All is lost");
+
+            }
+            InitializeMediaPlayer(config, AvStream);
+            H264FileReaderHackery h = new H264FileReaderHackery();
+            Task.Run(() => h.readFile(this));
+            //await StartConnection();
+        } 
         #endregion Navigation Events
 
         #region Mouse Events

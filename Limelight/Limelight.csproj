@@ -86,6 +86,7 @@
     </Compile>
     <Compile Include="Crypto\PairingCrypto.cs" />
     <Compile Include="Crypto\WPCryptoProvider.cs" />
+    <Compile Include="H264FileReaderHackery.cs" />
     <Compile Include="MainPage\SettingsManager.cs" />
     <Compile Include="StreamFrame\AvStreamSource.cs" />
     <Compile Include="MainPage\Computer.cs" />
@@ -99,6 +100,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StreamFrame\Connection.cs" />
     <Compile Include="StreamFrame\ConnectionCallbacks.cs" />
+    <Compile Include="StreamFrame\MediaPlayer.cs" />
     <Compile Include="StreamFrame\StreamFrame.xaml.cs">
       <DependentUpon>StreamFrame.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -134,6 +136,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="notpadded.h264">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
