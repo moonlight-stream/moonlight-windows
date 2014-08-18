@@ -1,68 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Media.Core;
-using Windows.Storage.Streams;
 
 namespace Limelight
 {
-    // FIXME use 8.1/RT version of this
-    class AvStreamSource : IDisposable , IMediaSource
+    class AvStreamSource
     {
-        #region Audio/Video Sample Constructors
-        /// <summary>
-        /// Audio Sample object
-        /// </summary>
-        public class AudioSample
-        {
-            /// <summary>
-            /// Initializes a new instance of the <see cref="AudioSample"/> class. 
-            /// </summary>
-            /// <param name="buffer">Buffer for the audio sample</param>
-            public AudioSample(IBuffer buffer)
-            {
-                this.buffer = buffer;
-            }
-            internal IBuffer buffer { get; private set; }
-        }
-
-        /// <summary>
-        /// Video Sample object
-        /// </summary>
-        public class VideoSample
-        {
-            /// <summary>
-            /// Initializes a new instance of the <see cref="VideoSample"/> class. 
-            /// </summary>
-            /// <param name="buffer">Buffer for the video stream</param>
-            /// <param name="frameNumber">The frame number that this sample is part of</param>
-            public VideoSample(IBuffer buffer, ulong frameNumber)
-            {
-                this.buffer = buffer;
-                this.frameNumber = frameNumber;
-            }
-            internal IBuffer buffer { get; private set; }
-            internal ulong frameNumber { get; private set; }
-        }
-        #endregion Audio/Video Sample Constructors
-
         #region Class Variables
 
-        private int frameWidth;
-        private int frameHeight;
-        private ManualResetEvent shutdownEvent;
-        //private Dictionary<MediaSampleAttributeKeys, string> emptySampleDict = new Dictionary<MediaSampleAttributeKeys, string>();
-        private ulong frameNumber;
+        private MediaStreamSourceSampleRequestDeferral pendingVideoDeferral;
+        private MediaStreamSourceSampleRequest pendingVideoRequest;
+        private MediaStreamSourceSampleRequestDeferral pendingAudioDeferral;
+        private MediaStreamSourceSampleRequest pendingAudioRequest;
 
-        private volatile int outstandingGetVideoSampleCount;
-        private volatile int outstandingGetAudioSampleCount;
-        private Queue<VideoSample> nalQueue;
-        private Queue<AudioSample> audioQueue;
-        private object nalQueueLock = new object();
-        private object audioQueueLock = new object();
+        private Queue<MediaStreamSample> videoSampleQueue;
+        private Queue<MediaStreamSample> audioSampleQueue;
+        private object videoQueueLock;
+        private object audioQueueLock;
 
         #endregion Class Variables
 
@@ -70,35 +25,157 @@ namespace Limelight
         /// <summary>
         /// Initializes a new instance of the <see cref="AvStreamSource"/> class. 
         /// </summary>
-        /// <param name="frameWidth">Width of the source's video frame</param>
-        /// <param name="frameHeight">Height of the source's video frame</param>
-        public AvStreamSource(int frameWidth, int frameHeight)
+        public AvStreamSource()
         {
-            this.frameWidth = frameWidth;
-            this.frameHeight = frameHeight;
-            this.shutdownEvent = new ManualResetEvent(false);
-            this.nalQueue = new Queue<VideoSample>();
-            this.audioQueue = new Queue<AudioSample>();
-
-            // 15 is the minimum size
-            //this.AudioBufferLength = 15;
+            this.videoSampleQueue = new Queue<MediaStreamSample>();
+            this.audioSampleQueue = new Queue<MediaStreamSample>();
+            this.videoQueueLock = new object();
+            this.audioQueueLock = new object();
         }
         #endregion Constructor
 
-        #region IDisposible Implementation
-        protected virtual void Dispose(bool managed)
+        private MediaStreamSample CreateVideoSample(byte[] buf, int nalStart, int nalEnd)
         {
-            if (managed)
+            int nalLength = nalEnd - nalStart;
+            byte[] nal = new byte[nalLength];
+            Array.ConstrainedCopy(buf, nalStart, nal, 0, nalLength);
+
+            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(nal.AsBuffer(), TimeSpan.Zero);
+            sample.Duration = TimeSpan.Zero;
+
+            return sample;
+        }
+
+        private MediaStreamSample CreateAudioSample(byte[] buf)
+        {
+            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(buf.AsBuffer(), TimeSpan.Zero);
+            sample.Duration = TimeSpan.Zero;
+
+            return sample;
+        }
+
+        private void EnqueueNal(byte[] buf, int nalStart, int nalEnd)
+        {
+            MediaStreamSample sample = CreateVideoSample(buf, nalStart, nalEnd);
+
+            lock (videoQueueLock)
             {
-                shutdownEvent.Dispose();
+                if (pendingVideoRequest != null)
+                {
+                    pendingVideoRequest.Sample = sample;
+                    pendingVideoDeferral.Complete();
+
+                    pendingVideoRequest = null;
+                    pendingVideoDeferral = null;
+                }
             }
         }
 
-        public void Dispose()
+        public void VideoSampleRequested(MediaStreamSourceSampleRequestedEventArgs args)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            lock (videoQueueLock)
+            {
+                if (videoSampleQueue.Count > 0)
+                {
+                    // Satisfy the sample request with a queued sample
+                    args.Request.Sample = videoSampleQueue.Dequeue();
+                }
+                else
+                {
+                    // This request is now pending
+                    pendingVideoRequest = args.Request;
+                    pendingVideoDeferral = args.Request.GetDeferral();
+                }
+            }
         }
-        #endregion IDisposible Implementation
+
+        public void AudioSampleRequested(MediaStreamSourceSampleRequestedEventArgs args)
+        {
+            lock (audioQueueLock)
+            {
+                if (audioSampleQueue.Count > 0)
+                {
+                    // Satisfy the sample request with a queued sample
+                    args.Request.Sample = audioSampleQueue.Dequeue();
+                }
+                else
+                {
+                    // This request is now pending
+                    pendingAudioRequest = args.Request;
+                    pendingAudioDeferral = args.Request.GetDeferral();
+                }
+            }
+        }
+
+        public void EnqueueVideoSample(byte[] buf)
+        {
+            /*int i;
+
+            int currentNalStart = -1;
+            bool frameStart = false;
+            for (i = 0; i < buf.Length - 4; i++)
+            {
+                // Look for the Annex B NAL start sequence (0x000001)
+                if (buf[i] == 0 && buf[i + 1] == 0)
+                {
+                    // Check for frame start
+                    if (buf[i + 2] == 0 && buf[i + 3] == 1)
+                    {
+                        // Remember this is a frame start NAL for later
+                        frameStart = true;
+                    }
+                    else if (buf[i + 2] == 1)
+                    {
+                        // NAL start (but not frame start)
+                        frameStart = false;
+                    }
+                    else
+                    {
+                        // Not actually NAL start
+                        continue;
+                    }
+
+                    // End the current NAL at i (exclusive)
+                    if (currentNalStart > 0)
+                    {
+                        EnqueueNal(buf, currentNalStart, i);
+                    }
+
+                    if (frameStart)
+                    {
+                        // Skip the first zero byte of the 4-byte frame start prefix
+                        i++;
+                    }
+
+                    // NAL start
+                    currentNalStart = i;
+                }
+            }
+
+            // Add the NAL that ends at the buffer's end
+            if (currentNalStart > 0)
+            {
+                EnqueueNal(buf, currentNalStart, buf.Length);
+            }*/
+
+            EnqueueNal(buf, 0, buf.Length);
+        }
+
+        public void EnqueueAudioSample(byte[] buf)
+        {
+            MediaStreamSample sample = CreateAudioSample(buf);
+
+            lock (audioQueueLock)
+            {
+                if (pendingAudioRequest != null)
+                {
+                    pendingAudioRequest.Sample = sample;
+                    pendingAudioDeferral.Complete();
+
+                    pendingAudioRequest = null;
+                    pendingAudioDeferral = null;
+                }
+            }
+        }
     }
 }

@@ -118,7 +118,6 @@
         {
             // TODO will this be okay if we haven't started a connection? 
             LimelightCommonRuntimeComponent.StopConnection();
-            AvStream.Dispose();
             hasMoved = false;
         }
         #endregion Helper methods

@@ -109,6 +109,7 @@
       <AdditionalIncludeDirectories>../../limelight-common/limelight-common;../opus-1.1-static;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableLanguageExtensions>false</DisableLanguageExtensions>
       <AdditionalUsingDirectories>../../limelight-common;../opus-1.1-static;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+      <PreprocessorDefinitions>_WINRT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

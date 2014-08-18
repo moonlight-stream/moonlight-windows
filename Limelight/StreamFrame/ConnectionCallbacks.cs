@@ -28,7 +28,7 @@
 
         public void DrSubmitDecodeUnit(byte[] data)
         {
-            //AvStream.EnqueueVideoSamples(data);
+            AvStream.EnqueueVideoSample(data);
         }
 #endregion Decoder Renderer
 
@@ -55,7 +55,7 @@
 
         public void ArPlaySample(byte[] data)
         {
-            //AvStream.EnqueueAudioSamples(data);
+            AvStream.EnqueueAudioSample(data);
         }
 #endregion Audio Renderer
 
