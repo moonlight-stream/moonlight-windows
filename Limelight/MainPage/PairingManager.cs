@@ -50,11 +50,17 @@
 
             if (await QueryPairState())
             {
+                var dialog = new MessageDialog("This device is already paired to the host PC", "Already Paired");
+                dialog.ShowAsync();
                 Debug.WriteLine("Already paired");
                 return;
             }
 
-            Challenges(nv.GetDeviceName()); 
+            if (!Challenges(nv.GetDeviceName()))
+            {
+                Debug.WriteLine("Challenges failed");
+                return; 
+            } 
 
             // Otherwise, everything was successful
             var successDialog = new MessageDialog("Pairing successful", "Success");

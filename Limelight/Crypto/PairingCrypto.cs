@@ -5,9 +5,11 @@
     using System;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading.Tasks;
     using Windows.Security.Cryptography;
     using Windows.Security.Cryptography.Core;
     using Windows.Storage.Streams;
+    using Windows.UI.Popups;
     using Windows.UI.Xaml.Controls;
 
     /// <summary>
@@ -85,7 +87,11 @@
             // Generate a salt for hashing the PIN
             byte[] salt = GenerateRandomBytes(16);
 
-            string pin = "0000";
+            string pin = String.Format("%04d", new Random().Next(9999));
+
+            var dialog = new MessageDialog("Enter the following PIN on the host PC: " + pin, "Enter PIN");
+            Task.Run(async () => await dialog.ShowAsync());
+            
             // Combine the salt and pin, then create an AES key from them
             byte[] saltAndPin = SaltPin(salt, pin);
             aesKey = GenerateAesKey(saltAndPin);
@@ -216,6 +222,7 @@
             return c;
         }
     #endregion Challenges
+
         #region Helpers
         /// <summary>
         /// Generate a cryptographically secure random number
@@ -229,7 +236,6 @@
             CryptographicBuffer.CopyToByteArray(buffer, out rand);
             return rand;
         }
-
 
         /// <summary>
         /// Convert a byte array to a hexidecimal string
@@ -329,6 +335,5 @@
             return key;
         }
         #endregion Helpers
-
     }
 }
