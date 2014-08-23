@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
+using System.Threading.Tasks;
 using Windows.Media.Core;
 
 namespace Limelight
@@ -9,11 +12,8 @@ namespace Limelight
     {
         #region Class Variables
 
-        private MediaStreamSourceSampleRequestDeferral pendingVideoDeferral;
         private MediaStreamSourceSampleRequest pendingVideoRequest;
-        private MediaStreamSourceSampleRequestDeferral pendingAudioDeferral;
         private MediaStreamSourceSampleRequest pendingAudioRequest;
-
         private Queue<MediaStreamSample> videoSampleQueue;
         private Queue<MediaStreamSample> audioSampleQueue;
         private object videoQueueLock;
@@ -34,13 +34,9 @@ namespace Limelight
         }
         #endregion Constructor
 
-        private MediaStreamSample CreateVideoSample(byte[] buf, int nalStart, int nalEnd)
+        private MediaStreamSample CreateVideoSample(byte[] buf)
         {
-            int nalLength = nalEnd - nalStart;
-            byte[] nal = new byte[nalLength];
-            Array.ConstrainedCopy(buf, nalStart, nal, 0, nalLength);
-
-            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(nal.AsBuffer(), TimeSpan.Zero);
+            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(buf.AsBuffer(), TimeSpan.Zero);
             sample.Duration = TimeSpan.Zero;
 
             return sample;
@@ -54,23 +50,6 @@ namespace Limelight
             return sample;
         }
 
-        private void EnqueueNal(byte[] buf, int nalStart, int nalEnd)
-        {
-            MediaStreamSample sample = CreateVideoSample(buf, nalStart, nalEnd);
-
-            lock (videoQueueLock)
-            {
-                if (pendingVideoRequest != null)
-                {
-                    pendingVideoRequest.Sample = sample;
-                    pendingVideoDeferral.Complete();
-
-                    pendingVideoRequest = null;
-                    pendingVideoDeferral = null;
-                }
-            }
-        }
-
         public void VideoSampleRequested(MediaStreamSourceSampleRequestedEventArgs args)
         {
             lock (videoQueueLock)
@@ -79,12 +58,12 @@ namespace Limelight
                 {
                     // Satisfy the sample request with a queued sample
                     args.Request.Sample = videoSampleQueue.Dequeue();
+                    Debug.WriteLine("Satisfying from queue");
                 }
                 else
                 {
                     // This request is now pending
                     pendingVideoRequest = args.Request;
-                    pendingVideoDeferral = args.Request.GetDeferral();
                 }
             }
         }
@@ -95,70 +74,43 @@ namespace Limelight
             {
                 if (audioSampleQueue.Count > 0)
                 {
-                    // Satisfy the sample request with a queued sample
-                    args.Request.Sample = audioSampleQueue.Dequeue();
+                    Task.Run(() =>
+                    {
+                        // Satisfy the sample request with a queued sample
+                        args.Request.Sample = audioSampleQueue.Dequeue();
+                        args.Request.GetDeferral().Complete();
+                    });
                 }
                 else
                 {
                     // This request is now pending
                     pendingAudioRequest = args.Request;
-                    pendingAudioDeferral = args.Request.GetDeferral();
                 }
             }
         }
 
         public void EnqueueVideoSample(byte[] buf)
         {
-            /*int i;
+            MediaStreamSample sample = CreateVideoSample(buf);
 
-            int currentNalStart = -1;
-            bool frameStart = false;
-            for (i = 0; i < buf.Length - 4; i++)
+            lock (videoQueueLock)
             {
-                // Look for the Annex B NAL start sequence (0x000001)
-                if (buf[i] == 0 && buf[i + 1] == 0)
+                if (pendingVideoRequest != null)
                 {
-                    // Check for frame start
-                    if (buf[i + 2] == 0 && buf[i + 3] == 1)
-                    {
-                        // Remember this is a frame start NAL for later
-                        frameStart = true;
-                    }
-                    else if (buf[i + 2] == 1)
-                    {
-                        // NAL start (but not frame start)
-                        frameStart = false;
-                    }
-                    else
-                    {
-                        // Not actually NAL start
-                        continue;
-                    }
+                    MediaStreamSourceSampleRequest request = pendingVideoRequest;
+                    pendingVideoRequest = null;
 
-                    // End the current NAL at i (exclusive)
-                    if (currentNalStart > 0)
+                    Task.Run(() =>
                     {
-                        EnqueueNal(buf, currentNalStart, i);
-                    }
-
-                    if (frameStart)
-                    {
-                        // Skip the first zero byte of the 4-byte frame start prefix
-                        i++;
-                    }
-
-                    // NAL start
-                    currentNalStart = i;
+                        request.Sample = sample;
+                        request.GetDeferral().Complete();
+                    });
+                }
+                else
+                {
+                    videoSampleQueue.Enqueue(sample);
                 }
             }
-
-            // Add the NAL that ends at the buffer's end
-            if (currentNalStart > 0)
-            {
-                EnqueueNal(buf, currentNalStart, buf.Length);
-            }*/
-
-            EnqueueNal(buf, 0, buf.Length);
         }
 
         public void EnqueueAudioSample(byte[] buf)
@@ -170,10 +122,13 @@ namespace Limelight
                 if (pendingAudioRequest != null)
                 {
                     pendingAudioRequest.Sample = sample;
-                    pendingAudioDeferral.Complete();
+                    pendingAudioRequest.GetDeferral().Complete();
 
                     pendingAudioRequest = null;
-                    pendingAudioDeferral = null;
+                }
+                else
+                {
+                    audioSampleQueue.Enqueue(sample);
                 }
             }
         }

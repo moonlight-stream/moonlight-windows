@@ -16,8 +16,6 @@
         #region Class Variables
         private MediaStreamSource _mss = null;
         private VideoStreamDescriptor _videoDesc = null;
-        private bool _mediaSourceIsLoaded = false;
-        private bool _playRequestPending = false;
         private AvStreamSource _streamSource;
 
         #endregion Class Variables

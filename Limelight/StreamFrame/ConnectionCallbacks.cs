@@ -55,7 +55,7 @@
 
         public void ArPlaySample(byte[] data)
         {
-            AvStream.EnqueueAudioSample(data);
+            //AvStream.EnqueueAudioSample(data);
         }
 #endregion Audio Renderer
 

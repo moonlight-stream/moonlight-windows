@@ -3,6 +3,7 @@
     using Limelight_common_binding;
     using System;
     using System.Diagnostics;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Windows.UI.Core;
     using Windows.UI.Popups;
@@ -15,7 +16,7 @@
         /// <summary>
         /// Starts the connection by calling into Limelight Common
         /// </summary>
-        private async Task StartConnection()
+        private async Task StartConnection(LimelightStreamConfiguration streamConfig)
         {
             NvHttp nv = null;
             await SetStateText("Resolving hostname...");
@@ -27,14 +28,36 @@
             {
                 stageFailureText = "Error resolving hostname";
                 ConnectionFailed();
+                return;
             }
+
+            try
+            {
+                await nv.GetServerIPAddress();
+            }
+            catch (Exception)
+            {
+                stageFailureText = "Error resolving hostname";
+                ConnectionFailed();
+                return;
+            }
+
+            // Set up callbacks
+            LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
+            LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArPlaySample);
+            LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
+            ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
 
             XmlQuery launchApp;
             // Launch Steam
             await SetStateText("Launching Steam");
             try
             {
-                launchApp = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetDeviceName() + "&appid=" + selected.steamID);
+                launchApp = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetDeviceName() + "&appid=" + selected.steamID +
+                "&mode=" + streamConfig.GetWidth()+"x"+streamConfig.GetHeight()+"x"+streamConfig.GetFps() +
+                "&additionalStates=1&sops=1" + // FIXME: make sops configurable
+                "&rikey=0" + // FIXME: RI encryption
+                "&rikeyid=0");
             }
             catch (Exception)
             {
@@ -44,17 +67,16 @@
                 return;
             }
 
-            // Set up callbacks
-            LimelightStreamConfiguration streamConfig = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 10000, 1024); // TODO a magic number. Get FPS from the settings
-            LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
-            LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArPlaySample);
-            LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
-            ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
-
             // Call into Common to start the connection
             Debug.WriteLine("Starting connection");
-            uint addr = 0;
-            //uint addr = (uint)nv.resolvedHost.ToString(); // TODO how to get the addr as a uint
+
+            Regex r = new Regex(@"^(?<octet1>\d+).(?<octet2>\d+).(?<octet3>\d+).(?<octet4>\d+)");
+            Match m = r.Match(selected.IpAddress);
+
+            uint addr = (uint)(Convert.ToByte(m.Groups["octet4"].Value) << 24 |
+                Convert.ToByte(m.Groups["octet3"].Value) << 16 | 
+                Convert.ToByte(m.Groups["octet2"].Value) << 8 |
+                Convert.ToByte(m.Groups["octet1"].Value));
             LimelightCommonRuntimeComponent.StartConnection(addr, streamConfig, clCallbacks, drCallbacks, arCallbacks);
 
             if (stageFailureText != null)

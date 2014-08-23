@@ -8,15 +8,16 @@
 
     public sealed partial class MainPage : Page
     {
+        NvHttp nv; 
         #region Stream Setup
         /// <summary>
         /// When the user presses "Start Streaming Steam", first check that they are paired in the background worker
         /// </summary>
-        private async Task StreamSetup(string uri)
+        private async Task StreamSetup(Computer computer)
         {
             try
             {
-                nv = new NvHttp(uri);
+                nv = new NvHttp(computer.IpAddress);
             }
             catch (Exception)
             {
@@ -32,19 +33,23 @@
             {
                 StreamSetupFailed("Unable to get streaming machine's IP addresss"); 
             }
+            Pairing p = new Pairing(nv); 
+            // HACK: Preload the cert data
+            p.getClientCertificate();
 
             // If device is already paired, return.             
-            if (!await QueryPairState())
+            if (!await p.QueryPairState())
             {
                 await StreamSetupFailed("Pair state query failed");
                 return;
             }
 
             // If we haven't cancelled and don't have the steam ID, query app list to get it
-            if (steamId == 0)
+            if (computer.steamID == 0)
             {
                 // If queryAppList fails, return
-                if (!await Task.Run(() => QueryAppList()))
+                computer.steamID = await Task.Run(() => QueryAppList());
+                if (computer.steamID == 0)
                 {
                     await StreamSetupFailed("App list query failed");
                     return;
@@ -59,7 +64,7 @@
         private async Task StreamSetupComplete()
         {
             // Pass the selected computer as the parameter
-            this.Frame.Navigate(typeof(StreamFrame), selected);
+            this.Frame.Navigate(typeof(StreamFrame));
         }
 
         /// <summary>
@@ -79,7 +84,7 @@
         /// Query the app list on the server to get the Steam App ID
         /// </summary>
         /// <returns>True if the operation succeeded, false otherwise</returns>
-        private async Task<bool> QueryAppList()
+        private async Task<int> QueryAppList()
         {
             XmlQuery appList;
             string steamIdStr;
@@ -91,7 +96,7 @@
             {
                 var dialog = new MessageDialog("Device not paired: " + e.Message, "App List Query Failed");
                 dialog.ShowAsync();
-                return false;
+                return 0;
             }
             // App list query went well - try to get the steam ID
             try
@@ -104,12 +109,11 @@
                 // Steam ID lookup failed
                 var dialog = new MessageDialog("Failed to get Steam ID: " + e.Message, "Steam ID Lookup Failed");
                 dialog.ShowAsync();
-                return false;
+                return 0;
             }
 
             // We're in the clear - save the Steam app ID
-            steamId = Convert.ToInt32(steamIdStr);
-            return true;
+            return Convert.ToInt32(steamIdStr);
         }
 
         #endregion Helper Methods

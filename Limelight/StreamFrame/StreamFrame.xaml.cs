@@ -91,7 +91,6 @@
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape;
 
             selected = (Computer)e.Parameter;
-            Debug.WriteLine("We're here");
         }
         
         /// <summary>
@@ -102,22 +101,15 @@
             StreamDisplay.Visibility = Visibility.Visible;
             Waitgrid.Visibility = Visibility.Collapsed;
             currentStateText.Visibility = Visibility.Collapsed; 
-            LimelightStreamConfiguration config = null; 
-            try
-            {
-                config = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 720, 1024);
-
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-                Debug.WriteLine("All is lost");
-
-            }
+            LimelightStreamConfiguration config;
+ 
+            config = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 5000, 1024);
             InitializeMediaPlayer(config, AvStream);
-            H264FileReaderHackery h = new H264FileReaderHackery();
-            Task.Run(() => h.readFile(this));
-            //await StartConnection();
+
+            //H264FileReaderHackery h = new H264FileReaderHackery();
+            //Task.Run(() => h.readFile(this));
+
+            await StartConnection(config);
         } 
         #endregion Navigation Events
 
