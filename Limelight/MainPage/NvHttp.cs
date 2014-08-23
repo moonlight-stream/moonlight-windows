@@ -53,8 +53,11 @@ namespace Limelight
             byte[] bytes = new byte[hardwareId.Length];
             dataReader.ReadBytes(bytes);
 
-            //return BitConverter.ToString(bytes); 
-            return "abc123";
+            string devName = BitConverter.ToString(bytes); 
+            // The device name in itself will crash the NvStream server because it's too long
+            // Return only the first 24 characters of the string
+      
+            return Truncate(devName, 24);
         }
 
         public async Task GetServerIPAddress()
@@ -91,7 +94,7 @@ namespace Limelight
         /// <summary>
         /// Resolve the GEForce PC hostname to an IP Address
         /// </summary>
-        /// <param name="hostName"></param>
+        /// <param name="hostName">Hostname to resolve</param>
         private async Task ResolveHostName(String hostName)
         {
             HostName serverHost = new HostName(hostName);
@@ -109,9 +112,23 @@ namespace Limelight
                 Debug.WriteLine("Exception: " + e.Message);
             }
 
-            this.serverIP = clientSocket.Information.RemoteAddress.ToString();
-           
+            this.serverIP = clientSocket.Information.RemoteAddress.ToString();           
         }
         #endregion Hostname resolution
+
+        #region Helpers
+
+        /// <summary>
+        /// Truncate a string to a given length
+        /// </summary>
+        /// <param name="value">String to truncate</param>
+        /// <param name="maxLength">Length to which to truncate the string</param>
+        /// <returns>The truncated string</returns>
+        private static string Truncate(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            return value.Length <= maxLength ? value : value.Substring(0, maxLength);
+        }
+        #endregion Helpers
     }
 }
