@@ -15,7 +15,7 @@
     /// <summary>
     /// Cryptography used in pairing with the streaming machine
     /// </summary>
-    public sealed partial class MainPage : Page
+    public partial class Pairing
     {
         private Object certLock = new Object();
         private static char[] hexArray = "0123456789ABCDEF".ToCharArray();

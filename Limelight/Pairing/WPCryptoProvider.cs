@@ -9,21 +9,22 @@
     using Org.BouncyCastle.Security;
     using Org.BouncyCastle.X509;
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
+    using System.Runtime.InteropServices.WindowsRuntime;
     using System.Text;
     using System.Threading.Tasks;
+    using Windows.Security.Cryptography;
     using Windows.Security.Cryptography.Certificates;
     using Windows.Storage;
     using Windows.Storage.Streams;
-    using Windows.UI.Xaml.Controls;
-    using System.Runtime.InteropServices.WindowsRuntime;
-    using Windows.Security.Cryptography;
 
     /// <summary>
     /// Functions for signing and verifying data
     /// </summary>
-    public sealed partial class MainPage : Page
+    public partial class Pairing
     {
         private X509Certificate cert = null;
         private AsymmetricCipherKeyPair keyPair; 
@@ -179,5 +180,66 @@
             await CertificateEnrollmentManager.ImportPfxDataAsync(pfx, password, ExportOption.NotExportable, KeyProtectionLevel.NoConsent, InstallOptions.None, friendlyName);
         }
         #endregion Cert Store
+
+        #region Persistent Crypto Settings
+        private async Task SaveCertKeyPair()
+        {
+            var settings = ApplicationData.Current.RoamingSettings;
+            PemWriter certWriter = new PemWriter(new StringWriter());
+            PemWriter keyWriter = new PemWriter(new StringWriter());
+
+            keyWriter.WriteObject(keyPair);
+            keyWriter.Writer.Flush();
+
+            // Add the cert to the cert store. This changes the fingerprint so we read it
+            // back before we serialize it so we have the up to date cert.
+            await AddToWinCertStore();
+
+            // Read the modified cert from the cert store
+            IEnumerable<Certificate> certificates = await CertificateStores.FindAllAsync(new CertificateQuery { FriendlyName = "Limelight-Client" });
+            cert = new X509CertificateParser().ReadCertificate(certificates.Single().GetCertificateBlob().AsStream());
+
+            certWriter.WriteObject(cert);
+            certWriter.Writer.Flush();
+
+            // Line endings MUST be UNIX for the PC to accept the cert properly
+            string keyStr = keyWriter.Writer.ToString();
+            keyStr = keyStr.Replace("\r\n", "\n");
+
+            string certStr = certWriter.Writer.ToString();
+            certStr = certStr.Replace("\r\n", "\n");
+
+            settings.Values["cert"] = certStr;
+            settings.Values["key"] = keyStr;
+        }
+
+        /// <summary>
+        /// Load the cert/key pair from memory
+        /// </summary>
+        /// <returns>Value indicating success</returns>
+        private bool LoadCertKeyPair()
+        {
+            var settings = ApplicationData.Current.RoamingSettings;
+            if (settings.Values.ContainsKey("cert") && settings.Values.ContainsKey("key"))
+            {
+                string certStr = ApplicationData.Current.RoamingSettings.Values["cert"].ToString();
+                string keyStr = ApplicationData.Current.RoamingSettings.Values["key"].ToString();
+
+                PemReader certReader = new PemReader(new StringReader(certStr));
+                PemReader keyReader = new PemReader(new StringReader(keyStr));
+
+                keyPair = (AsymmetricCipherKeyPair)keyReader.ReadObject();
+                cert = (X509Certificate)certReader.ReadObject();
+                pemCertBytes = System.Text.Encoding.UTF8.GetBytes(certStr);
+
+                return true;
+            }
+            // We didn't load the cert/key pair properly
+            else
+            {
+                return false;
+            }
+        }
+        #endregion Persistent Crypto Settings
     }
 }

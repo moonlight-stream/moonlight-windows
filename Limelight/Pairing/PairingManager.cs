@@ -12,15 +12,24 @@
     /// <summary>
     /// Performs pairing with the streaming machine
     /// </summary>
-    public sealed partial class MainPage : Page
+    public partial class Pairing
     {
-        private CryptographicKey aesKey; 
+        private CryptographicKey aesKey;
+        private NvHttp nv;
 
+        /// <summary>
+        /// Constructor that sets nv 
+        /// </summary>
+        /// <param name="nv">The NvHttp Object</param>
+        public Pairing(NvHttp nv)
+        {
+            this.nv = nv; 
+        }
         #region Pairing
         /// <summary>
         /// Pair with the hostname in the textbox
         /// </summary>
-        private async Task Pair(string uri)
+        public async Task Pair(string uri)
         {
             Debug.WriteLine("Pairing ");
             // Create NvHttp object with the user input as the URL
@@ -46,6 +55,7 @@
                 return;
             }
             // "Please don't do this ever, but it's only okay because Cameron said so" -Cameron Gutman
+            
             getClientCertificate(); 
 
             if (await QueryPairState())
@@ -74,7 +84,7 @@
         /// Query the server to get the device pair state
         /// </summary>
         /// <returns>True if the operation succeeded, false otherwise</returns>
-        private async Task<bool> QueryPairState()
+        public async Task<bool> QueryPairState()
         {
             XmlQuery pairState;
             try
@@ -96,6 +106,15 @@
             }
             return true;
         }
+
+        /// <summary>
+        /// Getter for the NvHttp object
+        /// </summary>
+        /// <returns>nv</returns>
+        public NvHttp getNv() {
+            return nv; 
+        }
+
         #endregion XML Queries
     }
 }
