@@ -10,7 +10,7 @@
     <ClCompile Include="Limelight-common-binding.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Limelight-common-binding.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Limelight-common-binding.hpp" />
   </ItemGroup>
 </Project>

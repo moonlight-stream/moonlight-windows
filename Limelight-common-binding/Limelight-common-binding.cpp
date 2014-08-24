@@ -1,6 +1,6 @@
 ﻿/* Binding between the main Limelight app and Limelight Common */
 
-#include "Limelight-common-binding.h"
+#include "Limelight-common-binding.hpp"
 
 #include <stdlib.h>
 #include <string.h>
