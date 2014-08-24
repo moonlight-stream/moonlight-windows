@@ -29,12 +29,18 @@ static LimelightDecoderRenderer ^s_DrCallbacks;
 static LimelightAudioRenderer ^s_ArCallbacks;
 static LimelightConnectionListener ^s_ClCallbacks;
 
-#define MAX_FRAME_SIZE 1048576
+#define INITIAL_FRAME_BUFFER_SIZE 1048576
+static int s_FrameBufferSize;
 static char* s_FrameBuffer;
 
 /* Each of these methods call into the appropriate Limelight Common method */
 void DrShimSetup(int width, int height, int redrawRate, void* context, int drFlags) {
-	s_FrameBuffer = (char*)malloc(MAX_FRAME_SIZE);
+	s_FrameBufferSize = INITIAL_FRAME_BUFFER_SIZE;
+	s_FrameBuffer = (char*) malloc(s_FrameBufferSize);
+	if (s_FrameBuffer == NULL) {
+		// FIXME: Change DrSetup() to be failable
+	}
+
 	s_DrCallbacks->Setup(width, height, redrawRate, drFlags);
 }
 void DrShimStart(void) {
@@ -50,6 +56,17 @@ void DrShimRelease(void) {
 void DrShimSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
 	PLENTRY entry;
 	int offset = 0;
+
+	/* Resize the frame buffer if the current frame is too big.
+	 * This is safe without locking because this function is
+	 * called only from a single thread. */
+	if (s_FrameBufferSize < decodeUnit->fullLength) {
+		s_FrameBufferSize = decodeUnit->fullLength;
+		s_FrameBuffer = (char*) malloc(s_FrameBufferSize);
+		if (s_FrameBuffer == NULL) {
+			// FIXME: Change DrSubmitDecodeUnit() to be failable
+		}
+	}
 
 	entry = decodeUnit->bufferList;
 	while (entry != NULL)
