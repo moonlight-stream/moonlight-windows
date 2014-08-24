@@ -90,16 +90,14 @@ void ArShimRelease(void) {
 	s_ArCallbacks->Destroy();
 }
 void ArShimDecodeAndPlaySample(char* sampleData, int sampleLength) {
-	const Platform::Array<unsigned char> ^dataArray;
 	opus_int16 decodedBuffer[MAX_OUTPUT_SHORTS_PER_CHANNEL * CHANNEL_COUNT];
 	int decodedSamples;
 		
 	decodedSamples = opus_decode(s_OpusDecoder, (const unsigned char*)sampleData, sampleLength,
 		decodedBuffer, MAX_OUTPUT_SHORTS_PER_CHANNEL, 0);
 	if (decodedSamples > 0) {
-		dataArray = ref new Platform::Array<byte>((byte*)decodedBuffer, 
-			decodedSamples * CHANNEL_COUNT * sizeof(opus_int16));
-		s_ArCallbacks->PlaySample(dataArray);
+		s_ArCallbacks->PlaySample(Platform::ArrayReference<byte>((byte*)decodedBuffer,
+			decodedSamples * CHANNEL_COUNT * sizeof(opus_int16)));
 	}
 }
 
