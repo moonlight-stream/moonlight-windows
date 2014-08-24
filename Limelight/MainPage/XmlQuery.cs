@@ -56,8 +56,17 @@ namespace Limelight
         /// <returns>The first attribute within the given tag in the XElement</returns>
         public string XmlAttribute(string tag, XElement element)
         {
-            // TODO handle not found
+            if (element == null)
+            {
+                return null; 
+            }
             var query = from c in element.Descendants(tag) select c;
+            // Not found 
+            if (query == null)
+            {
+                return null; 
+            }
+
             string attribute = query.FirstOrDefault().Value;
             return attribute;
         }
@@ -69,8 +78,12 @@ namespace Limelight
         /// <returns>The first attribute within the given tag</returns>
         public XElement XmlAttributeElement(string tag)
         {
-            // TODO handle not found
             var query = from c in rawXml.Descendants(tag) select c;
+            // Not found
+            if (query == null)
+            {
+                return null; 
+            }
             return query.FirstOrDefault(); 
         }
 

@@ -44,23 +44,22 @@ namespace Limelight
         /// Get the local device's name
         /// </summary>
         /// <returns>Unique ID for the device</returns>
-        public String GetDeviceName()
+        public String GetUniqueId()
         {
             var token = HardwareIdentification.GetPackageSpecificToken(null);
             var hardwareId = token.Id;
             var dataReader = Windows.Storage.Streams.DataReader.FromBuffer(hardwareId);
 
-            byte[] bytes = new byte[hardwareId.Length];
+            byte[] bytes = new byte[8];
             dataReader.ReadBytes(bytes);
 
-            string devName = BitConverter.ToString(bytes); 
-            // The device name in itself will crash the NvStream server because it's too long
-            // Return only the first 24 characters of the string
-      
-            return Truncate(devName, 24);
+            return Pairing.bytesToHex(bytes);
         }
 
-        public async Task GetServerIPAddress()
+        /// <summary>
+        /// Finds the IP address of the streaming machine
+        /// </summary>
+        public async Task ServerIPAddress()
         {
             Match ipAddr = null;
 

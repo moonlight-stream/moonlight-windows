@@ -18,8 +18,6 @@
 
         private const int MDNS_POLLING_INTERVAL = 5;
 
-        private NvHttp nv;
-        private int steamId = 0;
         private DispatcherTimer mDnsTimer = new DispatcherTimer();
 
         private static List<Computer> computerList = new List<Computer>();
@@ -122,20 +120,22 @@
             status_text.Text = "Checking pair state...";
             selected = (Computer)computerPicker.SelectedItem;
             // User hasn't selected a machine
-            /* if (selected == null)
+            if (selected == null)
             {
                 var dialog = new MessageDialog("No machine selected", "Streaming Failed");
                 await dialog.ShowAsync(); 
-                status_text.Text = "";               
-            } */ 
-            //else
-            //{
-               //await StreamSetup(selected.IpAddress);
-            //}
-            this.Frame.Navigate(typeof(StreamFrame));
-            status_text.Text = "";
-            //mDnsTimer.Start();
+                status_text.Text = "";
+                
+            }
+            else
+            {
+                await StreamSetup(selected);
+                this.Frame.Navigate(typeof(StreamFrame), selected);
+                status_text.Text = "";
+                //mDnsTimer.Start();
 
+            }
+            
 
             // User can use the buttons again
             PairButton.IsEnabled = true;
@@ -151,27 +151,28 @@
         /// </summary>
         private async void PairButton_Click(object sender, RoutedEventArgs e)
         {
-            // Stop polling timer while we're pairing
-            mDnsTimer.Stop();
-
-            SaveSettings();
-            status_text.Text = "Pairing...";
-            selected = (Computer)computerPicker.SelectedItem;
+            Computer selected = (Computer)computerPicker.SelectedItem;
             // User hasn't selected anything 
             if (selected == null)
             {
                 var dialog = new MessageDialog("No machine selected", "Pairing Failed");
                 await dialog.ShowAsync();
-                status_text.Text = "";  
+                status_text.Text = "";
+                return; 
             }
-            else
-            {
-                // Pair with the selected machine
-                await Pair(selected.IpAddress);
-            }
+            nv = new NvHttp(selected.IpAddress);
+            Pairing p = new Pairing(nv);
+            // Stop polling timer while we're pairing
+            mDnsTimer.Stop();
+
+            SaveSettings();
+            status_text.Text = "Pairing...";
+
+
+            await p.Pair(selected);
 
             status_text.Text = ""; 
-            mDnsTimer.Start(); 
+            mDnsTimer.Stop(); 
         }
         #endregion Event Handlers  
     }

@@ -61,7 +61,7 @@
                     {
                         if (resp.Services.ContainsKey("_nvstream._tcp.local."))
                         {
-                            Computer toAdd = new Computer(resp.DisplayName, resp.IPAddress, steamId);
+                            Computer toAdd = new Computer(resp.DisplayName, resp.IPAddress);
                             // If we don't have the computer already, add it
                             if (!computerListLocal.Exists(x => x.IpAddress == resp.IPAddress))
                             {
@@ -74,7 +74,10 @@
             }
 
             // We're done messing with the list - it's okay for the UI thread to update it now
+            /*IEnumerable<Computer> pairedList = MainPage.LoadComputers();
+            IEnumerable<Computer> fullList = computerListLocal as IEnumerable<Computer>;*/
             computerList = computerListLocal;
+
             if (computerList.Count == 0)
             {
                 computerPicker.PlaceholderText = "No computers found";

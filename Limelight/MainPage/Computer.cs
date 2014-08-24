@@ -22,11 +22,11 @@ namespace Limelight
         /// </summary>
         /// <param name="name">Computer display name</param>
         /// <param name="ipAddress">Computer IP address</param>
-        public Computer(string name, string ipAddress, int steamID)
+        public Computer(string name, string ipAddress)
         {
             this.IpAddress = ipAddress;
             this.Name = name;
-            this.steamID = steamID; 
+            this.steamID = 0;
         }
 
         /// <summary>

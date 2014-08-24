@@ -27,7 +27,7 @@
            
             try
             {
-                await nv.GetServerIPAddress();
+                await nv.ServerIPAddress();
             }
             catch (Exception)
             {
@@ -90,7 +90,7 @@
             string steamIdStr;
             try
             {
-                appList = new XmlQuery(nv.baseUrl + "/applist?uniqueid=" + nv.GetDeviceName());
+                appList = new XmlQuery(nv.baseUrl + "/applist?uniqueid=" + nv.GetUniqueId());
             }
             catch (Exception e)
             {
@@ -102,8 +102,16 @@
             try
             {
                 steamIdStr = await Task.Run(() => appList.XmlAttribute("ID", appList.XmlAttributeElement("App")));
-
+                
+                if (steamIdStr == null)
+                {
+                    // Not found
+                    var dialog = new MessageDialog("Steam ID Not Found", "Steam ID Lookup Failed");
+                    dialog.ShowAsync();
+                    return 0;
+                }
             }
+                // Exception connecting to the resource
             catch (Exception e)
             {
                 // Steam ID lookup failed

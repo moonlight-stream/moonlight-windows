@@ -33,7 +33,7 @@
 
             try
             {
-                await nv.GetServerIPAddress();
+                await nv.ServerIPAddress();
             }
             catch (Exception)
             {
@@ -53,7 +53,7 @@
             await SetStateText("Launching Steam");
             try
             {
-                launchApp = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetDeviceName() + "&appid=" + selected.steamID +
+                launchApp = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + selected.steamID +
                 "&mode=" + streamConfig.GetWidth()+"x"+streamConfig.GetHeight()+"x"+streamConfig.GetFps() +
                 "&additionalStates=1&sops=1" + // FIXME: make sops configurable
                 "&rikey=0" + // FIXME: RI encryption

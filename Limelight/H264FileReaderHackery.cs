@@ -21,7 +21,6 @@ namespace Limelight
             
             Debug.WriteLine("[H264FileReaderHackery::readFile Creating byte[] buffer]");
             Byte[] buffer = new Byte[131072];
-            int offset = 0;
             int seekOffset = 0;
             Debug.WriteLine("[H264FileReaderHackery::readFile Entering while(stream.CanRead]");
 

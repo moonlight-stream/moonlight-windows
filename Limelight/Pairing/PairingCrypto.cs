@@ -87,10 +87,10 @@
             // Generate a salt for hashing the PIN
             byte[] salt = GenerateRandomBytes(16);
 
-            string pin = String.Format("%04d", new Random().Next(9999));
+            string pin = new Random().Next(9999).ToString("D4");
 
             var dialog = new MessageDialog("Enter the following PIN on the host PC: " + pin, "Enter PIN");
-            Task.Run(async () => await dialog.ShowAsync());
+            dialog.ShowAsync(); 
             
             // Combine the salt and pin, then create an AES key from them
             byte[] saltAndPin = SaltPin(salt, pin);
@@ -100,6 +100,7 @@
 
             XmlQuery getServerCert = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + uniqueId +
                 "&devicename=roth&updateState=1&phrase=getservercert&salt=" + bytesToHex(salt) + "&clientcert=" + bytesToHex(pemCertBytes));
+            
             
             if (!getServerCert.XmlAttribute("paired").Equals("1"))
             {
@@ -206,7 +207,7 @@
             XmlQuery unpair;
             try
             {
-                unpair = new XmlQuery(nv.baseUrl + "/unpair?uniqueid=" + nv.GetDeviceName());
+                unpair = new XmlQuery(nv.baseUrl + "/unpair?uniqueid=" + nv.GetUniqueId());
             }
             catch (Exception e)
             {
@@ -242,7 +243,7 @@
         /// </summary>
         /// <param name="bytes">Byte array to convert</param>
         /// <returns>Resulting hexidecimal string</returns>
-        private static string bytesToHex(byte[] bytes)
+        public static string bytesToHex(byte[] bytes)
         {
             char[] hexChars = new char[bytes.Length * 2];
             for (int j = 0; j < bytes.Length; j++)

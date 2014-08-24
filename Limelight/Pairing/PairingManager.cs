@@ -29,13 +29,13 @@
         /// <summary>
         /// Pair with the hostname in the textbox
         /// </summary>
-        public async Task Pair(string uri)
+        public async Task Pair(Computer c)
         {
             Debug.WriteLine("Pairing ");
             // Create NvHttp object with the user input as the URL
             try
             {
-                nv = new NvHttp(uri);
+                nv = new NvHttp(c.IpAddress);
             }
             catch (Exception)
             {
@@ -46,7 +46,7 @@
             // Get the server IP address
             try
             {
-                await nv.GetServerIPAddress();
+                await nv.ServerIPAddress();
             }
             catch (Exception e)
             {
@@ -66,13 +66,14 @@
                 return;
             }
 
-            if (!Challenges(nv.GetDeviceName()))
+            if (!Challenges(nv.GetUniqueId()))
             {
                 Debug.WriteLine("Challenges failed");
                 return; 
             } 
 
             // Otherwise, everything was successful
+             
             var successDialog = new MessageDialog("Pairing successful", "Success");
             await successDialog.ShowAsync();
         }
@@ -89,7 +90,7 @@
             XmlQuery pairState;
             try
             {
-                pairState = new XmlQuery(nv.baseUrl + "/serverinfo?uniqueid=" + nv.GetDeviceName());
+                pairState = new XmlQuery(nv.baseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
             }
             catch (Exception e)
             {
