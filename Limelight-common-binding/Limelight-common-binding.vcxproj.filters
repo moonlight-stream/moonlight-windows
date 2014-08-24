@@ -6,11 +6,4 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tga;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Limelight-common-binding.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="targetver.h" />
-    <ClInclude Include="Limelight-common-binding.hpp" />
-  </ItemGroup>
 </Project>
