@@ -20,6 +20,9 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\Computer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\ConnectionManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage\MainPage.xaml.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\MdnsDiscovery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\NvHttp.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\SettingsManager.cs" />
@@ -31,5 +34,19 @@
     <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\Connection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\ConnectionCallbacks.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\MediaPlayer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\StreamFrame.xaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>StreamFrame.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)MainPage\MainPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)StreamFrame\StreamFrame.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>
