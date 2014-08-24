@@ -74,21 +74,12 @@
     <Reference Include="crypto">
       <HintPath>..\packages\crypto.1.7.0.0\lib\portable-net40+sl50+win+WindowsPhoneApp81+wp80\crypto.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.ApplicationInsights">
-      <HintPath>..\packages\Microsoft.ApplicationInsights.0.9.0-build06428\lib\wpa81\Microsoft.ApplicationInsights.winmd</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.ApplicationInsights.Platform">
-      <HintPath>..\packages\Microsoft.ApplicationInsights.0.9.0-build06428\lib\wpa81\Microsoft.ApplicationInsights.Platform.winmd</HintPath>
-    </Reference>
     <Reference Include="Zeroconf, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Zeroconf.2.1.1\lib\portable-win81+wpa81\Zeroconf.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ApplicationInsights.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
