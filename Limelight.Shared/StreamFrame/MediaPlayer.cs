@@ -31,21 +31,18 @@
             this._streamSource = streamSource;
 
             StreamDisplay.RealTimePlayback = true;
-            StreamDisplay.AutoPlay = true; 
+            StreamDisplay.AutoPlay = true;
 
-            VideoEncodingProperties videoProperties = VideoEncodingProperties.CreateUncompressed(MediaEncodingSubtypes.H264Es,
-                (uint)streamConfig.GetWidth(), (uint)streamConfig.GetHeight());
-
-            videoProperties.FrameRate.Numerator = (uint)streamConfig.GetFps();
-            videoProperties.FrameRate.Denominator = 1;
-            videoProperties.Bitrate = (uint)streamConfig.GetBitrate();
+            VideoEncodingProperties videoProperties = new VideoEncodingProperties();
+            videoProperties.Subtype = MediaEncodingSubtypes.H264Es;
             videoProperties.ProfileId = H264ProfileIds.High;
 
             _videoDesc = new VideoStreamDescriptor(videoProperties);
 
             _mss = new MediaStreamSource(_videoDesc);
             _mss.BufferTime = TimeSpan.Zero;
-            _mss.Starting += _mss_Starting;
+            _mss.CanSeek = false;
+            _mss.Duration = TimeSpan.Zero;
             _mss.SampleRequested += _mss_SampleRequested;
 
             StreamDisplay.SetMediaStreamSource(_mss);
@@ -53,7 +50,7 @@
 
         /// <summary>
         /// Media stream source sample requested callback
-        /// </summary>s
+        /// </summary>
         private void _mss_SampleRequested(MediaStreamSource sender, MediaStreamSourceSampleRequestedEventArgs args)
         {
             // Determine which stream needs a sample
@@ -67,11 +64,6 @@
                 // Audio
                 _streamSource.AudioSampleRequested(args);
             }
-        }
-
-        private void _mss_Starting(MediaStreamSource sender, MediaStreamSourceStartingEventArgs args)
-        {
-
         }
         #endregion Media Player
     }

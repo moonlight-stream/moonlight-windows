@@ -5,6 +5,8 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Media.Core;
+using Windows.Storage;
+using Windows.Storage.Streams;
 
 namespace Limelight
 {
@@ -13,11 +15,15 @@ namespace Limelight
         #region Class Variables
 
         private MediaStreamSourceSampleRequest pendingVideoRequest;
+        private MediaStreamSourceSampleRequestDeferral pendingVideoDeferral;
         private MediaStreamSourceSampleRequest pendingAudioRequest;
+        private MediaStreamSourceSampleRequestDeferral pendingAudioDeferral;
         private Queue<MediaStreamSample> videoSampleQueue;
         private Queue<MediaStreamSample> audioSampleQueue;
         private object videoQueueLock;
         private object audioQueueLock;
+        private DateTime videoStart = new DateTime(0);
+        private DateTime audioStart = new DateTime(0);
 
         #endregion Class Variables
 
@@ -34,10 +40,41 @@ namespace Limelight
         }
         #endregion Constructor
 
+
         private MediaStreamSample CreateVideoSample(byte[] buf)
         {
-            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(buf.AsBuffer(), TimeSpan.Zero);
+            if (videoStart.Ticks == 0)
+            {
+                videoStart = DateTime.Now;
+            }
+
+            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(buf.AsBuffer(),
+                DateTime.Now - videoStart);
+            sample.DecodeTimestamp = sample.Timestamp;
             sample.Duration = TimeSpan.Zero;
+
+            switch (buf[4])
+            {
+                case 0x65:
+                    sample.KeyFrame = true;
+                    Debug.WriteLine("I-frame");
+                    break;
+
+                case 0x67:
+                    Debug.WriteLine("SPS");
+                    break;
+
+                case 0x68:
+                    Debug.WriteLine("PPS");
+                    break;
+
+                case 0x61:
+                    break;
+
+                default:
+                    Debug.WriteLine("Unrecognized data: "+buf[4].ToString());
+                    break;
+            }
 
             return sample;
         }
@@ -54,17 +91,8 @@ namespace Limelight
         {
             lock (videoQueueLock)
             {
-                if (videoSampleQueue.Count > 0)
-                {
-                    // Satisfy the sample request with a queued sample
-                    args.Request.Sample = videoSampleQueue.Dequeue();
-                    Debug.WriteLine("Satisfying from queue");
-                }
-                else
-                {
-                    // This request is now pending
-                    pendingVideoRequest = args.Request;
-                }
+                pendingVideoRequest = args.Request;
+                pendingVideoDeferral = args.Request.GetDeferral();
             }
         }
 
@@ -74,17 +102,13 @@ namespace Limelight
             {
                 if (audioSampleQueue.Count > 0)
                 {
-                    Task.Run(() =>
-                    {
-                        // Satisfy the sample request with a queued sample
-                        args.Request.Sample = audioSampleQueue.Dequeue();
-                        args.Request.GetDeferral().Complete();
-                    });
+                    args.Request.Sample = audioSampleQueue.Dequeue();
                 }
                 else
                 {
                     // This request is now pending
                     pendingAudioRequest = args.Request;
+                    pendingAudioDeferral = args.Request.GetDeferral();
                 }
             }
         }
@@ -93,22 +117,21 @@ namespace Limelight
         {
             MediaStreamSample sample = CreateVideoSample(buf);
 
-            lock (videoQueueLock)
+            // This loop puts back-pressure in the DU queue in
+            // common. It's needed so that we avoid our queue getting
+            // too large.
+            for (;;)
             {
-                if (pendingVideoRequest != null)
+                lock (videoQueueLock)
                 {
-                    MediaStreamSourceSampleRequest request = pendingVideoRequest;
-                    pendingVideoRequest = null;
-
-                    Task.Run(() =>
+                    if (pendingVideoRequest == null)
                     {
-                        request.Sample = sample;
-                        request.GetDeferral().Complete();
-                    });
-                }
-                else
-                {
-                    videoSampleQueue.Enqueue(sample);
+                        continue;
+                    }
+
+                    pendingVideoRequest.Sample = sample;
+                    pendingVideoDeferral.Complete();
+                    break;
                 }
             }
         }
@@ -122,7 +145,7 @@ namespace Limelight
                 if (pendingAudioRequest != null)
                 {
                     pendingAudioRequest.Sample = sample;
-                    pendingAudioRequest.GetDeferral().Complete();
+                    pendingAudioDeferral.Complete();
 
                     pendingAudioRequest = null;
                 }
