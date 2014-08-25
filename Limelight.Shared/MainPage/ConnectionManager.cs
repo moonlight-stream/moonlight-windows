@@ -64,7 +64,7 @@
         private async Task StreamSetupComplete()
         {
             // Pass the selected computer as the parameter
-            this.Frame.Navigate(typeof(StreamFrame));
+            this.Frame.Navigate(typeof(StreamFrame), selected);
         }
 
         /// <summary>

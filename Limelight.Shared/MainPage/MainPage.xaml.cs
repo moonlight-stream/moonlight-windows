@@ -130,10 +130,8 @@
             else
             {
                 await StreamSetup(selected);
-                this.Frame.Navigate(typeof(StreamFrame), selected);
                 status_text.Text = "";
                 //mDnsTimer.Start();
-
             }
             
 
