@@ -166,12 +166,9 @@
             mDnsTimer.Stop();
 
             SaveSettings();
-            status_text.Text = "Pairing...";
-
 
             await p.Pair(selected);
 
-            status_text.Text = ""; 
             mDnsTimer.Stop(); 
         }
         #endregion Event Handlers  

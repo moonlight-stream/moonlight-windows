@@ -5,7 +5,9 @@
     using System;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
+    using Windows.Foundation;
     using Windows.Security.Cryptography;
     using Windows.Security.Cryptography.Core;
     using Windows.Storage.Streams;
@@ -82,25 +84,25 @@
 
         #region Challenges
 
-        private bool Challenges(string uniqueId)
+        private async Task<bool> Challenges(string uniqueId)
         {
             // Generate a salt for hashing the PIN
             byte[] salt = GenerateRandomBytes(16);
 
             string pin = new Random().Next(9999).ToString("D4");
-
-            var dialog = new MessageDialog("Enter the following PIN on the host PC: " + pin, "Enter PIN");
-            dialog.ShowAsync(); 
             
             // Combine the salt and pin, then create an AES key from them
             byte[] saltAndPin = SaltPin(salt, pin);
             aesKey = GenerateAesKey(saltAndPin);
 
             // Send the salt and get the server cert
+            var dialog = new MessageDialog("Enter the following PIN on the host PC: " + pin, "Enter PIN");
+            dialog.Commands.Add(new UICommand("Close"));
+            dialog.ShowAsync();
 
+            // User will need to close dialog themselves
             XmlQuery getServerCert = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + uniqueId +
                 "&devicename=roth&updateState=1&phrase=getservercert&salt=" + bytesToHex(salt) + "&clientcert=" + bytesToHex(pemCertBytes));
-            
             
             if (!getServerCert.XmlAttribute("paired").Equals("1"))
             {
@@ -128,14 +130,11 @@
             byte[] encServerChallengeResponse = HexToBytes(challengeResp.XmlAttribute("challengeresponse"));
             byte[] decServerChallengeResponse = DecryptAes(encServerChallengeResponse, aesKey);
 
-
             byte[] serverResponse = new byte[20], serverChallenge = new byte[16];
             Array.Copy(decServerChallengeResponse, serverResponse, serverResponse.Length);
             Array.Copy(decServerChallengeResponse, 20, serverChallenge, 0, serverChallenge.Length);
             Debug.WriteLine("serverResponse: " + bytesToHex(serverResponse));
             Debug.WriteLine("server challenge: " + bytesToHex(serverChallenge));
-
-
 
             // Using another 16 bytes secret, compute a challenge response hash using the secret, our cert sig, and the challenge
             byte[] clientSecret = GenerateRandomBytes(16);

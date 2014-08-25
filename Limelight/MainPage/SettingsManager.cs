@@ -18,9 +18,7 @@
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        private static List<Computer> pairedComputers;
         #region Persistent UI Settings
-        // TODO Save paired PCs
         /// <summary>
         /// Save page settings so the user doesn't have to select them each time she opens the app
         /// </summary>
@@ -68,36 +66,34 @@
         #endregion Persistent UI Settings
 
         #region Persistent paired computer list
-
+        
+        /// <summary>
+        /// Once we freshly pair to a computer, save it
+        /// </summary>
+        /// <param name="c">Computer we've paired to</param>
         public static void SaveComputer(Computer c)
         {
-            pairedComputers = LoadComputers();
-            pairedComputers.Add(c);
-
-            // Save the updated list for future use
             var settings = ApplicationData.Current.RoamingSettings;
-            settings.Values["computers"] = pairedComputers; 
+            settings.Values["computerName"] = c.Name;
+            settings.Values["computerIP"] = c.IpAddress;
         }
 
         /// <summary>
-        /// Load the list of saved computers from memory
+        /// Load the last computer we've paired to
         /// </summary>
-        /// <returns>The list of computers that we've previously paired to</returns>
-        public static List<Computer> LoadComputers()
+        /// <returns>Last computer we've paired to or null if none</returns>
+        public static Computer LoadComputer()
         {
             var settings = ApplicationData.Current.RoamingSettings;
 
-            if (!settings.Values.ContainsKey("computers"))
+            if (!settings.Values.ContainsKey("computerName") || !settings.Values.ContainsKey("computerIP"))
             {
-                return new List<Computer>();
+                return null;
             }
-            else
-            {
-                return settings.Values["computers"] as List<Computer>;
-            }
+            string name = settings.Values["computerName"] as string;
+            string ip = settings.Values["computerIP"] as string;
+            return new Computer(name, ip);
         }
-
-        // TODO allow the user to delete a computer
 
         #endregion Persistent paired computer list
     }

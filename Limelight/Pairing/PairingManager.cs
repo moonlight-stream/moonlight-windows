@@ -54,8 +54,8 @@
                 dialog.ShowAsync();
                 return;
             }
-            // "Please don't do this ever, but it's only okay because Cameron said so" -Cameron Gutman
-            
+
+            // "Please don't do this ever, but it's only okay because Cameron said so" -Cameron Gutman            
             getClientCertificate(); 
 
             if (await QueryPairState())
@@ -65,15 +65,15 @@
                 Debug.WriteLine("Already paired");
                 return;
             }
-
-            if (!Challenges(nv.GetUniqueId()))
+            bool challenge = await Challenges(nv.GetUniqueId());
+            if (!challenge)
             {
                 Debug.WriteLine("Challenges failed");
                 return; 
             } 
 
             // Otherwise, everything was successful
-             
+            MainPage.SaveComputer(c);
             var successDialog = new MessageDialog("Pairing successful", "Success");
             await successDialog.ShowAsync();
         }

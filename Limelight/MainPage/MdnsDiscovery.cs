@@ -74,8 +74,14 @@
             }
 
             // We're done messing with the list - it's okay for the UI thread to update it now
-            /*IEnumerable<Computer> pairedList = MainPage.LoadComputers();
-            IEnumerable<Computer> fullList = computerListLocal as IEnumerable<Computer>;*/
+            Computer last = LoadComputer();
+            if (last != null)
+            {// If we don't have the computer already, add it
+                if (!computerListLocal.Exists(x => x.IpAddress == last.IpAddress))
+                {
+                    computerListLocal.Add(last);
+                }                
+            }
             computerList = computerListLocal;
 
             if (computerList.Count == 0)
