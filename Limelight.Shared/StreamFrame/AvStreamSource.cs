@@ -81,8 +81,14 @@ namespace Limelight
 
         private MediaStreamSample CreateAudioSample(byte[] buf)
         {
-            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(buf.AsBuffer(), TimeSpan.Zero);
-            sample.Duration = TimeSpan.Zero;
+            if (audioStart.Ticks == 0)
+            {
+                audioStart = DateTime.Now;
+            }
+
+            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(buf.AsBuffer(),
+                DateTime.Now - audioStart);
+            sample.Duration = TimeSpan.FromMilliseconds(5);
 
             return sample;
         }
@@ -100,16 +106,8 @@ namespace Limelight
         {
             lock (audioQueueLock)
             {
-                if (audioSampleQueue.Count > 0)
-                {
-                    args.Request.Sample = audioSampleQueue.Dequeue();
-                }
-                else
-                {
-                    // This request is now pending
-                    pendingAudioRequest = args.Request;
-                    pendingAudioDeferral = args.Request.GetDeferral();
-                }
+                pendingAudioRequest = args.Request;
+                pendingAudioDeferral = args.Request.GetDeferral();
             }
         }
 
@@ -140,18 +138,21 @@ namespace Limelight
         {
             MediaStreamSample sample = CreateAudioSample(buf);
 
-            lock (audioQueueLock)
+            // This loop puts back-pressure in the DU queue in
+            // common. It's needed so that we avoid our queue getting
+            // too large.
+            for (; ; )
             {
-                if (pendingAudioRequest != null)
+                lock (audioQueueLock)
                 {
+                    if (pendingAudioRequest == null)
+                    {
+                        continue;
+                    }
+
                     pendingAudioRequest.Sample = sample;
                     pendingAudioDeferral.Complete();
-
-                    pendingAudioRequest = null;
-                }
-                else
-                {
-                    audioSampleQueue.Enqueue(sample);
+                    break;
                 }
             }
         }

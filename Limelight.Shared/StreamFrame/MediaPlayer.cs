@@ -16,6 +16,7 @@
         #region Class Variables
         private MediaStreamSource _mss = null;
         private VideoStreamDescriptor _videoDesc = null;
+        private AudioStreamDescriptor _audioDesc = null;
         private AvStreamSource _streamSource;
 
         #endregion Class Variables
@@ -33,13 +34,16 @@
             StreamDisplay.RealTimePlayback = true;
             StreamDisplay.AutoPlay = true;
 
+            AudioEncodingProperties audioProperties = AudioEncodingProperties.CreatePcm(48000, 2, 16);
+
             VideoEncodingProperties videoProperties = new VideoEncodingProperties();
             videoProperties.Subtype = MediaEncodingSubtypes.H264Es;
             videoProperties.ProfileId = H264ProfileIds.High;
 
             _videoDesc = new VideoStreamDescriptor(videoProperties);
+            _audioDesc = new AudioStreamDescriptor(audioProperties);
 
-            _mss = new MediaStreamSource(_videoDesc);
+            _mss = new MediaStreamSource(_videoDesc, _audioDesc);
             _mss.BufferTime = TimeSpan.Zero;
             _mss.CanSeek = false;
             _mss.Duration = TimeSpan.Zero;
