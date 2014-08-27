@@ -89,7 +89,6 @@
         {
             // We only want to stream in landscape
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape;
-
             selected = (Computer)e.Parameter;
         }
         
@@ -102,6 +101,10 @@
             Waitgrid.Visibility = Visibility.Collapsed;
             currentStateText.Visibility = Visibility.Collapsed; 
             LimelightStreamConfiguration config;
+
+            // Hide the status bar
+            var statusBar = Windows.UI.ViewManagement.StatusBar.GetForCurrentView();
+            await statusBar.HideAsync(); 
  
             config = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 5000, 1024);
             InitializeMediaPlayer(config, AvStream);
@@ -171,7 +174,7 @@
                 // Send the values to the streaming PC so it can register mouse movement
                 LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(x), (short)(y));
             }            
-            // TODO what even am I doing
+            // TODO experimental code written without internet access = bad, nonfunctional code. FIXME
         }
         #endregion Mouse Events
     } 
