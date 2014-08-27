@@ -14,6 +14,40 @@
         #region Connection
 
         /// <summary>
+        /// Create start HTTP request
+        /// </summary>
+        private XmlQuery StartOrResumeApp(NvHttp nv, LimelightStreamConfiguration streamConfig)
+        {
+            XmlQuery serverInfo = new XmlQuery(nv.baseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
+            string currentGameString = serverInfo.XmlAttribute("currentgame");
+
+            byte[] aesIv = streamConfig.GetRiAesIv();
+            int riKeyId =
+                (int)(((aesIv[0] << 24) & 0xFF000000) |
+                ((aesIv[1] << 16) & 0xFF0000) |
+                ((aesIv[2] << 8) & 0xFF00) |
+                (aesIv[3] & 0xFF));
+            string riConfigString =
+                "&rikey=" + Pairing.bytesToHex(streamConfig.GetRiAesKey()) +
+                "&rikeyid=" + riKeyId;
+
+            // Launch a new game if nothing is running
+            if (currentGameString == null || currentGameString.Equals("0"))
+            {
+                return new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + selected.steamID +
+                    "&mode=" + streamConfig.GetWidth() + "x" + streamConfig.GetHeight() + "x" + streamConfig.GetFps() +
+                    "&additionalStates=1&sops=1" + // FIXME: make sops configurable
+                    riConfigString);
+            }
+            else
+            {
+                // A game was already running, so resume it
+                // FIXME: Quit and relaunch if it's not the game we came to start
+                return new XmlQuery(nv.baseUrl + "/resume?uniqueid=" + nv.GetUniqueId() + riConfigString);
+            }
+        }
+
+        /// <summary>
         /// Starts the connection by calling into Limelight Common
         /// </summary>
         private async Task StartConnection(LimelightStreamConfiguration streamConfig)
@@ -53,11 +87,7 @@
             await SetStateText("Launching Steam");
             try
             {
-                launchApp = new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + selected.steamID +
-                "&mode=" + streamConfig.GetWidth()+"x"+streamConfig.GetHeight()+"x"+streamConfig.GetFps() +
-                "&additionalStates=1&sops=1" + // FIXME: make sops configurable
-                "&rikey=0" + // FIXME: RI encryption
-                "&rikeyid=0");
+                launchApp = StartOrResumeApp(nv, streamConfig);
             }
             catch (Exception)
             {

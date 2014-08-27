@@ -163,6 +163,9 @@ int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, L
 	config.fps = streamConfig->GetFps();
 	config.bitrate = streamConfig->GetBitrate();
 	config.packetSize = streamConfig->GetPacketSize();
+
+	memcpy(config.remoteInputAesKey, streamConfig->GetRiAesKey()->Data, sizeof(config.remoteInputAesKey));
+	memcpy(config.remoteInputAesIv, streamConfig->GetRiAesIv()->Data, sizeof(config.remoteInputAesIv));
 	
 	s_ClCallbacks = clCallbacks;
 	s_DrCallbacks = drCallbacks;

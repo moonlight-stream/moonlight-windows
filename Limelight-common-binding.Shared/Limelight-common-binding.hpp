@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <Limelight.h>
+#include <string.h>
 
 typedef unsigned char byte;
 
@@ -8,8 +9,13 @@ namespace Limelight_common_binding
 	public ref class LimelightStreamConfiguration sealed
 	{
 	public:
-		LimelightStreamConfiguration(int width, int height, int fps, int bitrate, int packetSize) :
-			m_Width(width), m_Height(height), m_Fps(fps), m_Bitrate(bitrate), m_PacketSize(packetSize) {}
+		LimelightStreamConfiguration(int width, int height, int fps, int bitrate, int packetSize,
+			const Platform::Array<unsigned char> ^riAesKey, const Platform::Array<unsigned char> ^riAesIv) :
+			m_Width(width), m_Height(height), m_Fps(fps), m_Bitrate(bitrate), m_PacketSize(packetSize)
+		{
+			memcpy(m_riAesKey, riAesKey->Data, sizeof(m_riAesKey));
+			memcpy(m_riAesIv, riAesIv->Data, sizeof(m_riAesIv));
+		}
 
 		int GetWidth(void) {
 			return m_Width;
@@ -26,6 +32,12 @@ namespace Limelight_common_binding
 		int GetPacketSize(void) {
 			return m_PacketSize;
 		}
+		Platform::Array<unsigned char>^ GetRiAesKey(void) {
+			return ref new Platform::Array<byte>(m_riAesKey, sizeof(m_riAesKey));
+		}
+		Platform::Array<unsigned char>^ GetRiAesIv(void) {
+			return ref new Platform::Array<byte>(m_riAesIv, sizeof(m_riAesIv));
+		}
 
 	private:
 		int m_Width;
@@ -33,6 +45,8 @@ namespace Limelight_common_binding
 		int m_Fps;
 		int m_Bitrate;
 		int m_PacketSize;
+		byte m_riAesKey[16];
+		byte m_riAesIv[16];
 	};
 
 	public delegate void DrSetup(int width, int height, int redrawRate, int drFlags);

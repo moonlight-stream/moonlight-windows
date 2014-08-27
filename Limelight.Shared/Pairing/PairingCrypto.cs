@@ -229,7 +229,7 @@
         /// </summary>
         /// <param name="length">Length of the desired number in bytes</param>
         /// <returns></returns>
-        private byte[] GenerateRandomBytes(uint length)
+        public static byte[] GenerateRandomBytes(uint length)
         {
             IBuffer buffer = CryptographicBuffer.GenerateRandom(length);
             byte[] rand = new byte[length];

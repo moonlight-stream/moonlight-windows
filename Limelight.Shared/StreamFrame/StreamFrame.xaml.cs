@@ -8,6 +8,8 @@
     using Windows.Graphics.Display;
     using Windows.Media.Core;
     using Windows.Media.MediaProperties;
+    using Windows.Security.Cryptography;
+    using Windows.Security.Cryptography.Core;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Input;
@@ -102,8 +104,16 @@
             Waitgrid.Visibility = Visibility.Collapsed;
             currentStateText.Visibility = Visibility.Collapsed; 
             LimelightStreamConfiguration config;
+
+            byte[] aesKey = Pairing.GenerateRandomBytes(16);
+
+            // GameStream only uses 4 bytes of a 16 byte IV. Go figure.
+            byte[] aesRiIndex = Pairing.GenerateRandomBytes(4);
+            byte[] aesIv = new byte[16];
+            Array.ConstrainedCopy(aesRiIndex, 0, aesIv, 0, aesRiIndex.Length);
  
-            config = new LimelightStreamConfiguration(frameWidth, frameHeight, 30, 5000, 1024);
+            config = new LimelightStreamConfiguration(frameWidth, frameHeight,
+                30, 5000, 1024, aesKey, aesIv);
             InitializeMediaPlayer(config, AvStream);
 
             //H264FileReaderHackery h = new H264FileReaderHackery();
