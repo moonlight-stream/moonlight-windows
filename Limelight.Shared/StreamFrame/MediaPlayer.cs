@@ -36,8 +36,8 @@
 
             AudioEncodingProperties audioProperties = AudioEncodingProperties.CreatePcm(48000, 2, 16);
 
-            VideoEncodingProperties videoProperties = new VideoEncodingProperties();
-            videoProperties.Subtype = MediaEncodingSubtypes.H264Es;
+            VideoEncodingProperties videoProperties = VideoEncodingProperties.CreateUncompressed(MediaEncodingSubtypes.H264Es,
+                (uint)streamConfig.GetWidth(), (uint)streamConfig.GetHeight());
             videoProperties.ProfileId = H264ProfileIds.High;
 
             _videoDesc = new VideoStreamDescriptor(videoProperties);

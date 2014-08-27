@@ -129,6 +129,8 @@ namespace Limelight
 
                     pendingVideoRequest.Sample = sample;
                     pendingVideoDeferral.Complete();
+
+                    pendingVideoRequest = null;
                     break;
                 }
             }
@@ -152,6 +154,8 @@ namespace Limelight
 
                     pendingAudioRequest.Sample = sample;
                     pendingAudioDeferral.Complete();
+
+                    pendingAudioRequest = null;
                     break;
                 }
             }
