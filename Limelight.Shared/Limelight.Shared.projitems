@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>d6ab1693-1b2b-402a-9cd1-c3777e206d96</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Limelight</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="$(MSBuildThisFileDirectory)App.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </ApplicationDefinition>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage\Computer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage\ConnectionManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage\MainPage.xaml.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage\MdnsDiscovery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage\NvHttp.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage\SettingsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage\XmlQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pairing\PairingCrypto.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pairing\PairingManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pairing\WPCryptoProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\AvStreamSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\Connection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\ConnectionCallbacks.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\MediaPlayer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\StreamFrame.xaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>StreamFrame.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)MainPage\MainPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)StreamFrame\StreamFrame.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+</Project>

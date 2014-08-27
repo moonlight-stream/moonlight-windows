@@ -10,12 +10,14 @@
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Input;
+    using Windows.UI.Xaml.Media;
     using Windows.UI.Xaml.Navigation;
     public sealed partial class StreamFrame : Page
     {
         #region Class Variables
         private MediaStreamSource _mss = null;
         private VideoStreamDescriptor _videoDesc = null;
+        private AudioStreamDescriptor _audioDesc = null;
         private AvStreamSource _streamSource;
 
         #endregion Class Variables
@@ -30,30 +32,42 @@
         {
             this._streamSource = streamSource;
 
-            StreamDisplay.RealTimePlayback = true;
-            StreamDisplay.AutoPlay = true; 
+            AudioEncodingProperties audioProperties = AudioEncodingProperties.CreatePcm(48000, 2, 16);
 
-            VideoEncodingProperties videoProperties = VideoEncodingProperties.CreateUncompressed(MediaEncodingSubtypes.H264Es,
-                (uint)streamConfig.GetWidth(), (uint)streamConfig.GetHeight());
-
-            videoProperties.FrameRate.Numerator = (uint)streamConfig.GetFps();
-            videoProperties.FrameRate.Denominator = 1;
-            videoProperties.Bitrate = (uint)streamConfig.GetBitrate();
+            VideoEncodingProperties videoProperties = new VideoEncodingProperties();
+            videoProperties.Subtype = MediaEncodingSubtypes.H264Es;
             videoProperties.ProfileId = H264ProfileIds.High;
 
             _videoDesc = new VideoStreamDescriptor(videoProperties);
+            _audioDesc = new AudioStreamDescriptor(audioProperties);
 
-            _mss = new MediaStreamSource(_videoDesc);
+            _mss = new MediaStreamSource(_videoDesc, _audioDesc);
             _mss.BufferTime = TimeSpan.Zero;
-            _mss.Starting += _mss_Starting;
+            _mss.CanSeek = false;
+            _mss.Duration = TimeSpan.Zero;
             _mss.SampleRequested += _mss_SampleRequested;
+
+            // Set for low latency playback
+            StreamDisplay.RealTimePlayback = true;
+
+            // Set the audio category to take advantage of hardware audio offload
+            StreamDisplay.AudioCategory = AudioCategory.ForegroundOnlyMedia;
+
+            // Render on the full window to avoid extra compositing
+            StreamDisplay.IsFullWindow = true;
+
+            // Disable built-in transport controls
+            StreamDisplay.AreTransportControlsEnabled = false;
+
+            // Start playing right away
+            StreamDisplay.AutoPlay = true;
 
             StreamDisplay.SetMediaStreamSource(_mss);
         }
 
         /// <summary>
         /// Media stream source sample requested callback
-        /// </summary>s
+        /// </summary>
         private void _mss_SampleRequested(MediaStreamSource sender, MediaStreamSourceSampleRequestedEventArgs args)
         {
             // Determine which stream needs a sample
@@ -67,11 +81,6 @@
                 // Audio
                 _streamSource.AudioSampleRequested(args);
             }
-        }
-
-        private void _mss_Starting(MediaStreamSource sender, MediaStreamSourceStartingEventArgs args)
-        {
-
         }
         #endregion Media Player
     }
