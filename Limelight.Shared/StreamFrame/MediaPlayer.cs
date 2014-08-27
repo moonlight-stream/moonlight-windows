@@ -10,6 +10,7 @@
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Input;
+    using Windows.UI.Xaml.Media;
     using Windows.UI.Xaml.Navigation;
     public sealed partial class StreamFrame : Page
     {
@@ -31,9 +32,6 @@
         {
             this._streamSource = streamSource;
 
-            StreamDisplay.RealTimePlayback = true;
-            StreamDisplay.AutoPlay = true;
-
             AudioEncodingProperties audioProperties = AudioEncodingProperties.CreatePcm(48000, 2, 16);
 
             VideoEncodingProperties videoProperties = new VideoEncodingProperties();
@@ -48,6 +46,21 @@
             _mss.CanSeek = false;
             _mss.Duration = TimeSpan.Zero;
             _mss.SampleRequested += _mss_SampleRequested;
+
+            // Set for low latency playback
+            StreamDisplay.RealTimePlayback = true;
+
+            // Set the audio category to take advantage of hardware audio offload
+            StreamDisplay.AudioCategory = AudioCategory.ForegroundOnlyMedia;
+
+            // Render on the full window to avoid extra compositing
+            StreamDisplay.IsFullWindow = true;
+
+            // Disable built-in transport controls
+            StreamDisplay.AreTransportControlsEnabled = false;
+
+            // Start playing right away
+            StreamDisplay.AutoPlay = true;
 
             StreamDisplay.SetMediaStreamSource(_mss);
         }
