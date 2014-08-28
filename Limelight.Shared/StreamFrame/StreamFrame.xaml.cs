@@ -4,6 +4,7 @@
     using System;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Windows.Graphics.Display;
     using Windows.Media.Core;
@@ -144,19 +145,12 @@
             if (!hasMoved)
             {
                 // We haven't moved so send a click
-                // TODO what even is this pointer crap. How do I send a click? 
                 LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, (int)MouseButton.Left);
 
                 // Sleep here because some games do input detection by polling
-                try
+                using (EventWaitHandle tmpEvent = new ManualResetEvent(false))
                 {
-                    // TODO how do we sleep
-                    //Thread.Sleep(100);
-                    
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine("Thread.sleep threw exception " + ex.StackTrace);
+                    tmpEvent.WaitOne(TimeSpan.FromMilliseconds(100));
                 }
 
                 // Raise the mouse button
@@ -169,6 +163,7 @@
         /// </summary>
         private void MouseMove(object sender, PointerRoutedEventArgs e)
         {
+            // FIXME
             var pointerCollection = e.GetIntermediatePoints(null);
             // TODO what the heck is this even giving me
             // TODO check for default value?? 
