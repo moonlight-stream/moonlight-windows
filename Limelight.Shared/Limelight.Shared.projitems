@@ -38,6 +38,7 @@
       <SubType>Code</SubType>
       <DependentUpon>StreamFrame.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\KeyboardHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="$(MSBuildThisFileDirectory)MainPage\MainPage.xaml">

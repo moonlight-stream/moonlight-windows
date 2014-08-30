@@ -183,5 +183,35 @@
             // TODO experimental code written without internet access = bad, nonfunctional code. FIXME
         }
         #endregion Mouse Events
+
+        #region Keyboard events
+
+        /// <summary>
+        /// Send key down event to the streaming PC
+        /// </summary>
+        private void KeyDownHandler(object sender, KeyRoutedEventArgs e)
+        {
+            short key = KeyboardHelper.TranslateVirtualKey(e.Key);
+            if (key != 0)
+            {
+                LimelightCommonRuntimeComponent.SendKeyboardEvent(key, (byte)KeyAction.Down,
+                    KeyboardHelper.GetModifierFlags());
+            }
+        }
+
+        /// <summary>
+        /// Send key up event to the streaming PC
+        /// </summary>
+        private void KeyUpHandler(object sender, KeyRoutedEventArgs e)
+        {
+            short key = KeyboardHelper.TranslateVirtualKey(e.Key);
+            if (key != 0)
+            {
+                LimelightCommonRuntimeComponent.SendKeyboardEvent(key, (byte)KeyAction.Up,
+                    KeyboardHelper.GetModifierFlags());
+            }
+        }
+
+        #endregion
     } 
 }
