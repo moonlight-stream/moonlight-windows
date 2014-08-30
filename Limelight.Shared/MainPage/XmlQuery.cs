@@ -19,7 +19,7 @@ namespace Limelight
     {
         private Uri uri;
         private XDocument rawXml;
-        private string rawXmlString;
+        public string rawXmlString;
         private Windows.Web.Http.HttpClient client; 
 
         #region Public Methods
@@ -69,6 +69,29 @@ namespace Limelight
 
             string attribute = query.FirstOrDefault().Value;
             return attribute;
+        }
+
+        /// <summary>
+        /// From known information, find another attribute in the XElement
+        /// </summary>
+        /// <param name="tag">Known tag</param>
+        /// <param name="attribute">Known attribute</param>
+        /// <param name="tagToFind">Tag from within we want to find an attribute</param>
+        /// <returns>The found attribute</returns>
+        public string SearchAttribute(string outerTag, string innerTag, string attribute, string tagToFind)
+        {
+            // Get all elements with specified tag
+            var query = from c in rawXml.Descendants(outerTag) select c;
+
+            // Look for the one with the attribute we already know
+            foreach (XElement x in query){
+                if (XmlAttribute(innerTag, x) == attribute)
+                {
+                    return XmlAttribute(tagToFind, x);
+                }
+            }
+            // Not found
+            return null; 
         }
 
         /// <summary>
@@ -127,7 +150,6 @@ namespace Limelight
                     Debug.WriteLine(ex.StackTrace);
                     Debug.WriteLine(ex.InnerException);
                 }
-
             }
         }
         #endregion Private Methods

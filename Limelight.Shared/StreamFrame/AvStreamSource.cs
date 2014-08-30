@@ -57,15 +57,15 @@ namespace Limelight
             {
                 case 0x65:
                     sample.KeyFrame = true;
-                    Debug.WriteLine("I-frame");
+                    //Debug.WriteLine("I-frame");
                     break;
 
                 case 0x67:
-                    Debug.WriteLine("SPS");
+                    //Debug.WriteLine("SPS");
                     break;
 
                 case 0x68:
-                    Debug.WriteLine("PPS");
+                    //Debug.WriteLine("PPS");
                     break;
 
                 case 0x61:

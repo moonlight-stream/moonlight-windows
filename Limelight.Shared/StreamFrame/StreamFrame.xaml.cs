@@ -6,11 +6,13 @@
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Windows.Devices.Input;
     using Windows.Graphics.Display;
     using Windows.Media.Core;
     using Windows.Media.MediaProperties;
     using Windows.Security.Cryptography;
     using Windows.Security.Cryptography.Core;
+    using Windows.UI.Input;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Input;
@@ -53,15 +55,13 @@
         /// Mouse input
         /// </summary>
         private bool hasMoved = false;
+        private int mouseButtonFlag; 
 
         /// <summary>
         /// Gets and sets the custom AV source
         /// </summary>
         internal AvStreamSource AvStream { get; private set; }
 
-        /// <summary>
-        /// Background worker and callbacks
-        /// </summary>
         private String stageFailureText;
 
         #endregion Class Variables
@@ -105,8 +105,8 @@
             currentStateText.Visibility = Visibility.Collapsed; 
             
             // Hide the status bar
-            var statusBar = Windows.UI.ViewManagement.StatusBar.GetForCurrentView();
-            await statusBar.HideAsync(); 
+            //var statusBar = Windows.UI.ViewManagement.StatusBar.GetForCurrentView();
+            //await statusBar.HideAsync(); 
             
             LimelightStreamConfiguration config;
 
@@ -135,8 +135,36 @@
         /// </summary>
         private void MouseDown(object sender, PointerRoutedEventArgs e)
         {
+            Pointer ptr = e.Pointer;
+            // If using a mouse, then get the correct button
+            if (ptr.PointerDeviceType == PointerDeviceType.Mouse)
+            {
+                Windows.UI.Input.PointerPoint ptrPt = e.GetCurrentPoint(null);
+                if (ptrPt.Properties.IsLeftButtonPressed)
+                {
+                    Debug.WriteLine("Left Button");
+                    mouseButtonFlag = (int)MouseButton.Left; 
+                }
+                if (ptrPt.Properties.IsMiddleButtonPressed)
+                {
+                    Debug.WriteLine("Middle Button");
+                    mouseButtonFlag = (int)MouseButton.Middle; 
+                }
+                if (ptrPt.Properties.IsRightButtonPressed)
+                {
+                    Debug.WriteLine("Right Button");
+                    mouseButtonFlag = (int)MouseButton.Right; 
+                }
+            }
+            else
+            {
+                // If not a mouse, then we'll just say it's a normal left button click
+                mouseButtonFlag = (int)MouseButton.Left; 
+            }
+            // We haven't moved yet
             hasMoved = false; 
         }
+
         /// <summary>
         /// Send mouse click event to the streaming PC
         /// </summary>
@@ -145,7 +173,7 @@
             if (!hasMoved)
             {
                 // We haven't moved so send a click
-                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, (int)MouseButton.Left);
+                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, mouseButtonFlag);
 
                 // Sleep here because some games do input detection by polling
                 using (EventWaitHandle tmpEvent = new ManualResetEvent(false))
@@ -154,33 +182,27 @@
                 }
 
                 // Raise the mouse button
-                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release, (int)MouseButton.Left);
+                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release, mouseButtonFlag);
             }
-
         }
+
         /// <summary>
         /// Send mouse move event to the streaming PC
         /// </summary>
         private void MouseMove(object sender, PointerRoutedEventArgs e)
         {
-            // FIXME
-            var pointerCollection = e.GetIntermediatePoints(null);
-            // TODO what the heck is this even giving me
-            // TODO check for default value?? 
-            var first = pointerCollection.FirstOrDefault();
-            var last = pointerCollection.LastOrDefault();
+            Pointer ptr = e.Pointer;
+            PointerPoint ptrPt = e.GetCurrentPoint(null);
 
-            // TODO is this check redundant? Will the event trigger lie to me frequently enough (if ever) that it'll be an issue? 
-            if (first.Position.X != last.Position.X || first.Position.Y != last.Position.Y)
-            {
-                short x = (short)(last.Position.X - first.Position.X); 
-                short y = (short)(last.Position.Y - first.Position.Y);
-                Debug.WriteLine(x + " and " + y);
-                hasMoved = true;
-                // Send the values to the streaming PC so it can register mouse movement
-                LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)(x), (short)(y));
-            }            
-            // TODO experimental code written without internet access = bad, nonfunctional code. FIXME
+            short x = (short)ptrPt.Position.X;
+            short y = (short)ptrPt.Position.Y;
+            Debug.WriteLine(x + " and " + y);
+            hasMoved = true;
+            // Send the values to the streaming PC so it can register mouse movement
+            LimelightCommonRuntimeComponent.SendMouseMoveEvent(x, y);
+
+            // Prevent most handlers along the event route from handling the same event again.
+            e.Handled = true;
         }
         #endregion Mouse Events
 
