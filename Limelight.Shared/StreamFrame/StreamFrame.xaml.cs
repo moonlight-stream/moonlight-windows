@@ -55,7 +55,9 @@
         /// Mouse input
         /// </summary>
         private bool hasMoved = false;
-        private int mouseButtonFlag; 
+        private int mouseButtonFlag;
+        private short lastX = 0;
+        private short lastY = 0; 
 
         /// <summary>
         /// Gets and sets the custom AV source
@@ -136,10 +138,11 @@
         private void MouseDown(object sender, PointerRoutedEventArgs e)
         {
             Pointer ptr = e.Pointer;
+            PointerPoint ptrPt = e.GetCurrentPoint(StreamDisplay);
+
             // If using a mouse, then get the correct button
             if (ptr.PointerDeviceType == PointerDeviceType.Mouse)
             {
-                Windows.UI.Input.PointerPoint ptrPt = e.GetCurrentPoint(null);
                 if (ptrPt.Properties.IsLeftButtonPressed)
                 {
                     Debug.WriteLine("Left Button");
@@ -162,7 +165,10 @@
                 mouseButtonFlag = (int)MouseButton.Left; 
             }
             // We haven't moved yet
-            hasMoved = false; 
+            hasMoved = false;
+            lastX = (short)ptrPt.Position.X;
+            lastY = (short)ptrPt.Position.Y; 
+
         }
 
         /// <summary>
@@ -191,16 +197,21 @@
         /// </summary>
         private void MouseMove(object sender, PointerRoutedEventArgs e)
         {
-            Pointer ptr = e.Pointer;
-            PointerPoint ptrPt = e.GetCurrentPoint(null);
+            PointerPoint ptrPt = e.GetCurrentPoint(StreamDisplay);
+            short eventX = (short)ptrPt.Position.X;
+            short eventY = (short)ptrPt.Position.Y; 
+            if (eventX != lastX || eventY != lastY)
+            {
+                hasMoved = true;
+                short xToSend = (short)(eventX - lastX);
+                short yToSend = (short)(eventY - lastY);
+                // Send the values to the streaming PC so it can register mouse movement
+                LimelightCommonRuntimeComponent.SendMouseMoveEvent(xToSend, yToSend);
 
-            short x = (short)ptrPt.Position.X;
-            short y = (short)ptrPt.Position.Y;
-            Debug.WriteLine(x + " and " + y);
-            hasMoved = true;
-            // Send the values to the streaming PC so it can register mouse movement
-            LimelightCommonRuntimeComponent.SendMouseMoveEvent(x, y);
-
+                lastX = eventX;
+                lastY = eventY;
+            }
+            
             // Prevent most handlers along the event route from handling the same event again.
             e.Handled = true;
         }
