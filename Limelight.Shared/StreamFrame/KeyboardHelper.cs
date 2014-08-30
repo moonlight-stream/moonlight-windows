@@ -53,6 +53,18 @@ namespace Limelight
 	    private const int VK_QUOTE = 222;
 	    private const int VK_PAUSE = 19;
 
+        private const int VIRTUAL_KEY_SLASH = 191;
+        private const int VIRTUAL_KEY_BACKSLASH = 220;
+        private const int VIRTUAL_KEY_COMMA = 188;
+        private const int VIRTUAL_KEY_EQUALS = 187;
+        private const int VIRTUAL_KEY_LEFT_BRACKET = 219;
+        private const int VIRTUAL_KEY_RIGHT_BRACKET = 221;
+        private const int VIRTUAL_KEY_MINUS = 189;
+        private const int VIRTUAL_KEY_PERIOD = 190;
+        private const int VIRTUAL_KEY_SEMICOLON = 186;
+        private const int VIRTUAL_KEY_GRAVE = 192;
+        private const int VIRTUAL_KEY_APOSTROPHE = 222;
+
         public static byte GetModifierFlags()
         {
             byte flags;
@@ -112,7 +124,9 @@ namespace Limelight
                         translated = VK_ALT;
                         break;
                     
-                    //case VirtualKey.Backslash:
+                    case (VirtualKey)VIRTUAL_KEY_BACKSLASH:
+                        translated = VK_BACK_SLASH;
+                        break;
 
                     case VirtualKey.CapitalLock:
                         translated = VK_CAPS_LOCK;
@@ -122,7 +136,9 @@ namespace Limelight
                         translated = VK_CLEAR;
                         break;
 
-                   //case VirtualKey.Comma
+                    case (VirtualKey)VIRTUAL_KEY_COMMA:
+                        translated = VK_COMMA;
+                        break;
 
                     case VirtualKey.Control:
                     case VirtualKey.LeftControl:
@@ -130,14 +146,17 @@ namespace Limelight
                         translated = VK_CONTROL;
                         break;
 
-
-                    //case VirtualKey.Backspace:
+                    //case VirtualKey.Back:
+                    //    translated = VK_BACK_SPACE;
+                    //    break;
 
                     case VirtualKey.Enter:
                         translated = 0x0d;
                         break;
 
-                    //case VirtualKey.Equals:
+                    case (VirtualKey)VIRTUAL_KEY_EQUALS:
+                        translated = VK_EQUALS;
+                        break;
 
                     case VirtualKey.Escape:
                         translated = VK_ESCAPE;
@@ -152,14 +171,18 @@ namespace Limelight
                         translated = -1;
                         break;
 
-                    //case VirtualKey.LeftBracket:
+                    case (VirtualKey)VIRTUAL_KEY_LEFT_BRACKET:
+                        translated = 0xdb;
+                        break;
 
                     case VirtualKey.LeftWindows:
                     case VirtualKey.RightWindows:
                         translated = VK_WINDOWS;
                         break;
 
-                    //case VirtualKey.Minus
+                    case (VirtualKey)VIRTUAL_KEY_MINUS:
+                        translated = 0xbd;
+                        break;
 
                     case VirtualKey.End:
                         translated = VK_END;
@@ -181,15 +204,21 @@ namespace Limelight
                         translated = VK_PAGE_UP;
                         break;
 
-                    //case VirtualKey.Period:
+                    case (VirtualKey)VIRTUAL_KEY_PERIOD:
+                        translated = 0xbe;
+                        break;
 
-                    //case VirtualKey.RightBracket
+                    case (VirtualKey)VIRTUAL_KEY_RIGHT_BRACKET:
+                        translated = 0xdd;
+                        break;
 
                     case VirtualKey.Scroll:
                         translated = VK_SCROLL_LOCK;
                         break;
 
-                    //case VirtualKey.Semicolon
+                    case (VirtualKey)VIRTUAL_KEY_SEMICOLON:
+                        translated = 0xba;
+                        break;
 
                     case VirtualKey.Shift:
                     case VirtualKey.LeftShift:
@@ -197,13 +226,17 @@ namespace Limelight
                         translated = VK_SHIFT;
                         break;
 
-                    //case VirtualKey.Slash
+                    case (VirtualKey)VIRTUAL_KEY_SLASH:
+                        translated = 0xbf;
+                        break;
 
                     case VirtualKey.Space:
                         translated = VK_SPACE;
                         break;
 
-                    //case VirtualKey.SysReq:
+                    case VirtualKey.Snapshot:
+                        translated = VK_PRINTSCREEN;
+                        break;
 
                     case VirtualKey.Tab:
                         translated = VK_TAB;
@@ -225,9 +258,13 @@ namespace Limelight
                         translated = VK_DOWN;
                         break;
 
-                    //case VirtualKey.Grave
+                    case (VirtualKey)VIRTUAL_KEY_GRAVE:
+                        translated = VK_BACK_QUOTE;
+                        break;
 
-                    //case VirtualKey.Apostrophe:
+                    case (VirtualKey)VIRTUAL_KEY_APOSTROPHE:
+                        translated = 0xde;
+                        break;
 
                     //case VirtualKey.Break:
 

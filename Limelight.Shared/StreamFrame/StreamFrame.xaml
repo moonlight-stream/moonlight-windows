@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" PointerPressed="MouseDown" PointerReleased="MouseUp" PointerMoved="MouseMove" KeyUp="KeyUpHandler" KeyDown="KeyDownHandler"  Loaded="Loaded">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" PointerPressed="MouseDown" PointerReleased="MouseUp" PointerMoved="MouseMove" Loaded="Loaded">
 
     <Grid>
         <Grid x:Name="Waitgrid" Grid.Row="0" Background="Black" Margin="12,10,-12,31" Grid.RowSpan="2">
@@ -15,8 +15,6 @@
             <ProgressBar x:Name="progressDots" Height="80" VerticalAlignment="Top" Margin="198,162,198,0" IsIndeterminate="True" Foreground="#FF0AE500"/>
         </Grid>
 
-        <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0"/>
         <MediaElement x:Name="StreamDisplay" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0" Grid.RowSpan="2" Visibility="Collapsed"/>
-
     </Grid>
 </Page>

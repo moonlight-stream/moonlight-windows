@@ -12,6 +12,7 @@
     using Windows.Media.MediaProperties;
     using Windows.Security.Cryptography;
     using Windows.Security.Cryptography.Core;
+    using Windows.UI.Core;
     using Windows.UI.Input;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
@@ -93,6 +94,9 @@
             // We only want to stream in landscape
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape;
             selected = (Computer)e.Parameter;
+
+            Window.Current.CoreWindow.KeyDown += WindowKeyDownHandler;
+            Window.Current.CoreWindow.KeyUp += WindowKeyUpHandler;
         }
         
         /// <summary>
@@ -102,7 +106,7 @@
         {
             StreamDisplay.Visibility = Visibility.Visible;
             Waitgrid.Visibility = Visibility.Collapsed;
-            currentStateText.Visibility = Visibility.Collapsed; 
+            currentStateText.Visibility = Visibility.Collapsed;
             
             // Hide the status bar
             //var statusBar = Windows.UI.ViewManagement.StatusBar.GetForCurrentView();
@@ -208,29 +212,27 @@
 
         #region Keyboard events
 
-        /// <summary>
-        /// Send key down event to the streaming PC
-        /// </summary>
-        private void KeyDownHandler(object sender, KeyRoutedEventArgs e)
+        private void WindowKeyDownHandler(CoreWindow sender, KeyEventArgs args)
         {
-            short key = KeyboardHelper.TranslateVirtualKey(e.Key);
+            short key = KeyboardHelper.TranslateVirtualKey(args.VirtualKey);
             if (key != 0)
             {
                 LimelightCommonRuntimeComponent.SendKeyboardEvent(key, (byte)KeyAction.Down,
                     KeyboardHelper.GetModifierFlags());
+
+                args.Handled = true;
             }
         }
 
-        /// <summary>
-        /// Send key up event to the streaming PC
-        /// </summary>
-        private void KeyUpHandler(object sender, KeyRoutedEventArgs e)
+        private void WindowKeyUpHandler(CoreWindow sender, KeyEventArgs args)
         {
-            short key = KeyboardHelper.TranslateVirtualKey(e.Key);
+            short key = KeyboardHelper.TranslateVirtualKey(args.VirtualKey);
             if (key != 0)
             {
                 LimelightCommonRuntimeComponent.SendKeyboardEvent(key, (byte)KeyAction.Up,
                     KeyboardHelper.GetModifierFlags());
+
+                args.Handled = true;
             }
         }
 
