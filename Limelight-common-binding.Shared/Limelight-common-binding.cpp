@@ -211,9 +211,7 @@ int LimelightCommonRuntimeComponent::SendKeyboardEvent(short keyCode, unsigned c
 	return LiSendKeyboardEvent(keyCode, keyAction, modifiers);
 }
 
-int LimelightCommonRuntimeComponent::sendControllerInput(short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX,
+int LimelightCommonRuntimeComponent::SendControllerInput(short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX,
 	short leftStickY, short rightStickX, short rightStickY){
-	// TODO waiting on Common code to handle controller input
-	// ^^ Is this TODO still true? 
-	return(0);
+	return LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
 }
