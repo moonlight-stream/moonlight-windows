@@ -105,8 +105,8 @@
             currentStateText.Visibility = Visibility.Collapsed; 
             
             // Hide the status bar
-            var statusBar = Windows.UI.ViewManagement.StatusBar.GetForCurrentView();
-            await statusBar.HideAsync(); 
+            //var statusBar = Windows.UI.ViewManagement.StatusBar.GetForCurrentView();
+            //await statusBar.HideAsync(); 
             
             LimelightStreamConfiguration config;
 

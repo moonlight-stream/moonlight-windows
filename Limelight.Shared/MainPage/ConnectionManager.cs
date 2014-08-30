@@ -98,11 +98,13 @@
                 dialog.ShowAsync();
                 return 0;
             }
+            Debug.WriteLine(appList.rawXmlString); 
             // App list query went well - try to get the steam ID
             try
             {
-                steamIdStr = await Task.Run(() => appList.XmlAttribute("ID", appList.XmlAttributeElement("App")));
-                
+                // FIXME Due to a bug in Steam, we need to launch by app right now to test
+                steamIdStr = appList.SearchAttribute("App", "AppTitle", "Borderlands 2", "ID");
+                Debug.WriteLine(steamIdStr);
                 if (steamIdStr == null)
                 {
                     // Not found
