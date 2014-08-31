@@ -58,7 +58,10 @@
         private bool hasMoved = false;
         private int mouseButtonFlag;
         private short lastX = 0;
-        private short lastY = 0; 
+        private short lastY = 0;
+        private const int MOUSE_BUTTON_LEFT = 0x1;
+        private const int MOUSE_BUTTON_MIDDLE = 0x2;
+        private const int MOUSE_BUTTON_RIGHT = 0x4;
 
         /// <summary>
         /// Gets and sets the custom AV source
@@ -136,6 +139,26 @@
 
         #region Mouse Events
 
+        private static int GetButtonFlags(PointerPoint ptrPt)
+        {
+            int mouseButtonFlag = 0;
+
+            if (ptrPt.Properties.IsLeftButtonPressed)
+            {
+                mouseButtonFlag |= MOUSE_BUTTON_LEFT;
+            }
+            if (ptrPt.Properties.IsMiddleButtonPressed)
+            {
+                mouseButtonFlag |= MOUSE_BUTTON_MIDDLE;
+            }
+            if (ptrPt.Properties.IsRightButtonPressed)
+            {
+                mouseButtonFlag |= MOUSE_BUTTON_RIGHT;
+            }
+
+            return mouseButtonFlag;
+        }
+
         /// <summary>
         /// Send mouse down event to the streaming PC
         /// </summary>
@@ -147,32 +170,35 @@
             // If using a mouse, then get the correct button
             if (ptr.PointerDeviceType == PointerDeviceType.Mouse)
             {
-                if (ptrPt.Properties.IsLeftButtonPressed)
+
+                // Send changes and update the current state
+                int deltaButtons = mouseButtonFlag ^ GetButtonFlags(ptrPt);
+                if ((deltaButtons & MOUSE_BUTTON_LEFT) != 0)
                 {
-                    Debug.WriteLine("Left Button");
-                    mouseButtonFlag = (int)MouseButton.Left; 
+                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press,
+                        (int)MouseButton.Left);
                 }
-                if (ptrPt.Properties.IsMiddleButtonPressed)
+                if ((deltaButtons & MOUSE_BUTTON_MIDDLE) != 0)
                 {
-                    Debug.WriteLine("Middle Button");
-                    mouseButtonFlag = (int)MouseButton.Middle; 
+                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press,
+                        (int)MouseButton.Middle);
                 }
-                if (ptrPt.Properties.IsRightButtonPressed)
+                if ((deltaButtons & MOUSE_BUTTON_RIGHT) != 0)
                 {
-                    Debug.WriteLine("Right Button");
-                    mouseButtonFlag = (int)MouseButton.Right; 
+                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press,
+                        (int)MouseButton.Right);
                 }
+                mouseButtonFlag = GetButtonFlags(ptrPt);
             }
             else
             {
-                // If not a mouse, then we'll just say it's a normal left button click
-                mouseButtonFlag = (int)MouseButton.Left; 
+                // We haven't moved yet
+                hasMoved = false;
+                lastX = (short)ptrPt.Position.X;
+                lastY = (short)ptrPt.Position.Y; 
             }
-            // We haven't moved yet
-            hasMoved = false;
-            lastX = (short)ptrPt.Position.X;
-            lastY = (short)ptrPt.Position.Y; 
 
+            e.Handled = true;
         }
 
         /// <summary>
@@ -180,20 +206,48 @@
         /// </summary>
         private void MouseUp(object sender, PointerRoutedEventArgs e)
         {
-            if (!hasMoved)
+            PointerPoint ptrPt = e.GetCurrentPoint(StreamDisplay);
+
+            if (e.Pointer.PointerDeviceType != PointerDeviceType.Mouse)
             {
-                // We haven't moved so send a click
-                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, mouseButtonFlag);
-
-                // Sleep here because some games do input detection by polling
-                using (EventWaitHandle tmpEvent = new ManualResetEvent(false))
+                if (!hasMoved)
                 {
-                    tmpEvent.WaitOne(TimeSpan.FromMilliseconds(100));
-                }
+                    // We haven't moved so send a click
+                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, (int)MouseButton.Left);
 
-                // Raise the mouse button
-                LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release, mouseButtonFlag);
+                    // Sleep here because some games do input detection by polling
+                    using (EventWaitHandle tmpEvent = new ManualResetEvent(false))
+                    {
+                        tmpEvent.WaitOne(TimeSpan.FromMilliseconds(100));
+                    }
+
+                    // Raise the mouse button
+                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release, (int)MouseButton.Left);
+                }
             }
+            else
+            {
+                // Send changes and update the current state
+                int deltaButtons = mouseButtonFlag ^ GetButtonFlags(ptrPt);
+                if ((deltaButtons & MOUSE_BUTTON_LEFT) != 0)
+                {
+                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release,
+                        (int)MouseButton.Left);
+                }
+                if ((deltaButtons & MOUSE_BUTTON_MIDDLE) != 0)
+                {
+                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release,
+                        (int)MouseButton.Middle);
+                }
+                if ((deltaButtons & MOUSE_BUTTON_RIGHT) != 0)
+                {
+                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release,
+                        (int)MouseButton.Right);
+                }
+                mouseButtonFlag = GetButtonFlags(ptrPt);
+            }
+
+            e.Handled = true;
         }
 
         /// <summary>
