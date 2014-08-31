@@ -3,19 +3,18 @@
 Note: Limelight Windows Phone is in development and is not considered stable. 
 
 Limelight is an open source implementation of NVIDIA's GameStream, as used by the NVIDIA Shield.
-We reverse engineered the Shield streaming software, and created a version that can be run on any Windows Phone 8.1 device.
+We reverse-engineered the Shield streaming software, and created a version that can be run on any Windows or Windows Phone 8.1 device. Limelight WP is built on the Windows Runtime. 
 
-Limelight will allow you to stream your full collection of games from your Windows PC to your Windows Phone device,
+Limelight will allow you to stream your full collection of games from your PC to your Windows or Windows Phone device,
 in your own home, or over the internet.
 
 ##Features
 
-* Streams any of your Steam games from your PC to your Windows Phone 8.1 device
+* Streams any of your Steam games from your PC to your Windows device
 * Automatically finds GameStream-compatible PCs on your network
 
 ##Features in development
-* Video and Audio rendering
-* MOGA controller support
+* Keyboard and Controller support
 
 ##Installation
 
@@ -33,8 +32,7 @@ in your own home, or over the internet.
 * If you are connecting from outside the same network, turn on internet
   streaming
 * When on the same network as your PC, open Limelight and tap on your PC in the list and then tap "Pair With PC"
-* Accept the pairing confirmation on your PC
-* Tap your PC again to view the list of apps to stream
+* Accept the pairing confirmation on your PC (Known issue: You need to close the pairing dialog on your device before pairing can complete)
 * Play games!
 
 ##Contribute 
