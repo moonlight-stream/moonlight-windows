@@ -56,13 +56,23 @@
             }
 
             // "Please don't do this ever, but it's only okay because Cameron said so" -Cameron Gutman            
-            getClientCertificate(); 
+            getClientCertificate();
 
-            if (await QueryPairState())
+            // Get the pair state.
+            bool? pairState = await QueryPairState(); 
+            if (pairState == true)
             {
                 var dialog = new MessageDialog("This device is already paired to the host PC", "Already Paired");
                 dialog.ShowAsync();
                 Debug.WriteLine("Already paired");
+                return;
+            }
+                // pairstate = null. We've encountered an error
+            else if (!pairState.HasValue)
+            {
+                var dialog = new MessageDialog("Failed to query pair state", "Pairing failed");
+                dialog.ShowAsync();
+                Debug.WriteLine("Query pair state failed");
                 return;
             }
             bool challenge = await Challenges(nv.GetUniqueId());
@@ -84,8 +94,8 @@
         /// <summary>
         /// Query the server to get the device pair state
         /// </summary>
-        /// <returns>True if the operation succeeded, false otherwise</returns>
-        public async Task<bool> QueryPairState()
+        /// <returns>True if device is already paired, false if not, null if failure</returns>
+        public async Task<bool?> QueryPairState()
         {
             XmlQuery pairState;
             try
@@ -94,9 +104,9 @@
             }
             catch (Exception e)
             {
-                var dialog = new MessageDialog("Failed to get pair state: " + e.Message);
-                dialog.ShowAsync();
-                return false;
+                Debug.WriteLine("Failed to get pair state: " + e.Message);
+                
+                return null;
             }
 
             // Check if the device is paired by checking the XML attribute within the <paired> tag
@@ -105,6 +115,7 @@
                 Debug.WriteLine("Not paired");
                 return false;
             }
+            // We're already paired if we get here!
             return true;
         }
 

@@ -11,7 +11,7 @@
         NvHttp nv; 
         #region Stream Setup
         /// <summary>
-        /// When the user presses "Start Streaming Steam", first check that they are paired in the background worker
+        /// When the user presses "Start Streaming Steam", first check that they are paired
         /// </summary>
         private async Task StreamSetup(Computer computer)
         {
@@ -31,19 +31,27 @@
             }
             catch (Exception)
             {
-                StreamSetupFailed("Unable to get streaming machine's IP addresss"); 
+                StreamSetupFailed("Unable to get streaming machine's IP addresss");
+                return; 
             }
             Pairing p = new Pairing(nv); 
             // HACK: Preload the cert data
             p.getClientCertificate();
 
-            // If device is already paired, return.             
-            if (!await p.QueryPairState())
+            // If we can't get the pair state, return   
+            bool? pairState = await p.QueryPairState();
+            if (!pairState.HasValue)
             {
                 await StreamSetupFailed("Pair state query failed");
                 return;
             }
 
+            // If we're not paired, return
+            if (pairState == false)
+            {
+                await StreamSetupFailed("Device not paired");
+                return;
+            }
             // If we haven't cancelled and don't have the steam ID, query app list to get it
             if (computer.steamID == 0)
             {
@@ -103,7 +111,7 @@
             try
             {
                 // FIXME Due to a bug in Steam, we need to launch by app right now to test
-                steamIdStr = appList.SearchAttribute("App", "AppTitle", "Borderlands 2", "ID");
+                steamIdStr = appList.SearchAttribute("App", "AppTitle", "The Elder Scrolls V: Skyrim", "ID");
                 Debug.WriteLine(steamIdStr);
                 if (steamIdStr == null)
                 {

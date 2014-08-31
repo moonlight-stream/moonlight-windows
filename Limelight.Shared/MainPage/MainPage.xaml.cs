@@ -110,6 +110,7 @@
             SaveSettings();
 
             // Don't let the user mash the buttons
+            // TODO use a spinner to avoid the appearance of the app being unresponsive
             PairButton.IsEnabled = false;
             StreamButton.IsEnabled = false;
             _60fps_button.IsEnabled = false;

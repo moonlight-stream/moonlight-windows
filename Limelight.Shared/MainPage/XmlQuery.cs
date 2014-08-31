@@ -32,7 +32,7 @@ namespace Limelight
             uri = new Uri(url);
             
             // TODO get rid of this gross .Wait(). Maybe caller should just call GetXml(); 
-            Task.Run(async () => await GetXml()).Wait();
+                Task.Run(async () => await GetXml()).Wait();            
         }
 
         /// <summary>
@@ -139,17 +139,11 @@ namespace Limelight
                     Debug.WriteLine(e.Message);
                 }
                 Debug.WriteLine(rawXmlString);
-                try
-                {
-                    this.rawXml = XDocument.Parse(rawXmlString);
+                
+                // Up to the caller to deal with exceptions resulting here
+                this.rawXml = XDocument.Parse(rawXmlString);
 
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                    Debug.WriteLine(ex.StackTrace);
-                    Debug.WriteLine(ex.InnerException);
-                }
+                
             }
         }
         #endregion Private Methods
