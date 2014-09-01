@@ -121,16 +121,13 @@
             {
                 var dialog = new MessageDialog("No machine selected", "Streaming Failed");
                 await dialog.ShowAsync(); 
-                status_text.Text = "";
-                
+                status_text.Text = "";                
             }
             else
             {
                 await StreamSetup(selected);
                 status_text.Text = "";
-                //mDnsTimer.Start();
-            }
-            
+            }            
 
             // User can use the buttons again
             PairButton.IsEnabled = true;

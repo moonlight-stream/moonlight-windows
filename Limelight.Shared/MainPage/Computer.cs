@@ -17,6 +17,10 @@ namespace Limelight
         public string IpAddress { get; set; }
         public int steamID { get; set; }
 
+        // Need to give these to the stream
+        public int fps { get; set; }
+        public int pixels { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Computer"/> class.
         /// </summary>
@@ -27,8 +31,9 @@ namespace Limelight
             this.IpAddress = ipAddress;
             this.Name = name;
             this.steamID = 0;
+            this.fps = 0;
+            this.pixels = 0; 
         }
-
         /// <summary>
         /// Computer information as a string
         /// </summary>

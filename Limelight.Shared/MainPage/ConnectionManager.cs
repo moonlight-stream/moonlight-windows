@@ -71,6 +71,8 @@
         /// </summary>
         private async Task StreamSetupComplete()
         {
+            selected.fps = getFps(); 
+
             // Pass the selected computer as the parameter
             this.Frame.Navigate(typeof(StreamFrame), selected);
         }
@@ -132,6 +134,40 @@
 
             // We're in the clear - save the Steam app ID
             return Convert.ToInt32(steamIdStr);
+        }
+
+        /// <summary>
+        /// Get the selected FPS from the radio buttons
+        /// </summary>
+        /// <returns>FPS to use in the stream</returns>
+        private int getFps()
+        {
+            if (_60fps_button.IsChecked == true)
+            {
+                return 60;
+            }
+            else
+            {
+                // 30 FPS button or null
+                return 30; 
+            }
+        }
+
+        /// <summary>
+        /// Get the selected pixels from the radio buttons
+        /// </summary>
+        /// <returns>Pixels to use in the stream</returns>
+        private int getPixels()
+        {
+            if (_1080p_button.IsChecked == true)
+            {
+                return 1080;
+            }
+            else
+            {
+                // 720p button or null
+                return 720;
+            }
         }
 
         #endregion Helper Methods
