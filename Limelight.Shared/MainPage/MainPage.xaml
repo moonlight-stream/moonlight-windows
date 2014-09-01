@@ -18,7 +18,7 @@
 			<RadioButton x:Name="_1080p_button" Content="1080p (may increase lag)" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" Width="256" Margin="128,446,0,110"/>
 			<RadioButton x:Name="_720p_button" Content="720p" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" IsChecked="True" Margin="16,446,200,110"/>
 			<TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top" Margin="17,12,40,508" FontSize="80" Height="94"/>
-			<ComboBox x:Name="computerPicker" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,111,16,428" Header="Discovered Machines" PlaceholderText="Discovery service is running..." Width="358"/>
+			<ComboBox x:Name="computerPicker" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,111,16,428" Header="Discovered Machines" PlaceholderText="Discovery service is running..." Width="358" DropDownClosed="PickerClosed" DropDownOpened="PickerOpened"/>
 		</Grid>
 	</ScrollViewer>
 </Page>

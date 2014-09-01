@@ -91,11 +91,7 @@
         {
             Debug.WriteLine(computerPicker.SelectedIndex);
             await EnumerateEligibleMachines();
-            // Update the list only if the user hasn't selected anything - FIXME this is a workaround
-            if (computerPicker.SelectedIndex < 0)
-            {
-                await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => computerPicker.ItemsSource = computerList);
-            }
+            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => computerPicker.ItemsSource = computerList);
         }
 
         /// <summary>
@@ -169,6 +165,23 @@
             await p.Pair(selected);
 
             mDnsTimer.Stop(); 
+        }
+
+        /// <summary>
+        /// When the computer picker is opened, stop the mDNS timer
+        /// That way, the list box won't update while the user is picking one
+        /// </summary>
+        private void PickerOpened(object sender, object e)
+        {
+            mDnsTimer.Stop();
+        }
+
+        /// <summary>
+        /// When the computer picker is closed, start the mDNS timer again. 
+        /// </summary>
+        private void PickerClosed(object sender, object e)
+        {
+            mDnsTimer.Start();
         }
         #endregion Event Handlers  
     }
