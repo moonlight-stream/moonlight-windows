@@ -181,5 +181,42 @@
             mDnsTimer.Start();
         }
         #endregion Event Handlers  
+
+        private void Quit_Game(object sender, RoutedEventArgs e)
+        {
+            // TODO need to make a UI element to display this text
+            SpinnerBegin("Quitting...");
+        }
+
+        /// <summary>
+        /// Start spinning the progress ring
+        /// </summary>
+        /// <param name="text">Text to display alongside the spinner</param>
+        private void SpinnerBegin(string text)
+        {
+            // Darken background
+            uiGrid.Opacity = .5;
+
+            // Disable select UI elements
+            StreamButton.IsEnabled = false;
+            PairButton.IsEnabled = false;
+
+            // Show the spinner
+            spinner.IsActive = true;
+        }
+
+        private void SpinnerEnd()
+        {
+            // Hide the spinner
+            spinner.IsActive = false;
+
+            // Return background to normal opacity
+            uiGrid.Opacity = 1;
+
+            // Enable UI elements
+            StreamButton.IsEnabled = true;
+            PairButton.IsEnabled = true;
+            
+        }
     }
 }
