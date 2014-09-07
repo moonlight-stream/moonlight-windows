@@ -15,6 +15,7 @@
         /// </summary>
         private async Task StreamSetup(Computer computer)
         {
+            // Resolve the hostname
             try
             {
                 nv = new NvHttp(computer.IpAddress);
@@ -25,6 +26,7 @@
                 return;
             }
            
+            // Get the Ip address of the streaming machine
             try
             {
                 await nv.ServerIPAddress();
@@ -104,7 +106,7 @@
             }
             catch (Exception e)
             {
-                var dialog = new MessageDialog("Device not paired: " + e.Message, "App List Query Failed");
+                var dialog = new MessageDialog(e.Message, "App List Query Failed");
                 dialog.ShowAsync();
                 return 0;
             }
@@ -113,7 +115,7 @@
             try
             {
                 // FIXME Due to a bug in Steam, we need to launch by app right now to test
-                steamIdStr = appList.SearchAttribute("App", "AppTitle", "The Elder Scrolls V: Skyrim", "ID");
+                steamIdStr = appList.SearchAttribute("App", "AppTitle", "Borderlands 2", "ID");
                 Debug.WriteLine(steamIdStr);
                 if (steamIdStr == null)
                 {

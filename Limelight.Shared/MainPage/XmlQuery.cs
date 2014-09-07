@@ -31,8 +31,19 @@ namespace Limelight
         {
             uri = new Uri(url);
             
-            // TODO get rid of this gross .Wait(). Maybe caller should just call GetXml(); 
-                Task.Run(async () => await GetXml()).Wait();            
+            Task.Run(async () => await GetXml()).Wait();
+
+            // Get the status string. If it's not 200, throw an exception
+            if (rawXml != null)
+            {
+                XElement e = rawXml.Descendants().First();
+                var x = e.Attribute("status_code");
+                if (x.Value != "200")
+                {
+                    Debug.WriteLine("Invalid status code " + x.Value);
+                    throw new WebException("Invalid status code");
+                }
+            }
         }
 
         /// <summary>
@@ -142,8 +153,6 @@ namespace Limelight
                 
                 // Up to the caller to deal with exceptions resulting here
                 this.rawXml = XDocument.Parse(rawXmlString);
-
-                
             }
         }
         #endregion Private Methods
