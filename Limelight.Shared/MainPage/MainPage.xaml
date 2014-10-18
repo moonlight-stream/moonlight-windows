@@ -20,21 +20,21 @@
         <Grid x:Name="progressGrid">
             <ProgressRing x:Name="spinner" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="170,177,151,358" Height="79" Width="79"/>
 
-            <Grid x:Name="uiGrid">
+            <Grid x:Name="uiGrid" Background="Black">
 
-                <Button x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="49,244,41,288" FontWeight="Bold" FontSize="25" Click="StreamButton_Click" Width="294" Height="82"/>
-                <Button x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="49,333,41,202" FontWeight="Bold" FontSize="25" Click="PairButton_Click" Width="294" Height="79" />
+                <Button x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="540,321,529,365" FontWeight="Bold" FontSize="25" Click="StreamButton_Click" Width="297" Height="82"/>
+                <Button x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="540,410,529,279" FontWeight="Bold" FontSize="25" Click="PairButton_Click" Width="297" Height="79" />
                 <TextBlock x:Name="status_text" HorizontalAlignment="Center" Height="40" Margin="49,186,41,388" TextWrapping="Wrap" VerticalAlignment="Center" Width="294" TextAlignment="Center" FontSize="18"/>
-                <RadioButton x:Name="_60fps_button" Content="60 FPS (may increase lag)" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="fps" RenderTransformOrigin="0.559,0.464" Width="242" Margin="128,540,14,16"/>
+                <RadioButton x:Name="_60fps_button" Content="60 FPS (may increase lag)" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="fps" RenderTransformOrigin="0.559,0.464" Width="242" Margin="661,632,463,107"/>
                 <RadioButton x:Name="_30fps_button" Content="30 FPS" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="fps" IsChecked="True" Margin="16,540,200,16"/>
-                <RadioButton x:Name="_1080p_button" Content="1080p (may increase lag)" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" Width="256" Margin="128,446,0,110"/>
+                <RadioButton x:Name="_1080p_button" Content="1080p (may increase lag)" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" Width="256" Margin="661,538,449,201"/>
                 <RadioButton x:Name="_720p_button" Content="720p" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" IsChecked="True" Margin="16,446,200,110"/>
                 <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top" Margin="17,12,40,508" FontSize="80" Height="94"/>
-                <ComboBox x:Name="computerPicker" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,111,16,428" Header="Discovered Machines" PlaceholderText="Discovery service is running..." Width="358" DropDownClosed="PickerClosed" DropDownOpened="PickerOpened"/>
+                <!--<ComboBox x:Name="computerPicker" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,111,16,428" Header="Discovered Machines" PlaceholderText="Discovery service is running..." Width="358" DropDownClosed="PickerClosed" DropDownOpened="PickerOpened"/> -->
+                <ListView x:Name="computerPicker" HorizontalAlignment="Left" Height="190" VerticalAlignment="Top" Width="288" Margin="543,96,0,0" Header="Discovered PCs" SelectionMode="Single" FontSize="20"/>
             </Grid>
-
         </Grid>
-        
-	</ScrollViewer>
+
+    </ScrollViewer>
 </Page>
 

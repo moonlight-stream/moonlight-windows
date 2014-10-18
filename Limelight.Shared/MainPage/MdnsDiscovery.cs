@@ -71,6 +71,11 @@
                         }
                     }
                 }
+                if (computerListLocal.Count == 0)
+                {
+                    Debug.WriteLine("Adding");
+                    computerListLocal.Add(new Computer("No Computers Found", ""));
+                }
             }
 
             // We're done messing with the list - it's okay for the UI thread to update it now
@@ -83,18 +88,9 @@
                 }                
             }
             computerList = computerListLocal;
-
-            if (computerList.Count == 0)
+            if (computerPicker.SelectedIndex == -1)
             {
-                computerPicker.PlaceholderText = "No computers found";
-            }
-            else if (computerList.Count == 1)
-            {
-                computerPicker.PlaceholderText = "1 computer found...";
-            }
-            else
-            {
-                computerPicker.PlaceholderText = computerList.Count + " computers found...";
+                computerPicker.ItemsSource = computerList; 
             }
         }
         #endregion Enumeration
