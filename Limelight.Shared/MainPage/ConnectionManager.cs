@@ -8,6 +8,7 @@
 
     public sealed partial class MainPage : Page
     {
+        // TODO streamline what you're doing with nv
         NvHttp nv; 
         #region Stream Setup
         /// <summary>
@@ -115,12 +116,12 @@
             try
             {
                 // FIXME Due to a bug in Steam, we need to launch by app right now to test
-                steamIdStr = appList.SearchAttribute("App", "AppTitle", "Borderlands 2", "ID");
+                steamIdStr = appList.SearchAttribute("App", "AppTitle", "Steam", "ID");
                 Debug.WriteLine(steamIdStr);
                 if (steamIdStr == null)
                 {
                     // Not found
-                    var dialog = new MessageDialog("Steam ID Not Found", "Steam ID Lookup Failed");
+                    var dialog = new MessageDialog("Steam Not Found", "Steam ID Lookup Failed");
                     dialog.ShowAsync();
                     return 0;
                 }

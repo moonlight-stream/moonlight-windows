@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Threading.Tasks;
     using Windows.UI.Core;
     using Windows.UI.Popups;
     using Windows.UI.Xaml;
@@ -91,7 +92,7 @@
         {
             Debug.WriteLine(computerPicker.SelectedIndex);
             await EnumerateEligibleMachines();
-            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => computerPicker.ItemsSource = computerList);
+            //await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => computerPicker.ItemsSource = computerList);
         }
 
         /// <summary>
@@ -180,29 +181,57 @@
         {
             mDnsTimer.Start();
         }
-        #endregion Event Handlers  
 
-        private void Quit_Game(object sender, RoutedEventArgs e)
+        private async void Quit_Game(object sender, RoutedEventArgs e)
         {
             // TODO need to make a UI element to display this text
-            SpinnerBegin("Quitting...");
+            Task.Run(() => SpinnerBegin("Quitting...")).Wait();
+            // If we haven't used nv before, create it. 
+            if(nv == null){
+                try
+                {
+                    await SpinnerBegin("Quitting");
+                    Computer selected = (Computer)computerPicker.SelectedItem;
+                    nv = new NvHttp(selected.IpAddress);
+                    await nv.ServerIPAddress();
+                    
+                    XmlQuery quit = new XmlQuery(nv.baseUrl + "/cancel?uniqueid=" + nv.GetUniqueId());
+                }
+                catch (Exception)
+                {
+                    SpinnerEnd(); 
+                    StreamSetupFailed("Unable to quit");
+                    return;
+                }
+                finally
+                {
+                    // Turn off the spinner
+                    SpinnerEnd(); 
+                }
+            }
         }
+
+        #endregion Event Handlers  
 
         /// <summary>
         /// Start spinning the progress ring
         /// </summary>
         /// <param name="text">Text to display alongside the spinner</param>
-        private void SpinnerBegin(string text)
+        private async Task SpinnerBegin(string text)
         {
-            // Darken background
-            uiGrid.Opacity = .5;
+            await dispatcher.RunAsync(CoreDispatcherPriority.High, new DispatchedHandler(() =>
+            {
+                // Darken background
+                uiGrid.Opacity = .5;
 
-            // Disable select UI elements
-            StreamButton.IsEnabled = false;
-            PairButton.IsEnabled = false;
+                // Disable select UI elements
+                StreamButton.IsEnabled = false;
+                PairButton.IsEnabled = false;
 
-            // Show the spinner
-            spinner.IsActive = true;
+                // Show the spinner
+                spinner.IsActive = true;
+            }));
+          
         }
 
         private void SpinnerEnd()

@@ -34,7 +34,6 @@
                 <ListView x:Name="computerPicker" HorizontalAlignment="Left" Height="190" VerticalAlignment="Top" Width="288" Margin="543,96,0,0" Header="Discovered PCs" SelectionMode="Single" FontSize="20"/>
             </Grid>
         </Grid>
-
     </ScrollViewer>
 </Page>
 
