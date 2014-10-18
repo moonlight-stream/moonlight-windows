@@ -124,13 +124,13 @@ void ClShimStageStarting(int stage) {
 void ClShimStageComplete(int stage) {
 	s_ClCallbacks->StageComplete(stage);
 }
-void ClShimStageFailed(int stage, int errorCode) {
+void ClShimStageFailed(int stage, long errorCode) {
 	s_ClCallbacks->StageFailed(stage, errorCode);
 }
 void ClShimConnectionStarted(void) {
 	s_ClCallbacks->ConnectionStarted();
 }
-void ClShimConnectionTerminated(int errorCode) {
+void ClShimConnectionTerminated(long errorCode) {
 	s_ClCallbacks->ConnectionTerminated(errorCode);
 }
 void ClShimDisplayMessage(char *message) {
