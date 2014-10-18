@@ -1,9 +1,9 @@
 #Limelight
 
-Note: Limelight Windows Phone is in development and is not considered stable. 
+Note: Limelight Windows is in development and is not considered stable. 
 
 Limelight is an open source implementation of NVIDIA's GameStream, as used by the NVIDIA Shield.
-We reverse-engineered the Shield streaming software, and created a version that can be run on any Windows or Windows Phone 8.1 device. Limelight WP is built on the Windows Runtime. 
+We reverse-engineered the Shield streaming software, and created a version that can be run on any Windows or Windows Phone 8.1 device. Limelight Windows is built on the Windows Runtime (WinRT). 
 
 Limelight will allow you to stream your full collection of games from your PC to your Windows or Windows Phone device,
 in your own home, or over the internet.
@@ -24,7 +24,7 @@ in your own home, or over the internet.
 ##Requirements
 
 * [GameStream compatible](http://shield.nvidia.com/play-pc-games/) computer with GTX 600/700 series GPU
-* Windows Phone device running Windows Phone 8.1 or higher
+* PC, tablet, or phone running Windows 8.1 or higher. 
 
 ##Usage
 
