@@ -195,7 +195,7 @@
                     nv = new NvHttp(selected.IpAddress);
                     await nv.ServerIPAddress();
                     
-                    XmlQuery quit = new XmlQuery(nv.baseUrl + "/cancel?uniqueid=" + nv.GetUniqueId());
+                    XmlQuery quit = new XmlQuery(nv.BaseUrl + "/cancel?uniqueid=" + nv.GetUniqueId());
                 }
                 catch (Exception)
                 {

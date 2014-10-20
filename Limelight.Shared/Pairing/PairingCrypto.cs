@@ -95,13 +95,20 @@
             byte[] saltAndPin = SaltPin(salt, pin);
             aesKey = GenerateAesKey(saltAndPin);
 
+            if(!nv.ServerInfo.XmlAttribute("currentgame").Equals("0")){
+                // The server is busy - we can't stream to it
+                var busyDialog = new MessageDialog("Server is busy", "Pairing Failed");
+                await busyDialog.ShowAsync(); 
+                return false; 
+            }
+
             // Send the salt and get the server cert
             var dialog = new MessageDialog("Enter the following PIN on the host PC: " + pin, "Enter PIN");
             dialog.Commands.Add(new UICommand("Close"));
-            dialog.ShowAsync();
+            await dialog.ShowAsync();
 
             // User will need to close dialog themselves
-            XmlQuery getServerCert = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + uniqueId +
+            XmlQuery getServerCert = new XmlQuery(nv.BaseUrl + "/pair?uniqueid=" + uniqueId +
                 "&devicename=roth&updateState=1&phrase=getservercert&salt=" + bytesToHex(salt) + "&clientcert=" + bytesToHex(pemCertBytes));
             
             if (!getServerCert.XmlAttribute("paired").Equals("1"))
@@ -118,7 +125,7 @@
 		    byte[] encryptedChallenge = EncryptAes(randomChallenge, aesKey);
 
 		    // Send the encrypted challenge to the server
-		    XmlQuery challengeResp = new XmlQuery(nv.baseUrl + 
+		    XmlQuery challengeResp = new XmlQuery(nv.BaseUrl + 
 				    "/pair?uniqueid="+uniqueId+"&devicename=roth&updateState=1&clientchallenge="+bytesToHex(encryptedChallenge));
             // If we're not paired, there's a problem. 
 		    if (!challengeResp.XmlAttribute("paired").Equals("1")) {
@@ -144,7 +151,7 @@
             byte[] challengeRespHash = ToSHA1Bytes(concatBytes(concatBytes(serverChallenge, cert.GetSignature()), clientSecret));
             Debug.WriteLine("Challenge SHA 1: " + bytesToHex(challengeRespHash));
             byte[] challengeRespEncrypted = EncryptAes(challengeRespHash, aesKey);
-            XmlQuery secretResp = new XmlQuery(nv.baseUrl +
+            XmlQuery secretResp = new XmlQuery(nv.BaseUrl +
                     "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&serverchallengeresp=" + bytesToHex(challengeRespEncrypted));
             if (!secretResp.XmlAttribute("paired").Equals("1"))
             {
@@ -179,7 +186,7 @@
 
             // Send the server our signed secret
             byte[] clientPairingSecret = concatBytes(clientSecret, SignData(clientSecret));
-            XmlQuery clientSecretResp = new XmlQuery(nv.baseUrl +
+            XmlQuery clientSecretResp = new XmlQuery(nv.BaseUrl +
                     "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&clientpairingsecret=" + bytesToHex(clientPairingSecret));
             if (!clientSecretResp.XmlAttribute("paired").Equals("1"))
             {
@@ -188,7 +195,7 @@
             }
 
             // Do the initial challenge (seems neccessary for us to show as paired)
-            XmlQuery pairChallenge = new XmlQuery(nv.baseUrl + "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&phrase=pairchallenge");
+            XmlQuery pairChallenge = new XmlQuery(nv.BaseUrl + "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&phrase=pairchallenge");
 
             if (!pairChallenge.XmlAttribute("paired").Equals("1"))
             {
@@ -206,7 +213,7 @@
             XmlQuery unpair;
             try
             {
-                unpair = new XmlQuery(nv.baseUrl + "/unpair?uniqueid=" + nv.GetUniqueId());
+                unpair = new XmlQuery(nv.BaseUrl + "/unpair?uniqueid=" + nv.GetUniqueId());
             }
             catch (Exception e)
             {

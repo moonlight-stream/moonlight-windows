@@ -45,14 +45,14 @@
             bool? pairState = await p.QueryPairState();
             if (!pairState.HasValue)
             {
-                await StreamSetupFailed("Pair state query failed");
+                StreamSetupFailed("Pair state query failed");
                 return;
             }
 
             // If we're not paired, return
             if (pairState == false)
             {
-                await StreamSetupFailed("Device not paired");
+                StreamSetupFailed("Device not paired");
                 return;
             }
             // If we haven't cancelled and don't have the steam ID, query app list to get it
@@ -62,17 +62,17 @@
                 computer.steamID = await Task.Run(() => QueryAppList());
                 if (computer.steamID == 0)
                 {
-                    await StreamSetupFailed("App list query failed");
+                    StreamSetupFailed("App list query failed");
                     return;
                 }
             }
-            await StreamSetupComplete();
+            StreamSetupComplete();
         }
 
         /// <summary>
         /// Runs upon successful completion of checking pair state when the user presses "Start Streaming Steam!"
         /// </summary>
-        private async Task StreamSetupComplete()
+        private void StreamSetupComplete()
         {
             selected.fps = getFps(); 
 
@@ -83,11 +83,11 @@
         /// <summary>
         /// Runs if checking pair state fails
         /// </summary>
-        private async Task StreamSetupFailed(string message)
+        private void StreamSetupFailed(string message)
         {
             Debug.WriteLine("Stream setup failed");
             var dialog = new MessageDialog(message, "Stream setup failed");
-            await dialog.ShowAsync();
+            dialog.ShowAsync();
         }
 
         #endregion Stream Setup
@@ -97,13 +97,13 @@
         /// Query the app list on the server to get the Steam App ID
         /// </summary>
         /// <returns>True if the operation succeeded, false otherwise</returns>
-        private async Task<int> QueryAppList()
+        private int QueryAppList()
         {
             XmlQuery appList;
             string steamIdStr;
             try
             {
-                appList = new XmlQuery(nv.baseUrl + "/applist?uniqueid=" + nv.GetUniqueId());
+                appList = new XmlQuery(nv.BaseUrl + "/applist?uniqueid=" + nv.GetUniqueId());
             }
             catch (Exception e)
             {
@@ -115,7 +115,6 @@
             // App list query went well - try to get the steam ID
             try
             {
-                // FIXME Due to a bug in Steam, we need to launch by app right now to test
                 steamIdStr = appList.SearchAttribute("App", "AppTitle", "Steam", "ID");
                 Debug.WriteLine(steamIdStr);
                 if (steamIdStr == null)

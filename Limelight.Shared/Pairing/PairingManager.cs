@@ -67,7 +67,7 @@
                 Debug.WriteLine("Already paired");
                 return;
             }
-                // pairstate = null. We've encountered an error
+            // pairstate = null. We've encountered an error
             else if (!pairState.HasValue)
             {
                 var dialog = new MessageDialog("Failed to query pair state", "Pairing failed");
@@ -75,6 +75,7 @@
                 Debug.WriteLine("Query pair state failed");
                 return;
             }
+
             bool challenge = await Challenges(nv.GetUniqueId());
             if (!challenge)
             {
@@ -100,7 +101,7 @@
             XmlQuery pairState;
             try
             {
-                pairState = new XmlQuery(nv.baseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
+                pairState = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
             }
             catch (Exception e)
             {
@@ -108,6 +109,7 @@
                 
                 return null;
             }
+            nv.ServerInfo = pairState; 
 
             // Check if the device is paired by checking the XML attribute within the <paired> tag
             if (String.Compare(pairState.XmlAttribute("PairStatus"), "1") != 0)
@@ -117,14 +119,6 @@
             }
             // We're already paired if we get here!
             return true;
-        }
-
-        /// <summary>
-        /// Getter for the NvHttp object
-        /// </summary>
-        /// <returns>nv</returns>
-        public NvHttp getNv() {
-            return nv; 
         }
 
         #endregion XML Queries
