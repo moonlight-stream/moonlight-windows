@@ -74,7 +74,8 @@
         /// </summary>
         private void StreamSetupComplete()
         {
-            selected.fps = getFps(); 
+            selected.fps = getFps();
+            selected.pixels = getPixels();
 
             // Pass the selected computer as the parameter
             this.Frame.Navigate(typeof(StreamFrame), selected);
