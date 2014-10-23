@@ -18,7 +18,7 @@ in your own home, or over the internet.
 
 ##Installation
 
-* Limelight Windows Phone is in development and not yet available for free download in the Store. If you want to try it in the meantime, download the source and deploy the app to your phone. 
+* Limelight Windows is in development and not yet available for free download in the Store. If you want to try it in the meantime, download the source and deploy the app to your phone. 
 * Download [GeForce Experience](http://www.geforce.com/geforce-experience) and install on your Windows PC
 
 ##Requirements
@@ -32,7 +32,7 @@ in your own home, or over the internet.
 * If you are connecting from outside the same network, turn on internet
   streaming
 * When on the same network as your PC, open Limelight and tap on your PC in the list and then tap "Pair With PC"
-* Accept the pairing confirmation on your PC (Known issue: You need to close the pairing dialog on your device before pairing can complete)
+* Accept the pairing confirmation on your PC
 * Play games!
 
 ##Contribute 
