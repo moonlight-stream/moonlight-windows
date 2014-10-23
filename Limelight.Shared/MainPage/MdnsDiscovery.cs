@@ -11,6 +11,8 @@
 
     public sealed partial class MainPage : Page
     {
+        Computer notFound = new Computer("No Computers Found", "");
+        Computer noNetwork = new Computer("Network Unavailable", "");
         #region Enumeration
         /// <summary>
         /// Uses mDNS to enumerate the machines on the network eligible to stream from
@@ -18,7 +20,8 @@
         /// <returns></returns>
         private async Task EnumerateEligibleMachines()
         {
-            // TODO save previous machines you've connected to
+            computerList = new List<Computer>();      
+
             // Make a local copy of the computer list
             // The UI thread will populate the listbox with computerList whenever it pleases, so we don't want it to take the one we're modifying
             List<Computer> computerListLocal = new List<Computer>(computerList);
@@ -30,10 +33,14 @@
             // If there's no network, save time and don't do the time-consuming mDNS 
             if (!InternetAvailable)
             {
+                computerListLocal.Add(noNetwork);
                 Debug.WriteLine("Network not available - skipping mDNS");
             }
             else
             {
+                if(computerListLocal.Contains(noNetwork)){
+                    computerListLocal.Remove(noNetwork);
+                }
                 // Let Zeroconf do its magic and find everything it can with mDNS
                 ILookup<string, string> domains = null;
                 try
@@ -56,6 +63,12 @@
                 }
                 if (responses != null)
                 {
+                    if (computerList.Contains(notFound))
+                    {
+                        Debug.WriteLine("Removing");
+                        computerList.Remove(notFound);
+                    }
+
                     // Go through every response we received and grab only the ones running nvstream
                     foreach (var resp in responses)
                     {
@@ -71,21 +84,23 @@
                         }
                     }
                 }
-                if (computerListLocal.Count == 0)
-                {
-                    Debug.WriteLine("Adding");
-                    computerListLocal.Add(new Computer("No Computers Found", ""));
-                }
-            }
-
-            // We're done messing with the list - it's okay for the UI thread to update it now
-            Computer last = LoadComputer();
+             // We're done messing with the list - it's okay for the UI thread to update it now
+             Computer last = LoadComputer();
             if (last != null)
-            {// If we don't have the computer already, add it
+            {
+                // If we don't have the computer already, add it
                 if (!computerListLocal.Exists(x => x.IpAddress == last.IpAddress))
                 {
                     computerListLocal.Add(last);
                 }                
+            }  
+
+            // If no computers at all, say none are found.
+            if (computerListLocal.Count == 0)
+            {
+                Debug.WriteLine("Not Found");
+                computerListLocal.Add(notFound);
+            }
             }
             computerList = computerListLocal;
             if (computerPicker.SelectedIndex == -1)
