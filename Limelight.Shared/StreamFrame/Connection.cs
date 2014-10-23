@@ -18,7 +18,7 @@
         /// </summary>
         private XmlQuery StartOrResumeApp(NvHttp nv, LimelightStreamConfiguration streamConfig)
         {
-            XmlQuery serverInfo = new XmlQuery(nv.baseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
+            XmlQuery serverInfo = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
             string currentGameString = serverInfo.XmlAttribute("currentgame");
 
             byte[] aesIv = streamConfig.GetRiAesIv();
@@ -34,7 +34,7 @@
             // Launch a new game if nothing is running
             if (currentGameString == null || currentGameString.Equals("0"))
             {
-                return new XmlQuery(nv.baseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + selected.steamID +
+                return new XmlQuery(nv.BaseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + selected.steamID +
                     "&mode=" + streamConfig.GetWidth() + "x" + streamConfig.GetHeight() + "x" + streamConfig.GetFps() +
                     "&additionalStates=1&sops=1" + // FIXME: make sops configurable
                     riConfigString);
@@ -43,7 +43,7 @@
             {
                 // A game was already running, so resume it
                 // FIXME: Quit and relaunch if it's not the game we came to start
-                return new XmlQuery(nv.baseUrl + "/resume?uniqueid=" + nv.GetUniqueId() + riConfigString);
+                return new XmlQuery(nv.BaseUrl + "/resume?uniqueid=" + nv.GetUniqueId() + riConfigString);
             }
         }
 
