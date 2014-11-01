@@ -6,6 +6,7 @@
     using System.Diagnostics;
     using System.Threading.Tasks;
     using Windows.System.Threading;
+    using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     public sealed partial class StreamFrame : Page
     {
@@ -163,7 +164,9 @@
         /// </summary>
         public void ClConnectionStarted()
         {
-
+            // Hide the cursor
+            oldCursor = Window.Current.CoreWindow.PointerCursor;
+            Window.Current.CoreWindow.PointerCursor = null;
         }
 
         /// <summary>
