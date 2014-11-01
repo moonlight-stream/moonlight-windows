@@ -115,17 +115,17 @@
             _720p_button.IsEnabled = false;
             _1080p_button.IsEnabled = false;
 
-            status_text.Text = "Checking pair state...";
             selected = (Computer)computerPicker.SelectedItem;
-            // User hasn't selected a machine
-            if (selected == null)
+
+            // User hasn't selected a machine or selected a placeholder
+            if (selected == null || selected.IpAddress == null)
             {
                 var dialog = new MessageDialog("No machine selected", "Streaming Failed");
-                await dialog.ShowAsync(); 
-                status_text.Text = "";                
+                await dialog.ShowAsync();         
             }
             else
             {
+                status_text.Text = "Checking pair state...";
                 await StreamSetup(selected);
                 status_text.Text = "";
             }            
@@ -145,14 +145,16 @@
         private async void PairButton_Click(object sender, RoutedEventArgs e)
         {
             Computer selected = (Computer)computerPicker.SelectedItem;
-            // User hasn't selected anything 
-            if (selected == null)
+
+            // User hasn't selected anything or selected the placeholder
+            if (selected == null || selected.IpAddress == null)
             {
                 var dialog = new MessageDialog("No machine selected", "Pairing Failed");
                 await dialog.ShowAsync();
                 status_text.Text = "";
                 return; 
             }
+
             nv = new NvHttp(selected.IpAddress);
             Pairing p = new Pairing(nv);
             // Stop polling timer while we're pairing

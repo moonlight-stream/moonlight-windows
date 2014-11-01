@@ -11,8 +11,8 @@
 
     public sealed partial class MainPage : Page
     {
-        Computer notFound = new Computer("No Computers Found", "");
-        Computer noNetwork = new Computer("Network Unavailable", "");
+        Computer notFound = new Computer("No Computers Found", null);
+        Computer noNetwork = new Computer("Network Unavailable", null);
         #region Enumeration
         /// <summary>
         /// Uses mDNS to enumerate the machines on the network eligible to stream from
