@@ -1,4 +1,5 @@
 ﻿using Limelight.Streaming;
+using Limelight.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -55,15 +56,13 @@ namespace Limelight
         {
             if (String.IsNullOrWhiteSpace(ip_textbox.Text) || String.IsNullOrWhiteSpace(nickname_textbox.Text))
             {
-                var dialog = new MessageDialog("Please fill out both text boxes", "Add PC Failed");
-                dialog.ShowAsync();
+                DialogUtils.DisplayDialog(this.Dispatcher, "Please fill out both text boxes", "Add PC Failed");
                 return;
             }
             else
             {
                 Computer toAdd = new Computer(nickname_textbox.Text, ip_textbox.Text);                
                 this.Frame.Navigate(typeof(MainPage), toAdd);
-               
             }
         }
 

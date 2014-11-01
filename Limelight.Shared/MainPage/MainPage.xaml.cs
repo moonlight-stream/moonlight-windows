@@ -56,20 +56,22 @@
         /// This parameter is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            // If we are coming from AddPc, then add a PC to the list
-            // HACK is there a way to get the name of the page you've come from? 
-            Computer toAdd; 
-            try
+            if (e.Parameter != null)
             {
-                toAdd = (Computer)e.Parameter;
-
+                // If we are coming from AddPc, then add a PC to the list
+                // HACK is there a way to get the name of the page you've come from? 
+                Computer toAdd;
+                try
+                {
+                    toAdd = (Computer)e.Parameter;
+                }
+                catch (Exception)
+                {
+                    // If that up there didn't work, then we didn't come from AddPC
+                    return;
+                }
+                addedPCs.Add(toAdd);
             }
-            catch (Exception)
-            {
-                // If that up there didn't work, then we didn't come from AddPC
-                return; 
-            }
-            addedPCs.Add(toAdd);
         }
 
 
