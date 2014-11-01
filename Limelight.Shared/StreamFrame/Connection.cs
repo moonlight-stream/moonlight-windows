@@ -23,10 +23,10 @@
 
             byte[] aesIv = streamConfig.GetRiAesIv();
             int riKeyId =
-                (int)(((aesIv[0] << 24) & 0xFF000000) |
-                ((aesIv[1] << 16) & 0xFF0000) |
-                ((aesIv[2] << 8) & 0xFF00) |
-                (aesIv[3] & 0xFF));
+                (int)(((aesIv[0] << 24) & 0xFF000000U) |
+                ((aesIv[1] << 16) & 0xFF0000U) |
+                ((aesIv[2] << 8) & 0xFF00U) |
+                (aesIv[3] & 0xFFU));
             string riConfigString =
                 "&rikey=" + PairingCryptoHelpers.BytesToHex(streamConfig.GetRiAesKey()) +
                 "&rikeyid=" + riKeyId;
