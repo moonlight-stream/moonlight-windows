@@ -96,8 +96,7 @@ namespace Limelight
             // Try to connect to the remote host
             try
             {
-                await clientSocket.ConnectAsync(serverHost, "http");
-
+                await clientSocket.ConnectAsync(serverHost, "47984");
             }
             catch (Exception e)
             {
