@@ -8,11 +8,11 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <TextBlock HorizontalAlignment="Left" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top"/>
-        <TextBlock HorizontalAlignment="Center" Style="{StaticResource SubheaderTextBlockStyle}" TextWrapping="Wrap" Text="Manually Add PC" VerticalAlignment="Top" Margin="0,88,0,0"/>
-        <TextBox x:Name="nickname_textbox" HorizontalAlignment="Center" Margin="66,168,41,0" TextWrapping="Wrap" VerticalAlignment="Top" PlaceholderText="Nickname" Height="40" Width="293" AcceptsReturn="True"/>
-        <TextBox x:Name="ip_textbox" HorizontalAlignment="Center" Margin="66,227,41,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="293" AcceptsReturn="True" PlaceholderText="IP Address"/>
-        <Button Content="Add" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,310,0,0" Click="Add_Button_Click"/>
+    	<TextBlock HorizontalAlignment="Left" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top"/>
+    	<TextBlock HorizontalAlignment="Center" Style="{StaticResource SubheaderTextBlockStyle}" TextWrapping="Wrap" Text="Manually Add PC" VerticalAlignment="Top" Margin="0,88,0,0"/>
+    	<TextBox x:Name="nickname_textbox" HorizontalAlignment="Center" Margin="66,168,66,0" TextWrapping="Wrap" VerticalAlignment="Top" PlaceholderText="Nickname" Height="40" Width="318"/>
+    	<TextBox x:Name="ip_textbox" HorizontalAlignment="Center" Margin="66,227,66,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="318" PlaceholderText="IP Address"/>
+    	<Button x:Name="add_pc_button" Content="Add" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,310,0,0" Click="Add_Button_Click"/>
 
     </Grid>
 </Page>

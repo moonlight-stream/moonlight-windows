@@ -1,14 +1,10 @@
-﻿using Limelight.Streaming;
-using Limelight.Utils;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
-using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -24,9 +20,9 @@ namespace Limelight
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class AddPC : Page
+    public sealed partial class SettingsPage : Page
     {
-        public AddPC()
+        public SettingsPage()
         {
             this.InitializeComponent();
 
@@ -35,6 +31,7 @@ namespace Limelight
 #endif
         }
 
+        #region EventHandlers
 #if WINDOWS_PHONE_APP
         /// <summary>
         /// If Windows Phone, go backwards instead of quitting the app
@@ -47,24 +44,6 @@ namespace Limelight
             Frame.GoBack();
         }
 #endif
-
-        /// <summary>
-        /// Event handler for clicking the add PC manually button
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Add_Button_Click(object sender, RoutedEventArgs e)
-        {
-            if (String.IsNullOrWhiteSpace(ip_textbox.Text) || String.IsNullOrWhiteSpace(nickname_textbox.Text))
-            {
-                DialogUtils.DisplayDialog(this.Dispatcher, "Please fill out both text boxes", "Add PC Failed");
-                return;
-            }
-            else
-            {
-                Computer toAdd = new Computer(nickname_textbox.Text, ip_textbox.Text);                
-                this.Frame.Navigate(typeof(MainPage), toAdd);
-            }
-        }
+        #endregion EventHandlers
     }
 }
