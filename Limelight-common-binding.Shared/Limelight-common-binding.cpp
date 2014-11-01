@@ -28,6 +28,7 @@ using namespace Platform;
 static LimelightDecoderRenderer ^s_DrCallbacks;
 static LimelightAudioRenderer ^s_ArCallbacks;
 static LimelightConnectionListener ^s_ClCallbacks;
+static LimelightPlatformCallbacks ^s_PlCallbacks;
 
 #define INITIAL_FRAME_BUFFER_SIZE 1048576
 static int s_FrameBufferSize;
@@ -150,13 +151,19 @@ void ClShimDisplayTransientMessage(char *message) {
 	s_ClCallbacks->DisplayTransientMessage(messageString);
 }
 
+void PlShimThreadStart(void) {
+	s_PlCallbacks->ThreadStart();
+}
+
 int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, LimelightStreamConfiguration ^streamConfig,
-	LimelightConnectionListener ^clCallbacks, LimelightDecoderRenderer ^drCallbacks, LimelightAudioRenderer ^arCallbacks)
+	LimelightConnectionListener ^clCallbacks, LimelightDecoderRenderer ^drCallbacks, LimelightAudioRenderer ^arCallbacks,
+	LimelightPlatformCallbacks ^plCallbacks)
 {
 	STREAM_CONFIGURATION config;
 	DECODER_RENDERER_CALLBACKS drShimCallbacks;
 	AUDIO_RENDERER_CALLBACKS arShimCallbacks;
 	CONNECTION_LISTENER_CALLBACKS clShimCallbacks;
+	PLATFORM_CALLBACKS plShimCallbacks;
 
 	config.width = streamConfig->GetWidth();
 	config.height = streamConfig->GetHeight();
@@ -170,6 +177,7 @@ int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, L
 	s_ClCallbacks = clCallbacks;
 	s_DrCallbacks = drCallbacks;
 	s_ArCallbacks = arCallbacks;
+	s_PlCallbacks = plCallbacks;
 
 	drShimCallbacks.setup = DrShimSetup;
 	drShimCallbacks.start = DrShimStart;
@@ -191,8 +199,10 @@ int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, L
 	clShimCallbacks.displayMessage = ClShimDisplayMessage;
 	clShimCallbacks.displayTransientMessage = ClShimDisplayTransientMessage;
 
+	plShimCallbacks.threadStart = PlShimThreadStart;
+
 	return LiStartConnection(hostAddress, &config, &clShimCallbacks,
-		&drShimCallbacks, &arShimCallbacks, NULL, 0);
+		&drShimCallbacks, &arShimCallbacks, &plShimCallbacks, NULL, 0);
 }
 
 void LimelightCommonRuntimeComponent::StopConnection(void) {
@@ -212,6 +222,10 @@ int LimelightCommonRuntimeComponent::SendKeyboardEvent(short keyCode, unsigned c
 }
 
 int LimelightCommonRuntimeComponent::SendControllerInput(short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX,
-	short leftStickY, short rightStickX, short rightStickY){
+	short leftStickY, short rightStickX, short rightStickY) {
 	return LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
+}
+
+void LimelightCommonRuntimeComponent::CompleteThreadStart() {
+	LiCompleteThreadStart();
 }

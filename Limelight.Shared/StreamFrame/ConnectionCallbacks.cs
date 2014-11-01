@@ -1,7 +1,9 @@
 ﻿namespace Limelight
 {
+    using Limelight_common_binding;
     using System;
     using System.Diagnostics;
+    using Windows.System.Threading;
     using Windows.UI.Xaml.Controls;
     public sealed partial class StreamFrame : Page
     {
@@ -181,5 +183,16 @@
             Debug.WriteLine("ClDisplayTransientMessage: " + message);
         }
 #endregion Connection Listener
+
+#region Platform Callbacks
+        public void PlThreadStart()
+        {
+            ThreadPool.RunAsync((workitem) =>
+            {
+                // The thread will execute in the context of this worker
+                LimelightCommonRuntimeComponent.CompleteThreadStart();
+            });
+        }
+#endregion
     }
 }

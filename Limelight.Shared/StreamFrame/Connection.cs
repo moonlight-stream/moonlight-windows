@@ -81,6 +81,7 @@
             LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArPlaySample);
             LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
             ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
+            LimelightPlatformCallbacks plCallbacks = new LimelightPlatformCallbacks(PlThreadStart);
 
             XmlQuery launchApp;
             // Launch Steam
@@ -107,7 +108,7 @@
                 Convert.ToByte(m.Groups["octet3"].Value) << 16 | 
                 Convert.ToByte(m.Groups["octet2"].Value) << 8 |
                 Convert.ToByte(m.Groups["octet1"].Value));
-            LimelightCommonRuntimeComponent.StartConnection(addr, streamConfig, clCallbacks, drCallbacks, arCallbacks);
+            LimelightCommonRuntimeComponent.StartConnection(addr, streamConfig, clCallbacks, drCallbacks, arCallbacks, plCallbacks);
 
             if (stageFailureText != null)
             {

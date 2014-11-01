@@ -125,6 +125,22 @@ namespace Limelight_common_binding
 		Limelight_common_binding::ArPlaySample ^m_ArPlaySample;
 	};
 
+	public delegate void PlThreadStart(void);
+
+	public ref class LimelightPlatformCallbacks sealed
+	{
+	public:
+		LimelightPlatformCallbacks(PlThreadStart ^plThreadStart) :
+			m_PlThreadStart(plThreadStart) {}
+
+		void ThreadStart(void) {
+			m_PlThreadStart();
+		}
+
+	private:
+		Limelight_common_binding::PlThreadStart ^m_PlThreadStart;
+	};
+
 	public delegate void ClStageStarting(int stage);
 	public delegate void ClStageComplete(int stage);
 	public delegate void ClStageFailed(int stage, int errorCode);
@@ -202,7 +218,8 @@ namespace Limelight_common_binding
 	{
 	public:
 		static int StartConnection(unsigned int hostAddress, LimelightStreamConfiguration ^streamConfig,
-			LimelightConnectionListener ^clCallbacks, LimelightDecoderRenderer ^drCallbacks, LimelightAudioRenderer ^arCallbacks);
+			LimelightConnectionListener ^clCallbacks, LimelightDecoderRenderer ^drCallbacks, LimelightAudioRenderer ^arCallbacks,
+			LimelightPlatformCallbacks ^plCallbacks);
 
 		static void StopConnection(void);
 		static int SendMouseMoveEvent(short deltaX, short deltaY);
@@ -210,5 +227,8 @@ namespace Limelight_common_binding
 		static int SendKeyboardEvent(short keyCode, unsigned char keyAction, unsigned char modifiers);
 		static int SendControllerInput(short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX, 
 			short leftStickY, short rightStickX, short rightStickY);
+
+		// Platform-specific code
+		static void CompleteThreadStart(void);
 	};
 }
