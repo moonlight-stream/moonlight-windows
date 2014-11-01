@@ -24,15 +24,20 @@
         /// <returns></returns>
         private async Task EnumerateEligibleMachines()
         {
-            computerList = new List<Computer>(); 
             // Make a local copy of the computer list
             // The UI thread will populate the listbox with computerList whenever it pleases, so we don't want it to take the one we're modifying
             List<Computer> computerListLocal = new List<Computer>(computerList);
+            bool modifiedList = false;
 
-            // Ignore all computers we may have found in the past
-            computerListLocal.Clear();
             // Make sure we have the manually added PCs in here
-            computerListLocal.AddRange(addedPCs);
+            foreach (var pc in addedPCs)
+            {
+                if (!computerListLocal.Exists(x => x.IpAddress == pc.IpAddress))
+                {
+                    computerListLocal.Add(pc);
+                    modifiedList = true;
+                }
+            }
 
             Debug.WriteLine("Enumerating machines...");
 
@@ -42,6 +47,7 @@
                 if (computerListLocal.Count == 0 && !computerListLocal.Contains(noNetwork))
                 {
                     computerListLocal.Add(noNetwork);
+                    modifiedList = true;
                 }
                 Debug.WriteLine("Network not available - skipping mDNS");
             }
@@ -52,8 +58,8 @@
                 {
                     Debug.WriteLine("Removing \"no network\" placeholder");
                     computerListLocal.Remove(noNetwork);
+                    modifiedList = true;
                 }
-
 
                 // Let Zeroconf do its magic and find everything it can with mDNS
                 ILookup<string, string> domains = null;
@@ -87,6 +93,7 @@
                     {
                         Debug.WriteLine("Removing \"not found\" placeholder");
                         computerList.Remove(notFound);
+                        modifiedList = true;
                     }
 
                     // Go through every response we received and grab only the ones running nvstream
@@ -101,6 +108,7 @@
                             {
                                 computerListLocal.Add(toAdd);
                                 Debug.WriteLine(resp);
+                                modifiedList = true;
                             }
                         }
                     }
@@ -113,6 +121,7 @@
                     // If we don't have the computer already, add it
                     if (!computerListLocal.Exists(x => x.IpAddress == last.IpAddress))
                     {
+                        modifiedList = true;
                         computerListLocal.Add(last);
                     }
                 }
@@ -121,14 +130,19 @@
                 if (computerListLocal.Count == 0)
                 {
                     Debug.WriteLine("Not Found");
+                    modifiedList = true;
                     computerListLocal.Add(notFound);
                 }
             }
 
-            computerList = computerListLocal;
-            if (computerPicker.SelectedIndex == -1)
+            if (modifiedList)
             {
-                computerPicker.ItemsSource = computerList;
+                computerList = computerListLocal;
+
+                if (computerPicker.SelectedIndex == -1)
+                {
+                    computerPicker.ItemsSource = computerList;
+                }
             }
         }
         #endregion Enumeration
