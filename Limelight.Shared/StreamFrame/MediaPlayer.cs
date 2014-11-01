@@ -32,14 +32,8 @@
         {
             this._streamSource = streamSource;
 
-            AudioEncodingProperties audioProperties = AudioEncodingProperties.CreatePcm(48000, 2, 16);
-
-            VideoEncodingProperties videoProperties = VideoEncodingProperties.CreateUncompressed(MediaEncodingSubtypes.H264Es,
-                (uint)streamConfig.GetWidth(), (uint)streamConfig.GetHeight());
-            videoProperties.ProfileId = H264ProfileIds.High;
-
-            _videoDesc = new VideoStreamDescriptor(videoProperties);
-            _audioDesc = new AudioStreamDescriptor(audioProperties);
+            _videoDesc = new VideoStreamDescriptor(VideoEncodingProperties.CreateH264());
+            _audioDesc = new AudioStreamDescriptor(AudioEncodingProperties.CreatePcm(48000, 2, 16));
 
             _mss = new MediaStreamSource(_videoDesc, _audioDesc);
             _mss.BufferTime = TimeSpan.Zero;
