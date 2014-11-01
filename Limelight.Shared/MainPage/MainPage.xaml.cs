@@ -4,10 +4,12 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Threading.Tasks;
+    using Windows.UI;
     using Windows.UI.Core;
     using Windows.UI.Popups;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml.Media;
     using Windows.UI.Xaml.Navigation;
 
     /// <summary>
@@ -24,8 +26,12 @@
         private static List<Computer> computerList = new List<Computer>();
         private Computer selected = null;
         private CoreDispatcher dispatcher;
-
-
+        private SolidColorBrush color = new SolidColorBrush(Color.FromArgb(120, 0, 255, 0));
+        public SolidColorBrush ItemBackground
+        {
+            get { return color; }
+            set { color = value; }
+        }
         #endregion Class variables
 
         #region Constructor
@@ -80,10 +86,10 @@
             await EnumerateEligibleMachines();
 
             computerPicker.ItemsSource = computerList;
+
             // Start regularly polling for machines
             mDnsTimer.Start();            
         }
-
 
         /// <summary>
         /// When the timer ticks, poll for machines with mDNS
@@ -92,7 +98,6 @@
         {
             Debug.WriteLine(computerPicker.SelectedIndex);
             await EnumerateEligibleMachines();
-            //await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => computerPicker.ItemsSource = computerList);
         }
 
         /// <summary>
@@ -115,19 +120,16 @@
             _720p_button.IsEnabled = false;
             _1080p_button.IsEnabled = false;
 
-            status_text.Text = "Checking pair state...";
             selected = (Computer)computerPicker.SelectedItem;
             // User hasn't selected a machine
             if (selected == null)
             {
                 var dialog = new MessageDialog("No machine selected", "Streaming Failed");
                 await dialog.ShowAsync(); 
-                status_text.Text = "";                
             }
             else
             {
                 await StreamSetup(selected);
-                status_text.Text = "";
             }            
 
             // User can use the buttons again
@@ -150,7 +152,12 @@
             {
                 var dialog = new MessageDialog("No machine selected", "Pairing Failed");
                 await dialog.ShowAsync();
-                status_text.Text = "";
+                return; 
+            }
+            if (String.IsNullOrWhiteSpace(selected.IpAddress))
+            {
+                var dialog = new MessageDialog("Invalid IP address", "Pairing Failed");
+                await dialog.ShowAsync();
                 return; 
             }
             nv = new NvHttp(selected.IpAddress);
@@ -182,10 +189,8 @@
             mDnsTimer.Start();
         }
 
-        private async void Quit_Game(object sender, RoutedEventArgs e)
+        private async void QuitGame(object sender, RoutedEventArgs e)
         {
-            // TODO need to make a UI element to display this text
-            Task.Run(() => SpinnerBegin("Quitting...")).Wait();
             // If we haven't used nv before, create it. 
             if(nv == null){
                 try
@@ -197,10 +202,12 @@
                     
                     XmlQuery quit = new XmlQuery(nv.BaseUrl + "/cancel?uniqueid=" + nv.GetUniqueId());
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    SpinnerEnd(); 
-                    StreamSetupFailed("Unable to quit");
+                    SpinnerEnd();
+                    Debug.WriteLine("Stream setup failed");
+                    var dialog = new MessageDialog(ex.Message, "Quit Game Failed");
+                    dialog.ShowAsync();
                     return;
                 }
                 finally
@@ -210,6 +217,18 @@
                 }
             }
         }
+        /// <summary>
+        /// ListView Item selected event handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ItemSelected(object sender, ItemClickEventArgs e)
+        {
+            // HACK on Windows Phone, clicking the item does not automatically select it
+            // Revisit once Threshold APIs are released
+            computerPicker.SelectedItem = e.ClickedItem;
+        }
+
 
         #endregion Event Handlers  
 
@@ -247,5 +266,7 @@
             PairButton.IsEnabled = true;
             
         }
+
+
     }
 }

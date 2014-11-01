@@ -17,12 +17,12 @@ namespace Limelight
 
         public const int PORT = 47984; 
 	    public const int CONNECTION_TIMEOUT = 5000;
+        // TODO try internal, then try external IP address
         public string BaseUrl { get; set; }
         public string ServerIP { get; set; }
         public XmlQuery ServerInfo { get; set; }
         private string hostname;
-        private Regex IP = new Regex(@"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
-          
+        private Regex IP = new Regex(@"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");          
 
         #endregion Class Variables
 

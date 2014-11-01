@@ -3,7 +3,7 @@
   <Identity Name="ed850c2e-8c8c-4c20-a020-bb5f2e85a007" Publisher="CN=Cameron" Version="1.0.0.0" />
   <Properties>
     <DisplayName>Limelight.Windows</DisplayName>
-    <PublisherDisplayName>Cameron</PublisherDisplayName>
+    <PublisherDisplayName>Michelle Bergeron</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Prerequisites>
