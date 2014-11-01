@@ -1,5 +1,6 @@
 ﻿namespace Limelight
 {
+    using Limelight.Utils;
     using Org.BouncyCastle.Crypto;
     using Org.BouncyCastle.OpenSsl;
     using Org.BouncyCastle.Pkcs;
@@ -16,6 +17,7 @@
     using Windows.Security.Cryptography;
     using Windows.Security.Cryptography.Core;
     using Windows.Storage.Streams;
+    using Windows.UI.Core;
     using Windows.UI.Popups;
     using Windows.UI.Xaml.Controls;
 
@@ -137,7 +139,7 @@
             return (X509Certificate)certReader.ReadObject();
         }
 
-        public static async Task<bool> PerformPairingHandshake(WPCryptoProvider provider, NvHttp nv, string uniqueId)
+        public static bool PerformPairingHandshake(CoreDispatcher uiDispatcher, WPCryptoProvider provider, NvHttp nv, string uniqueId)
         {
             // Generate a salt for hashing the PIN
             byte[] salt = GenerateRandomBytes(16);
@@ -149,9 +151,7 @@
             CryptographicKey aesKey = GenerateAesKey(saltAndPin);
 
             // Send the salt and get the server cert
-            var dialog = new MessageDialog("Enter the following PIN on the host PC: " + pin, "Enter PIN");
-            dialog.Commands.Add(new UICommand("Close"));
-            await dialog.ShowAsync();
+            DialogUtils.DisplayDialog(uiDispatcher, "Enter the following PIN on the host PC: " + pin, "Enter PIN");
 
             // User will need to close dialog themselves
             XmlQuery getServerCert = new XmlQuery(nv.BaseUrl + "/pair?uniqueid=" + uniqueId +

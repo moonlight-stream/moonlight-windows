@@ -1,9 +1,12 @@
 ﻿namespace Limelight.Streaming
 {
+    using Limelight.Utils;
     using Limelight_common_binding;
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Threading.Tasks;
+    using Windows.UI.Core;
     using Windows.UI.Popups;
     using Windows.UI.Xaml.Controls;
 
@@ -14,7 +17,7 @@
         /// <summary>
         /// When the user presses "Start Streaming Steam", first check that they are paired
         /// </summary>
-        public static async Task<StreamContext> StartStreaming(Computer computer, LimelightStreamConfiguration streamConfig)
+        public static async Task<StreamContext> StartStreaming(CoreDispatcher uiDispatcher, Computer computer, LimelightStreamConfiguration streamConfig)
         {
             PairingManager p = new PairingManager(computer); 
 
@@ -22,20 +25,20 @@
             bool? pairState = await p.QueryPairState();
             if (!pairState.HasValue)
             {
-                NotifyStreamSetupFailed("Pair state query failed");
+                DialogUtils.DisplayDialog(uiDispatcher, "Pair state query failed", "Failed to start streaming");
                 return null;
             }
 
             // If we're not paired, return
             if (pairState == false)
             {
-                NotifyStreamSetupFailed("Device not paired");
+                DialogUtils.DisplayDialog(uiDispatcher, "Device not paired", "Failed to start streaming");
                 return null;
             }
 
             // Lookup the desired app in the app list
             // NOTE: This will go away when we have a proper app list
-            int appId = await Task.Run(() => LookupAppIdForApp(new NvHttp(computer.IpAddress), "Steam"));
+            int appId = await Task.Run(() => LookupAppIdForApp(uiDispatcher, new NvHttp(computer.IpAddress), "Steam"));
             if (appId == 0)
             {
                 // LookupAppIdForApp() handles displaying a failure dialog
@@ -50,20 +53,10 @@
         #region Helper Methods
 
         /// <summary>
-        /// Runs if checking pair state fails
-        /// </summary>
-        private static void NotifyStreamSetupFailed(string message)
-        {
-            Debug.WriteLine("Stream setup failed: "+message);
-            var dialog = new MessageDialog(message, "Stream setup failed");
-            dialog.ShowAsync();
-        }
-
-        /// <summary>
         /// Query the app list on the server to get the Steam App ID
         /// </summary>
         /// <returns>True if the operation succeeded, false otherwise</returns>
-        private static int LookupAppIdForApp(NvHttp nv, String app)
+        private static int LookupAppIdForApp(CoreDispatcher dispatcher, NvHttp nv, String app)
         {
             XmlQuery appList;
             string appIdStr;
@@ -74,8 +67,7 @@
             }
             catch (Exception e)
             {
-                var dialog = new MessageDialog(e.Message, "App List Query Failed");
-                dialog.ShowAsync();
+                DialogUtils.DisplayDialog(dispatcher, e.Message, "App List Query Failed");
                 return 0;
             }
 
@@ -89,8 +81,7 @@
                 if (appIdStr == null)
                 {
                     // Not found
-                    var dialog = new MessageDialog("App Not Found", "App ID Lookup Failed");
-                    dialog.ShowAsync();
+                    DialogUtils.DisplayDialog(dispatcher, "App Not Found", "App ID Lookup Failed");
                     return 0;
                 }
             }
@@ -98,8 +89,7 @@
             catch (Exception e)
             {
                 // Steam ID lookup failed
-                var dialog = new MessageDialog("Failed to get app ID: " + e.Message, "App ID Lookup Failed");
-                dialog.ShowAsync();
+                DialogUtils.DisplayDialog(dispatcher, "Failed to get app ID: " + e.Message, "App ID Lookup Failed");
                 return 0;
             }
 

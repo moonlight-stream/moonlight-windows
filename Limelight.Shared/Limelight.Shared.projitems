@@ -44,6 +44,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Streaming\NvHttp.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Streaming\StreamContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Streaming\XmlQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Utils\DialogUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="$(MSBuildThisFileDirectory)MainPage\AddPC.xaml">
