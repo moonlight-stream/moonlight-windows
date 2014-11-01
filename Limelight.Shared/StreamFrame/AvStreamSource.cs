@@ -113,8 +113,6 @@ namespace Limelight
 
         public void EnqueueVideoSample(byte[] buf)
         {
-            MediaStreamSample sample = CreateVideoSample(buf);
-
             // This loop puts back-pressure in the DU queue in
             // common. It's needed so that we avoid our queue getting
             // too large.
@@ -127,7 +125,7 @@ namespace Limelight
                         continue;
                     }
 
-                    pendingVideoRequest.Sample = sample;
+                    pendingVideoRequest.Sample = CreateVideoSample(buf);
                     pendingVideoDeferral.Complete();
 
                     pendingVideoRequest = null;
@@ -138,12 +136,10 @@ namespace Limelight
 
         public void EnqueueAudioSample(byte[] buf)
         {
-            MediaStreamSample sample = CreateAudioSample(buf);
-
             // This loop puts back-pressure in the DU queue in
             // common. It's needed so that we avoid our queue getting
             // too large.
-            for (; ; )
+            for (;;)
             {
                 lock (audioQueueLock)
                 {
@@ -152,7 +148,7 @@ namespace Limelight
                         continue;
                     }
 
-                    pendingAudioRequest.Sample = sample;
+                    pendingAudioRequest.Sample = CreateAudioSample(buf);
                     pendingAudioDeferral.Complete();
 
                     pendingAudioRequest = null;
