@@ -218,7 +218,7 @@
 
             await p.Pair(selected);
 
-            mDnsTimer.Stop(); 
+            mDnsTimer.Start();
         }
 
         /// <summary>
