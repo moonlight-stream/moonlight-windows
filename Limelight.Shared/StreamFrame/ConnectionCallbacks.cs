@@ -1,8 +1,10 @@
 ﻿namespace Limelight
 {
+    using Limelight.Utils;
     using Limelight_common_binding;
     using System;
     using System.Diagnostics;
+    using System.Threading.Tasks;
     using Windows.System.Threading;
     using Windows.UI.Xaml.Controls;
     public sealed partial class StreamFrame : Page
@@ -171,6 +173,17 @@
         public void ClConnectionTerminated(int errorCode)
         {
             Debug.WriteLine("Connection terminated: " + errorCode);
+
+            var unused = Task.Run(() =>
+            {
+                // This needs to be done on a separate thread
+                LimelightCommonRuntimeComponent.StopConnection();
+            });
+
+            DialogUtils.DisplayDialog(this.Dispatcher, "Connection terminated unexpectedly", "Connection Terminated", (command) =>
+            {
+                this.Frame.Navigate(typeof(MainPage), null);
+            });
         }
 
         public void ClDisplayMessage(String message)
