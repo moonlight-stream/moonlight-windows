@@ -19,8 +19,9 @@ namespace Limelight
     {
         private Uri uri;
         private XDocument rawXml;
-        public string rawXmlString;
-        private Windows.Web.Http.HttpClient client; 
+        private string rawXmlString;
+        private Windows.Web.Http.HttpClient client;
+        private bool ranQuery;
 
         #region Public Methods
         /// <summary>
@@ -30,20 +31,6 @@ namespace Limelight
         public XmlQuery(string url)
         {
             uri = new Uri(url);
-            
-            Task.Run(async () => await GetXml()).Wait();
-
-            // Get the status string. If it's not 200, throw an exception
-            if (rawXml != null)
-            {
-                XElement e = rawXml.Descendants().First();
-                var x = e.Attribute("status_code");
-                if (x.Value != "200")
-                {
-                    Debug.WriteLine("Invalid status code " + x.Value);
-                    throw new WebException("Invalid status code");
-                }
-            }
         }
 
         /// <summary>
@@ -51,35 +38,36 @@ namespace Limelight
         /// </summary>
         /// <param name="tag">Tag containing the desired attribute</param>
         /// <returns>The first attribute within the given tag</returns>
-        public string XmlAttribute(string tag)
+        public async Task<string> ReadXmlAttribute(string tag)
         {
-            // TODO handle not found
-            var query = from c in rawXml.Descendants(tag) select c;
-            string attribute = query.FirstOrDefault().Value;
-            return attribute;
+            // Do the query if we haven't yet
+            await GetXml();
+
+            return ReadXmlAttribute(tag, rawXml);
         }
 
         /// <summary>
         /// Given an XElement and a tag, search within that element for the first attribute contained within the tag
         /// </summary>
         /// <param name="tag">XML tag</param>
-        /// <param name="element">XElement to search within</param>
-        /// <returns>The first attribute within the given tag in the XElement</returns>
-        public string XmlAttribute(string tag, XElement element)
+        /// <param name="element">XContainer to search within</param>
+        /// <returns>The first attribute within the given tag in the XContainer</returns>
+        public string ReadXmlAttribute(string tag, XContainer element)
         {
             if (element == null)
             {
-                return null; 
+                return null;
             }
+
             var query = from c in element.Descendants(tag) select c;
+
             // Not found 
             if (query == null)
             {
                 return null; 
             }
 
-            string attribute = query.FirstOrDefault().Value;
-            return attribute;
+            return query.FirstOrDefault().Value;
         }
 
         /// <summary>
@@ -89,20 +77,31 @@ namespace Limelight
         /// <param name="attribute">Known attribute</param>
         /// <param name="tagToFind">Tag from within we want to find an attribute</param>
         /// <returns>The found attribute</returns>
-        public string SearchAttribute(string outerTag, string innerTag, string attribute, string tagToFind)
+        public async Task<string> SearchAttribute(string outerTag, string innerTag, string attribute, string tagToFind)
         {
+            // Do the query if we haven't yet
+            await GetXml();
+
             // Get all elements with specified tag
             var query = from c in rawXml.Descendants(outerTag) select c;
 
             // Look for the one with the attribute we already know
             foreach (XElement x in query){
-                if (XmlAttribute(innerTag, x) == attribute)
+                if (ReadXmlAttribute(innerTag, x) == attribute)
                 {
-                    return XmlAttribute(tagToFind, x);
+                    return ReadXmlAttribute(tagToFind, x);
                 }
             }
             // Not found
             return null; 
+        }
+
+        public async Task<bool> Run()
+        {
+            await GetXml();
+
+            // Return true if query succeeded
+            return rawXml != null;
         }
 
         #endregion Public Methods
@@ -114,6 +113,16 @@ namespace Limelight
         /// <returns>The server info XML as a string</returns>
         private async Task GetXml()
         {
+            // Return if we've already been here
+            if (ranQuery)
+            {
+                return;
+            }
+            else
+            {
+                ranQuery = true;
+            }
+
             HttpBaseProtocolFilter filter = new HttpBaseProtocolFilter();
             filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Untrusted);
             filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.InvalidName);
@@ -123,21 +132,21 @@ namespace Limelight
 
             client = new Windows.Web.Http.HttpClient(filter);
             Debug.WriteLine(uri);
-            if (rawXmlString == null)
+
+            try
             {
-                try
-                {
-                    rawXmlString = await client.GetStringAsync(uri);
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine(e.Message);
-                }
-                Debug.WriteLine(rawXmlString);
-                
-                // Up to the caller to deal with exceptions resulting here
-                this.rawXml = XDocument.Parse(rawXmlString);
+                rawXmlString = await client.GetStringAsync(uri);
             }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                return;
+            }
+
+            Debug.WriteLine(rawXmlString);
+
+            // Up to the caller to deal with exceptions resulting here
+            this.rawXml = XDocument.Parse(rawXmlString);
         }
         #endregion Private Methods
     }

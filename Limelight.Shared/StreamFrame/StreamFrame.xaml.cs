@@ -48,6 +48,7 @@
         private const int MOUSE_BUTTON_LEFT = 0x1;
         private const int MOUSE_BUTTON_MIDDLE = 0x2;
         private const int MOUSE_BUTTON_RIGHT = 0x4;
+        private CoreCursor oldCursor;
 
         /// <summary>
         /// Gets and sets the custom AV source
@@ -87,12 +88,28 @@
         /// </summary>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            base.OnNavigatedTo(e);
+
             // We only want to stream in landscape
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape;
             context = (StreamContext)e.Parameter;
 
             Window.Current.CoreWindow.KeyDown += WindowKeyDownHandler;
             Window.Current.CoreWindow.KeyUp += WindowKeyUpHandler;
+
+            // Add a callback for relative mouse movements
+            MouseDevice.GetForCurrentView().MouseMoved += RelativeMouseMoved;
+        }
+
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+
+            // Restore the cursor
+            if (oldCursor != null)
+            {
+                Window.Current.CoreWindow.PointerCursor = oldCursor;
+            }
         }
         
         /// <summary>
@@ -121,7 +138,7 @@
         /// <param name="e"></param>
         private void HardwareButtonsBackPressed(object sender, Windows.Phone.UI.Input.BackPressedEventArgs e)
         {
-        // TODO tear down stream
+            LimelightCommonRuntimeComponent.StopConnection();
             e.Handled = true;
             Frame.GoBack();
         }
@@ -246,24 +263,35 @@
         /// </summary>
         private void MouseMove(object sender, PointerRoutedEventArgs e)
         {
-            PointerPoint ptrPt = e.GetCurrentPoint(StreamDisplay);
-            short eventX = (short)ptrPt.Position.X;
-            short eventY = (short)ptrPt.Position.Y; 
-            if (eventX != lastX || eventY != lastY)
+            // Only use this fake relative mode on non-mice
+            if (e.Pointer.PointerDeviceType != PointerDeviceType.Mouse)
             {
-                hasMoved = true;
-                short xToSend = (short)(eventX - lastX);
-                short yToSend = (short)(eventY - lastY);
-                // Send the values to the streaming PC so it can register mouse movement
-                LimelightCommonRuntimeComponent.SendMouseMoveEvent(xToSend, yToSend);
+                PointerPoint ptrPt = e.GetCurrentPoint(StreamDisplay);
 
-                lastX = eventX;
-                lastY = eventY;
+                short eventX = (short)ptrPt.Position.X;
+                short eventY = (short)ptrPt.Position.Y;
+                if (eventX != lastX || eventY != lastY)
+                {
+                    hasMoved = true;
+                    short xToSend = (short)(eventX - lastX);
+                    short yToSend = (short)(eventY - lastY);
+                    // Send the values to the streaming PC so it can register mouse movement
+                    LimelightCommonRuntimeComponent.SendMouseMoveEvent(xToSend, yToSend);
+
+                    lastX = eventX;
+                    lastY = eventY;
+                }
+
+                // Prevent most handlers along the event route from handling the same event again.
+                e.Handled = true;
             }
-            
-            // Prevent most handlers along the event route from handling the same event again.
-            e.Handled = true;
         }
+
+        private void RelativeMouseMoved(MouseDevice device, MouseEventArgs e)
+        {
+            LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)e.MouseDelta.X, (short)e.MouseDelta.Y);
+        }
+
         #endregion Mouse Events
 
         #region Keyboard events

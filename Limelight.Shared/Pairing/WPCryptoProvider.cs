@@ -31,60 +31,67 @@
         private byte[] pemCertBytes;
 
         private static Object certLock = new Object();
+        private static Task keypairGenerationTask;
 
-        private void InitializeCryptoProviderKeys()
+        private async Task InitializeCryptoProviderKeys()
         {
-            // Use a lock here to ensure only one guy will be generating or loading
-            // the certificate and key at a time
-            lock (certLock)
+            // Return if we have one loaded
+            if (cert != null)
             {
-                // Return if we have one loaded
-                if (cert != null)
-                {
-                    return;
-                }
-
-                // No loaded cert yet, let's see if we have one on disk
-                if (LoadCertKeyPair())
-                {
-                    // Got one
-                    return;
-                }
-
-                // We don't have a cert yet - generate a new key pair
-                GenerateCertKeyPair();
-
-                // Load the generated pair
-                LoadCertKeyPair();
+                return;
             }
+
+            // No loaded cert yet, let's see if we have one on disk
+            if (LoadCertKeyPair())
+            {
+                // Got one
+                return;
+            }
+
+            if (keypairGenerationTask != null)
+            {
+                // Another thread is already generating a key pair
+                // Let's wait for them to finish.
+                // FIXME: There's a little race here where it could be
+                // set to null below after we read it but before we await it
+                await keypairGenerationTask;
+            }
+
+            // We don't have a cert yet - generate a new key pair
+            keypairGenerationTask = GenerateCertKeyPair();
+            await keypairGenerationTask;
+            keypairGenerationTask = null;
+
+            // Load the generated pair
+            LoadCertKeyPair();
         }
 
         /// <summary>
         /// Get client X509 Certificate
         /// </summary>
         /// <returns>The client's X509 certificate </returns>
-        public X509Certificate GetClientCertificate()
+        public async Task<X509Certificate> GetClientCertificate()
         {
-            InitializeCryptoProviderKeys();
+            await InitializeCryptoProviderKeys();
             return cert;
         }
 
-        public byte[] GetPemCertBytes()
+        public async Task<byte[]> GetPemCertBytes()
         {
-            InitializeCryptoProviderKeys();
+            await InitializeCryptoProviderKeys();
             return pemCertBytes;
         }
 
-        public AsymmetricCipherKeyPair GetKeyPair()
+        public async Task<AsymmetricCipherKeyPair> GetKeyPair()
         {
-            InitializeCryptoProviderKeys();
+            await InitializeCryptoProviderKeys();
             return keyPair;
         }
 
         /// <summary>
         /// Generate a cert/key pair
         /// </summary>
-        private void GenerateCertKeyPair()
+        private async Task GenerateCertKeyPair()
         {
             // Generate RSA key pair
             RsaKeyPairGenerator r = new RsaKeyPairGenerator();
@@ -115,7 +122,7 @@
                 return;
             }
 
-            Task.Run(async () => await SaveCertKeyPair()).Wait(); 
+            await SaveCertKeyPair();
         }
 
         private static AsymmetricCipherKeyPair GenerateKeys(int keySize)

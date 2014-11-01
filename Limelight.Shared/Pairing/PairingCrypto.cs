@@ -129,9 +129,9 @@
 
         #region Pairing Handshake
 
-        private static X509Certificate ExtractPlainCert(XmlQuery q, String tag)
+        private static async Task<X509Certificate> ExtractPlainCert(XmlQuery q, String tag)
         {
-            String certHexString = q.XmlAttribute(tag);
+            String certHexString = await q.ReadXmlAttribute(tag);
             byte[] certBytes = PairingCryptoHelpers.HexToBytes(certHexString);
             String certText = Encoding.UTF8.GetString(certBytes, 0, certBytes.Length);
 
@@ -139,8 +139,10 @@
             return (X509Certificate)certReader.ReadObject();
         }
 
-        public static bool PerformPairingHandshake(CoreDispatcher uiDispatcher, WPCryptoProvider provider, NvHttp nv, string uniqueId)
+        public static async Task<bool> PerformPairingHandshake(CoreDispatcher uiDispatcher, WPCryptoProvider provider, NvHttp nv, string uniqueId)
         {
+            string result;
+
             // Generate a salt for hashing the PIN
             byte[] salt = GenerateRandomBytes(16);
 
@@ -155,15 +157,15 @@
 
             // User will need to close dialog themselves
             XmlQuery getServerCert = new XmlQuery(nv.BaseUrl + "/pair?uniqueid=" + uniqueId +
-                "&devicename=roth&updateState=1&phrase=getservercert&salt=" + BytesToHex(salt) + "&clientcert=" + BytesToHex(provider.GetPemCertBytes()));
-            
-            if (!getServerCert.XmlAttribute("paired").Equals("1"))
+                "&devicename=roth&updateState=1&phrase=getservercert&salt=" + BytesToHex(salt) + "&clientcert=" + BytesToHex(await provider.GetPemCertBytes()));
+            result = await getServerCert.ReadXmlAttribute("paired");
+            if (result == null || !result.Equals("1"))
             {
-                Unpair(nv);
+                await Unpair(nv);
                 return false; 
             }
 
-            X509Certificate serverCert = ExtractPlainCert(getServerCert, "plaincert");
+            X509Certificate serverCert = await ExtractPlainCert(getServerCert, "plaincert");
 
             // Generate a random challenge and encrypt it with our AES key
 		    byte[] randomChallenge = GenerateRandomBytes(16);
@@ -174,13 +176,14 @@
 		    XmlQuery challengeResp = new XmlQuery(nv.BaseUrl + 
 				    "/pair?uniqueid="+uniqueId+"&devicename=roth&updateState=1&clientchallenge="+BytesToHex(encryptedChallenge));
             // If we're not paired, there's a problem. 
-		    if (!challengeResp.XmlAttribute("paired").Equals("1")) {
-                Unpair(nv); 
+            result = await challengeResp.ReadXmlAttribute("paired");
+		    if (result == null || !result.Equals("1")) {
+                await Unpair(nv); 
 			    return false;
 		    }
 
             // Decode the server's response and subsequent challenge
-            byte[] encServerChallengeResponse = HexToBytes(challengeResp.XmlAttribute("challengeresponse"));
+            byte[] encServerChallengeResponse = HexToBytes(await challengeResp.ReadXmlAttribute("challengeresponse"));
             byte[] decServerChallengeResponse = DecryptAes(encServerChallengeResponse, aesKey);
 
             byte[] serverResponse = new byte[20], serverChallenge = new byte[16];
@@ -192,21 +195,22 @@
             // Using another 16 bytes secret, compute a challenge response hash using the secret, our cert sig, and the challenge
             byte[] clientSecret = GenerateRandomBytes(16);
             Debug.WriteLine("Client secret: " + BytesToHex(clientSecret));
-            Debug.WriteLine("Client sig: " + BytesToHex(provider.GetClientCertificate().GetSignature()));
+            Debug.WriteLine("Client sig: " + BytesToHex((await provider.GetClientCertificate()).GetSignature()));
 
-            byte[] challengeRespHash = ToSHA1Bytes(concatBytes(concatBytes(serverChallenge, provider.GetClientCertificate().GetSignature()), clientSecret));
+            byte[] challengeRespHash = ToSHA1Bytes(concatBytes(concatBytes(serverChallenge, (await provider.GetClientCertificate()).GetSignature()), clientSecret));
             Debug.WriteLine("Challenge SHA 1: " + BytesToHex(challengeRespHash));
             byte[] challengeRespEncrypted = EncryptAes(challengeRespHash, aesKey);
             XmlQuery secretResp = new XmlQuery(nv.BaseUrl +
                     "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&serverchallengeresp=" + BytesToHex(challengeRespEncrypted));
-            if (!secretResp.XmlAttribute("paired").Equals("1"))
+            result = await secretResp.ReadXmlAttribute("paired");
+            if (result == null || !result.Equals("1"))
             {
-                Unpair(nv); 
+                await Unpair(nv); 
                 return false;
             }
 
             // Get the server's signed secret
-            byte[] serverSecretResp = HexToBytes(secretResp.XmlAttribute("pairingsecret"));
+            byte[] serverSecretResp = HexToBytes(await secretResp.ReadXmlAttribute("pairingsecret"));
             byte[] serverSecret = new byte[16]; byte[] serverSignature = new byte[256]; 
             Array.Copy(serverSecretResp, 0, serverSecret, 0, 16);
             Array.Copy(serverSecretResp, 16, serverSignature, 0, 256);
@@ -215,7 +219,7 @@
             if (!VerifySignature(serverSecret, serverSignature, serverCert))
             {
                 // Cancel the pairing process
-                Unpair(nv); 
+                await Unpair(nv); 
                 // Looks like a MITM
                 return false;
             }
@@ -225,27 +229,29 @@
             if (!serverChallengeRespHash.SequenceEqual(serverResponse))
             {
                 // Cancel the pairing process
-                Unpair(nv); 
+                await Unpair(nv); 
                 // Probably got the wrong PIN
                 return false;
             }
 
             // Send the server our signed secret
-            byte[] clientPairingSecret = concatBytes(clientSecret, SignData(provider.GetKeyPair(), clientSecret));
+            byte[] clientPairingSecret = concatBytes(clientSecret, SignData(await provider.GetKeyPair(), clientSecret));
             XmlQuery clientSecretResp = new XmlQuery(nv.BaseUrl +
                     "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&clientpairingsecret=" + BytesToHex(clientPairingSecret));
-            if (!clientSecretResp.XmlAttribute("paired").Equals("1"))
+            result = await clientSecretResp.ReadXmlAttribute("paired");
+            if (result == null || !result.Equals("1"))
             {
-                Unpair(nv);
+                await Unpair(nv);
                 return false; 
             }
 
             // Do the initial challenge (seems neccessary for us to show as paired)
             XmlQuery pairChallenge = new XmlQuery(nv.BaseUrl + "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&phrase=pairchallenge");
 
-            if (!pairChallenge.XmlAttribute("paired").Equals("1"))
+            result = await pairChallenge.ReadXmlAttribute("paired");
+            if (result == null || !result.Equals("1"))
             {
-                Unpair(nv);
+                await Unpair(nv);
                 return false; 
             }
             return true; 
@@ -254,17 +260,11 @@
         /// <summary>
         /// Unpair from the device
         /// </summary>
-        private static void Unpair(NvHttp nv)
+        private static async Task Unpair(NvHttp nv)
         {
             XmlQuery unpair;
-            try
-            {
-                unpair = new XmlQuery(nv.BaseUrl + "/unpair?uniqueid=" + nv.GetUniqueId());
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("Error hitting unpair URL " + e.Message);
-            }
+            unpair = new XmlQuery(nv.BaseUrl + "/unpair?uniqueid=" + nv.GetUniqueId());
+            await unpair.Run();
         }
 
         private static byte[] concatBytes(byte[] a, byte[] b)

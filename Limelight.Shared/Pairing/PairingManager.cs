@@ -50,7 +50,7 @@
                 return;
             }
 
-            bool challenge = PairingCryptoHelpers.PerformPairingHandshake(uiDispatcher, new WPCryptoProvider(), nv, nv.GetUniqueId());
+            bool challenge = await PairingCryptoHelpers.PerformPairingHandshake(uiDispatcher, new WPCryptoProvider(), nv, nv.GetUniqueId());
             if (!challenge)
             {
                 Debug.WriteLine("Challenges failed");
@@ -74,18 +74,11 @@
         public async Task<bool?> QueryPairState()
         {
             XmlQuery pairState;
-            try
-            {
-                pairState = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine("Failed to get pair state: " + e.Message);
-                return null;
-            }
+
+            pairState = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
 
             // Check if the device is paired by checking the XML attribute within the <paired> tag
-            if (String.Compare(pairState.XmlAttribute("PairStatus"), "1") != 0)
+            if (String.Compare(await pairState.ReadXmlAttribute("PairStatus"), "1") != 0)
             {
                 Debug.WriteLine("Not paired");
                 return false;

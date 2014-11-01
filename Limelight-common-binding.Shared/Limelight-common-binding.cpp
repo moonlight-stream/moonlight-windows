@@ -64,9 +64,11 @@ void DrShimSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
 	if (s_FrameBufferSize < decodeUnit->fullLength) {
 		s_FrameBufferSize = decodeUnit->fullLength;
 		s_FrameBuffer = (char*) malloc(s_FrameBufferSize);
-		if (s_FrameBuffer == NULL) {
-			// FIXME: Change DrSubmitDecodeUnit() to be failable
-		}
+	}
+
+	if (s_FrameBuffer == NULL) {
+		// FIXME: Change DrSubmitDecodeUnit() to be failable
+		return;
 	}
 
 	entry = decodeUnit->bufferList;

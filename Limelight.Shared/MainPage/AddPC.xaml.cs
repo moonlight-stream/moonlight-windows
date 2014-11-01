@@ -1,4 +1,5 @@
 ﻿using Limelight.Streaming;
+using Limelight.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -56,25 +57,14 @@ namespace Limelight
         {
             if (String.IsNullOrWhiteSpace(ip_textbox.Text) || String.IsNullOrWhiteSpace(nickname_textbox.Text))
             {
-                var dialog = new MessageDialog("Please fill out both text boxes", "Add PC Failed");
-                dialog.ShowAsync();
+                DialogUtils.DisplayDialog(this.Dispatcher, "Please fill out both text boxes", "Add PC Failed");
                 return;
             }
             else
             {
                 Computer toAdd = new Computer(nickname_textbox.Text, ip_textbox.Text);                
-                this.Frame.Navigate(typeof(MainPage), toAdd);               
+                this.Frame.Navigate(typeof(MainPage), toAdd);
             }
-        }
-
-        /// <summary>
-        /// Event handler for clicking the software back button
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Back_AppBarButton_Click(object sender, RoutedEventArgs e)
-        {
-            Frame.GoBack();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿namespace Limelight
 {
+    using Limelight.Utils;
     using Limelight_common_binding;
     using System;
     using System.Diagnostics;
@@ -16,17 +17,21 @@
         /// <summary>
         /// Create start HTTP request
         /// </summary>
-        private XmlQuery StartOrResumeApp(NvHttp nv, LimelightStreamConfiguration streamConfig)
+        private async Task<bool> StartOrResumeApp(NvHttp nv, LimelightStreamConfiguration streamConfig)
         {
             XmlQuery serverInfo = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
-            string currentGameString = serverInfo.XmlAttribute("currentgame");
+            string currentGameString = await serverInfo.ReadXmlAttribute("currentgame");
+            if (currentGameString == null)
+            {
+                return false;
+            }
 
             byte[] aesIv = streamConfig.GetRiAesIv();
             int riKeyId =
-                (int)(((aesIv[0] << 24) & 0xFF000000) |
-                ((aesIv[1] << 16) & 0xFF0000) |
-                ((aesIv[2] << 8) & 0xFF00) |
-                (aesIv[3] & 0xFF));
+                (int)(((aesIv[0] << 24) & 0xFF000000U) |
+                ((aesIv[1] << 16) & 0xFF0000U) |
+                ((aesIv[2] << 8) & 0xFF00U) |
+                (aesIv[3] & 0xFFU));
             string riConfigString =
                 "&rikey=" + PairingCryptoHelpers.BytesToHex(streamConfig.GetRiAesKey()) +
                 "&rikeyid=" + riKeyId;
@@ -34,16 +39,32 @@
             // Launch a new game if nothing is running
             if (currentGameString == null || currentGameString.Equals("0"))
             {
-                return new XmlQuery(nv.BaseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + context.appId +
+                XmlQuery x = new XmlQuery(nv.BaseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + context.appId +
                     "&mode=" + streamConfig.GetWidth() + "x" + streamConfig.GetHeight() + "x" + streamConfig.GetFps() +
                     "&additionalStates=1&sops=1" + // FIXME: make sops configurable
                     riConfigString);
+
+                string sessionStr = await x.ReadXmlAttribute("gamesession");
+                if (sessionStr == null || sessionStr.Equals("0"))
+                {
+                    return false;
+                }
+
+                return true;
             }
             else
             {
                 // A game was already running, so resume it
                 // FIXME: Quit and relaunch if it's not the game we came to start
-                return new XmlQuery(nv.BaseUrl + "/resume?uniqueid=" + nv.GetUniqueId() + riConfigString);
+                XmlQuery x = new XmlQuery(nv.BaseUrl + "/resume?uniqueid=" + nv.GetUniqueId() + riConfigString);
+
+                string resumeStr = await x.ReadXmlAttribute("resume");
+                if (resumeStr == null || resumeStr.Equals("0"))
+                {
+                    return false;
+                }
+
+                return true;
             }
         }
 
@@ -84,17 +105,12 @@
             ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
             LimelightPlatformCallbacks plCallbacks = new LimelightPlatformCallbacks(PlThreadStart, PlDebugPrint);
 
-            XmlQuery launchApp;
             // Launch Steam
             await SetStateText("Launching Steam");
-            try
+            if (await StartOrResumeApp(nv, streamConfig) == false)
             {
-                launchApp = StartOrResumeApp(nv, streamConfig);
-            }
-            catch (Exception)
-            {
-                Debug.WriteLine("Can't find steam");
-                stageFailureText = "Error launching Steam";
+                Debug.WriteLine("Can't find app");
+                stageFailureText = "Error launching App";
                 ConnectionFailed();
                 return;
             }
@@ -132,15 +148,12 @@
             this.Waitgrid.Visibility = Visibility.Collapsed;
             this.currentStateText.Visibility = Visibility.Collapsed;
 
-            // Inform the user of the failure via a message dialog            
-            var dialog = new MessageDialog(stageFailureText, "Starting Connection Failed");
-            dialog.Commands.Add(new UICommand("ok", x =>
+            // Inform the user of the failure via a message dialog  
+            DialogUtils.DisplayDialog(this.Dispatcher, stageFailureText, "Starting Connection Failed", x =>
             {
                 Cleanup();
                 this.Frame.Navigate(typeof(MainPage));
-            }));
-
-            await dialog.ShowAsync();
+            });
         }
 
         /// <summary>
@@ -170,7 +183,6 @@
         /// </summary>
         private void Cleanup()
         {
-            // TODO will this be okay if we haven't started a connection? 
             LimelightCommonRuntimeComponent.StopConnection();
             hasMoved = false;
         }

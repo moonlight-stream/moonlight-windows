@@ -1,9 +1,12 @@
 ﻿namespace Limelight
 {
+    using Limelight.Utils;
     using Limelight_common_binding;
     using System;
     using System.Diagnostics;
+    using System.Threading.Tasks;
     using Windows.System.Threading;
+    using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
     public sealed partial class StreamFrame : Page
     {
@@ -161,7 +164,9 @@
         /// </summary>
         public void ClConnectionStarted()
         {
-
+            // Hide the cursor
+            oldCursor = Window.Current.CoreWindow.PointerCursor;
+            Window.Current.CoreWindow.PointerCursor = null;
         }
 
         /// <summary>
@@ -171,6 +176,17 @@
         public void ClConnectionTerminated(int errorCode)
         {
             Debug.WriteLine("Connection terminated: " + errorCode);
+
+            var unused = Task.Run(() =>
+            {
+                // This needs to be done on a separate thread
+                LimelightCommonRuntimeComponent.StopConnection();
+            });
+
+            DialogUtils.DisplayDialog(this.Dispatcher, "Connection terminated unexpectedly", "Connection Terminated", (command) =>
+            {
+                this.Frame.Navigate(typeof(MainPage), null);
+            });
         }
 
         public void ClDisplayMessage(String message)
@@ -184,10 +200,10 @@
         }
 #endregion Connection Listener
 
-#region Platform Callbacks
+        #region Platform Callbacks
         public void PlThreadStart()
         {
-            ThreadPool.RunAsync((workitem) =>
+            var unused = ThreadPool.RunAsync((workitem) =>
             {
                 // The thread will execute in the context of this worker
                 LimelightCommonRuntimeComponent.CompleteThreadStart();
@@ -204,6 +220,6 @@
 
             Debug.WriteLine(message);
         }
-#endregion
+        #endregion
     }
 }
