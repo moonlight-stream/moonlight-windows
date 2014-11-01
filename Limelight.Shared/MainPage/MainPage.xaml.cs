@@ -225,12 +225,9 @@
 
             SaveSettings();
 
-            Task.Run(() =>
-            {
-                p.Pair(this.Dispatcher, selected);
+            await p.Pair(this.Dispatcher, selected);
 
-                mDnsTimer.Start();
-            });
+            mDnsTimer.Start();
         }
 
         /// <summary>

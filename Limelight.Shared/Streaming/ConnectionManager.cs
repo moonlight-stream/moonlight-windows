@@ -56,27 +56,17 @@
         /// Query the app list on the server to get the Steam App ID
         /// </summary>
         /// <returns>True if the operation succeeded, false otherwise</returns>
-        private static int LookupAppIdForApp(CoreDispatcher dispatcher, NvHttp nv, String app)
+        private static async Task<int> LookupAppIdForApp(CoreDispatcher dispatcher, NvHttp nv, String app)
         {
             XmlQuery appList;
             string appIdStr;
 
-            try
-            {
-                appList = new XmlQuery(nv.BaseUrl + "/applist?uniqueid=" + nv.GetUniqueId());
-            }
-            catch (Exception e)
-            {
-                DialogUtils.DisplayDialog(dispatcher, e.Message, "App List Query Failed");
-                return 0;
-            }
-
-            Debug.WriteLine(appList.rawXmlString);
+            appList = new XmlQuery(nv.BaseUrl + "/applist?uniqueid=" + nv.GetUniqueId());
 
             // App list query went well - try to get the app ID
             try
             {
-                appIdStr = appList.SearchAttribute("App", "AppTitle", app, "ID");
+                appIdStr = await appList.SearchAttribute("App", "AppTitle", app, "ID");
                 Debug.WriteLine(appIdStr);
                 if (appIdStr == null)
                 {

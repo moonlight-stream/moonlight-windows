@@ -19,8 +19,9 @@ namespace Limelight
     {
         private Uri uri;
         private XDocument rawXml;
-        public string rawXmlString;
-        private Windows.Web.Http.HttpClient client; 
+        private string rawXmlString;
+        private Windows.Web.Http.HttpClient client;
+        private bool ranQuery;
 
         #region Public Methods
         /// <summary>
@@ -30,20 +31,6 @@ namespace Limelight
         public XmlQuery(string url)
         {
             uri = new Uri(url);
-            
-            Task.Run(async () => await GetXml()).Wait();
-
-            // Get the status string. If it's not 200, throw an exception
-            if (rawXml != null)
-            {
-                XElement e = rawXml.Descendants().First();
-                var x = e.Attribute("status_code");
-                if (x.Value != "200")
-                {
-                    Debug.WriteLine("Invalid status code " + x.Value);
-                    throw new WebException("Invalid status code");
-                }
-            }
         }
 
         /// <summary>
@@ -51,8 +38,11 @@ namespace Limelight
         /// </summary>
         /// <param name="tag">Tag containing the desired attribute</param>
         /// <returns>The first attribute within the given tag</returns>
-        public string ReadXmlAttribute(string tag)
+        public async Task<string> ReadXmlAttribute(string tag)
         {
+            // Do the query if we haven't yet
+            await GetXml();
+
             return ReadXmlAttribute(tag, rawXml);
         }
 
@@ -87,8 +77,11 @@ namespace Limelight
         /// <param name="attribute">Known attribute</param>
         /// <param name="tagToFind">Tag from within we want to find an attribute</param>
         /// <returns>The found attribute</returns>
-        public string SearchAttribute(string outerTag, string innerTag, string attribute, string tagToFind)
+        public async Task<string> SearchAttribute(string outerTag, string innerTag, string attribute, string tagToFind)
         {
+            // Do the query if we haven't yet
+            await GetXml();
+
             // Get all elements with specified tag
             var query = from c in rawXml.Descendants(outerTag) select c;
 
@@ -103,6 +96,11 @@ namespace Limelight
             return null; 
         }
 
+        public async Task Run()
+        {
+            await GetXml();
+        }
+
         #endregion Public Methods
 
         #region Private Methods
@@ -112,6 +110,16 @@ namespace Limelight
         /// <returns>The server info XML as a string</returns>
         private async Task GetXml()
         {
+            // Return if we've already been here
+            if (ranQuery)
+            {
+                return;
+            }
+            else
+            {
+                ranQuery = true;
+            }
+
             HttpBaseProtocolFilter filter = new HttpBaseProtocolFilter();
             filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Untrusted);
             filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.InvalidName);
@@ -121,23 +129,21 @@ namespace Limelight
 
             client = new Windows.Web.Http.HttpClient(filter);
             Debug.WriteLine(uri);
-            if (rawXmlString == null)
-            {
-                try
-                {
-                    rawXmlString = await client.GetStringAsync(uri);
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine(e.Message);
-                    return;
-                }
 
-                Debug.WriteLine(rawXmlString);
-                
-                // Up to the caller to deal with exceptions resulting here
-                this.rawXml = XDocument.Parse(rawXmlString);
+            try
+            {
+                rawXmlString = await client.GetStringAsync(uri);
             }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                return;
+            }
+
+            Debug.WriteLine(rawXmlString);
+
+            // Up to the caller to deal with exceptions resulting here
+            this.rawXml = XDocument.Parse(rawXmlString);
         }
         #endregion Private Methods
     }

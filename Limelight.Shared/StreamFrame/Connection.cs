@@ -16,10 +16,14 @@
         /// <summary>
         /// Create start HTTP request
         /// </summary>
-        private XmlQuery StartOrResumeApp(NvHttp nv, LimelightStreamConfiguration streamConfig)
+        private async Task<XmlQuery> StartOrResumeApp(NvHttp nv, LimelightStreamConfiguration streamConfig)
         {
             XmlQuery serverInfo = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
-            string currentGameString = serverInfo.ReadXmlAttribute("currentgame");
+            string currentGameString = await serverInfo.ReadXmlAttribute("currentgame");
+            if (currentGameString == null)
+            {
+                return null;
+            }
 
             byte[] aesIv = streamConfig.GetRiAesIv();
             int riKeyId =
@@ -89,12 +93,17 @@
             await SetStateText("Launching Steam");
             try
             {
-                launchApp = StartOrResumeApp(nv, streamConfig);
+                launchApp = await StartOrResumeApp(nv, streamConfig);
             }
             catch (Exception)
             {
-                Debug.WriteLine("Can't find steam");
-                stageFailureText = "Error launching Steam";
+                launchApp = null;
+            }
+
+            if (launchApp == null)
+            {
+                Debug.WriteLine("Can't find app");
+                stageFailureText = "Error launching App";
                 ConnectionFailed();
                 return;
             }
