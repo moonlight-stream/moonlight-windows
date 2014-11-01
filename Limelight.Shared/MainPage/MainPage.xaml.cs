@@ -4,10 +4,12 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Threading.Tasks;
+    using Windows.UI;
     using Windows.UI.Core;
     using Windows.UI.Popups;
     using Windows.UI.Xaml;
     using Windows.UI.Xaml.Controls;
+    using Windows.UI.Xaml.Media;
     using Windows.UI.Xaml.Navigation;
 
     using Limelight.Streaming;
@@ -27,8 +29,6 @@
         private static List<Computer> computerList = new List<Computer>();
         private Computer selected = null;
         private CoreDispatcher dispatcher;
-
-
         #endregion Class variables
 
         #region Constructor
@@ -55,13 +55,7 @@
         /// This parameter is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            // TODO: Prepare page for display here.
-
-            // TODO: If your application contains multiple pages, ensure that you are
-            // handling the hardware Back button by registering for the
-            // Windows.Phone.UI.Input.HardwareButtons.BackPressed event.
-            // If you are using the NavigationHelper provided by some templates,
-            // this event is handled for you.
+            // Add anything here to prepare page for display
         }
 
         /// <summary>
@@ -83,10 +77,10 @@
             await EnumerateEligibleMachines();
 
             computerPicker.ItemsSource = computerList;
+
             // Start regularly polling for machines
             mDnsTimer.Start();            
         }
-
 
         /// <summary>
         /// When the timer ticks, poll for machines with mDNS
@@ -95,7 +89,6 @@
         {
             Debug.WriteLine(computerPicker.SelectedIndex);
             await EnumerateEligibleMachines();
-            //await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => computerPicker.ItemsSource = computerList);
         }
 
         private int GetStreamWidth()
@@ -157,15 +150,13 @@
             selected = (Computer)computerPicker.SelectedItem;
 
             // User hasn't selected a machine or selected a placeholder
-            if (selected == null || selected.IpAddress == null)
+            if (selected == null || String.IsNullOrWhiteSpace(selected.IpAddress))
             {
                 var dialog = new MessageDialog("No machine selected", "Streaming Failed");
-                await dialog.ShowAsync();         
-            }
+                await dialog.ShowAsync();
+            } 
             else
             {
-                status_text.Text = "Checking pair state...";
-
                 byte[] aesKey = PairingCryptoHelpers.GenerateRandomBytes(16);
 
                 // GameStream only uses 4 bytes of a 16 byte IV. Go figure.
@@ -187,7 +178,6 @@
                     this.Frame.Navigate(typeof(StreamFrame), context);
                 }
 
-                status_text.Text = "";
             }            
 
             // User can use the buttons again
@@ -211,7 +201,12 @@
             {
                 var dialog = new MessageDialog("No machine selected", "Pairing Failed");
                 await dialog.ShowAsync();
-                status_text.Text = "";
+                return; 
+            }
+            if (String.IsNullOrWhiteSpace(selected.IpAddress))
+            {
+                var dialog = new MessageDialog("Invalid IP address", "Pairing Failed");
+                await dialog.ShowAsync();
                 return; 
             }
 
@@ -243,11 +238,8 @@
             mDnsTimer.Start();
         }
 
-        private async void Quit_Game(object sender, RoutedEventArgs e)
+        private async void QuitGame(object sender, RoutedEventArgs e)
         {
-            // TODO need to make a UI element to display this text
-            Task.Run(() => SpinnerBegin("Quitting...")).Wait();
-
             try
             {
                 await SpinnerBegin("Quitting");
@@ -255,11 +247,11 @@
                 NvHttp nv = new NvHttp(selected.IpAddress);
                 XmlQuery quit = new XmlQuery(nv.BaseUrl + "/cancel?uniqueid=" + nv.GetUniqueId());
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 SpinnerEnd();
                 Debug.WriteLine("Quitting failed");
-                var dialog = new MessageDialog("Failed to quit", "Error");
+                var dialog = new MessageDialog(ex.Message, "Quit Game Failed");
                 dialog.ShowAsync();
                 return;
             }
@@ -269,6 +261,18 @@
                 SpinnerEnd();
             }
         }
+        /// <summary>
+        /// ListView Item selected event handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ItemSelected(object sender, ItemClickEventArgs e)
+        {
+            // HACK on Windows Phone, clicking the item does not automatically select it
+            // Revisit once Threshold APIs are released
+            computerPicker.SelectedItem = e.ClickedItem;
+        }
+
 
         #endregion Event Handlers  
 
@@ -306,5 +310,7 @@
             PairButton.IsEnabled = true;
             
         }
+
+
     }
 }

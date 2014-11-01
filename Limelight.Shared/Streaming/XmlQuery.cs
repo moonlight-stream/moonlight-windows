@@ -105,22 +105,6 @@ namespace Limelight
             return null; 
         }
 
-        /// <summary>
-        /// Given a tag, return the first XML attribute contained in this tag as an XElement
-        /// </summary>
-        /// <param name="tag">Tag containing the desired attribute</param>
-        /// <returns>The first attribute within the given tag</returns>
-        public XElement XmlAttributeElement(string tag)
-        {
-            var query = from c in rawXml.Descendants(tag) select c;
-            // Not found
-            if (query == null)
-            {
-                return null; 
-            }
-            return query.FirstOrDefault(); 
-        }
-
         #endregion Public Methods
 
         #region Private Methods

@@ -1,4 +1,6 @@
-﻿<Page
+﻿
+    
+    <Page
     x:Class="Limelight.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,33 +8,43 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Loaded">
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Loaded" RequestedTheme="Dark">
     <Page.BottomAppBar>
         <CommandBar>
-            <AppBarButton x:Name="quitButton" Icon="Cancel" Label="Quit Game" Click="Quit_Game">
+            <AppBarButton x:Name="quitButton" Icon="Cancel" Label="Quit Game" Click="QuitGame">
             </AppBarButton>
             <AppBarButton Icon="Add" Label="Add PC"/>
             <AppBarButton Icon="Setting" Label="Settings"/>
         </CommandBar>
     </Page.BottomAppBar>
-
+    
     <ScrollViewer>
         <Grid x:Name="progressGrid">
-            <ProgressRing x:Name="spinner" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="170,177,151,358" Height="79" Width="79"/>
+            <ProgressRing x:Name="spinner" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="163,177,158,358" Height="79" Width="79"/>
 
             <Grid x:Name="uiGrid">
 
-                <Button x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="57,262,49,270" FontWeight="Bold" FontSize="25" Click="StreamButton_Click" Width="294" Height="82"/>
-                <Button x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="57,351,49,184" FontWeight="Bold" FontSize="25" Click="PairButton_Click" Width="294" Height="79" />
-                <TextBlock x:Name="status_text" HorizontalAlignment="Center" Height="40" Margin="49,186,41,388" TextWrapping="Wrap" VerticalAlignment="Center" Width="294" TextAlignment="Center" FontSize="18"/>
+                <Button x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="49,262,41,270" FontWeight="Bold" FontSize="25" Click="StreamButton_Click" Width="294" Height="82"/>
+                <Button x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="49,351,41,183" FontWeight="Bold" FontSize="25" Click="PairButton_Click" Width="294" Height="80" />
                 <RadioButton x:Name="_60fps_button" Content="60 FPS (may increase lag)" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="fps" RenderTransformOrigin="0.559,0.464" Width="242" Margin="128,540,14,16"/>
                 <RadioButton x:Name="_30fps_button" Content="30 FPS" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="fps" IsChecked="True" Margin="16,540,200,16"/>
                 <RadioButton x:Name="_1080p_button" Content="1080p (may increase lag)" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" Width="256" Margin="128,446,0,110"/>
                 <RadioButton x:Name="_720p_button" Content="720p" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" IsChecked="True" Margin="16,446,200,110"/>
                 <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top" Margin="17,12,40,508" FontSize="80" Height="94"/>
-                <ListView x:Name="computerPicker" HorizontalAlignment="Left" Height="190" VerticalAlignment="Top" Width="288" Margin="63,111,0,0" Header="Discovered PCs" SelectionMode="Single" FontSize="20" BorderBrush="#FFD12222"/>
+                <ListView x:Name="computerPicker" HorizontalAlignment="Center" Height="161" VerticalAlignment="Top" Width="294" Margin="49,106,41,0" Header="PC List" SelectionMode="Single" FontSize="24" BorderBrush="#FF6E6E6E" BorderThickness="2" IsItemClickEnabled="True" ItemClick="ItemSelected">
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <TextBlock Text="{Binding}" FontSize="18"></TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                    <ListView.Items>
+                        <x:String>Discovering PCs...</x:String>
+                    </ListView.Items>
+
+                </ListView>
             </Grid>
         </Grid>
-
     </ScrollViewer>
 </Page>
