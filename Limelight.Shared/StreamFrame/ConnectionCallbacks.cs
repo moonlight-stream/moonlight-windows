@@ -184,7 +184,7 @@
         }
 #endregion Connection Listener
 
-#region Platform Callbacks
+        #region Platform Callbacks
         public void PlThreadStart()
         {
             ThreadPool.RunAsync((workitem) =>
@@ -204,6 +204,6 @@
 
             Debug.WriteLine(message);
         }
-#endregion
+        #endregion
     }
 }
