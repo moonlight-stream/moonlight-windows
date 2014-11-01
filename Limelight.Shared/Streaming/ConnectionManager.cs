@@ -38,7 +38,7 @@
 
             // Lookup the desired app in the app list
             // NOTE: This will go away when we have a proper app list
-            int appId = await Task.Run(() => LookupAppIdForApp(uiDispatcher, new NvHttp(computer.IpAddress), "Steam"));
+            int appId = await LookupAppIdForApp(uiDispatcher, new NvHttp(computer.IpAddress), "Steam");
             if (appId == 0)
             {
                 // LookupAppIdForApp() handles displaying a failure dialog
