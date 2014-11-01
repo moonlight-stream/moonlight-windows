@@ -74,6 +74,11 @@
         {
             InitializeComponent();
 
+            // Register back button for use in phone
+#if WINDOWS_PHONE_APP
+            Windows.Phone.UI.Input.HardwareButtons.BackPressed += HardwareButtonsBackPressed;
+#endif
+
             // Audio/video stream source init
             AvStream = new AvStreamSource();
 
@@ -114,6 +119,20 @@
 
             await StartConnection(context.streamConfig);
         }
+
+#if WINDOWS_PHONE_APP
+        /// <summary>
+        /// If Windows Phone, go backwards and quit the stream instead of quitting the app
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void HardwareButtonsBackPressed(object sender, Windows.Phone.UI.Input.BackPressedEventArgs e)
+        {
+        // TODO tear down stream
+            e.Handled = true;
+            Frame.GoBack();
+        }
+#endif
         #endregion Navigation Events
 
         #region Mouse Events
