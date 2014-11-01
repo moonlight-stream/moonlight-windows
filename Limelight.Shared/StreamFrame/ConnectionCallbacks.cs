@@ -205,8 +205,17 @@
         {
             var unused = ThreadPool.RunAsync((workitem) =>
             {
-                // The thread will execute in the context of this worker
-                LimelightCommonRuntimeComponent.CompleteThreadStart();
+                try
+                {
+                    // The thread will execute in the context of this worker
+                    LimelightCommonRuntimeComponent.CompleteThreadStart();
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Platform thread terminated");
+                    Debug.WriteLine(e.Message);
+                    Debug.WriteLine(e.StackTrace);
+                }
             });
         }
 
