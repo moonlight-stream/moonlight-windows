@@ -155,6 +155,15 @@ void PlShimThreadStart(void) {
 	s_PlCallbacks->ThreadStart();
 }
 
+void PlShimDebugPrint(char *string) {
+	std::string stdStr = std::string(string);
+	std::wstring wStr = std::wstring(stdStr.begin(), stdStr.end());
+	const wchar_t* wChar = wStr.c_str();
+	Platform::String^ messageString = ref new Platform::String(wChar);
+
+	s_PlCallbacks->DebugPrint(messageString);
+}
+
 int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, LimelightStreamConfiguration ^streamConfig,
 	LimelightConnectionListener ^clCallbacks, LimelightDecoderRenderer ^drCallbacks, LimelightAudioRenderer ^arCallbacks,
 	LimelightPlatformCallbacks ^plCallbacks)
@@ -200,6 +209,7 @@ int LimelightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, L
 	clShimCallbacks.displayTransientMessage = ClShimDisplayTransientMessage;
 
 	plShimCallbacks.threadStart = PlShimThreadStart;
+	plShimCallbacks.debugPrint = PlShimDebugPrint;
 
 	return LiStartConnection(hostAddress, &config, &clShimCallbacks,
 		&drShimCallbacks, &arShimCallbacks, &plShimCallbacks, NULL, 0);

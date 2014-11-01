@@ -81,7 +81,7 @@
             LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArPlaySample);
             LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
             ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
-            LimelightPlatformCallbacks plCallbacks = new LimelightPlatformCallbacks(PlThreadStart);
+            LimelightPlatformCallbacks plCallbacks = new LimelightPlatformCallbacks(PlThreadStart, PlDebugPrint);
 
             XmlQuery launchApp;
             // Launch Steam

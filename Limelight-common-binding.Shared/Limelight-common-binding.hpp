@@ -126,19 +126,25 @@ namespace Limelight_common_binding
 	};
 
 	public delegate void PlThreadStart(void);
+	public delegate void PlDebugPrint(Platform::String ^message);
 
 	public ref class LimelightPlatformCallbacks sealed
 	{
 	public:
-		LimelightPlatformCallbacks(PlThreadStart ^plThreadStart) :
-			m_PlThreadStart(plThreadStart) {}
+		LimelightPlatformCallbacks(PlThreadStart ^plThreadStart, PlDebugPrint ^plDebugPrint) :
+			m_PlThreadStart(plThreadStart), m_PlDebugPrint(plDebugPrint) {}
 
 		void ThreadStart(void) {
 			m_PlThreadStart();
 		}
 
+		void DebugPrint(Platform::String ^message) {
+			m_PlDebugPrint(message);
+		}
+
 	private:
 		Limelight_common_binding::PlThreadStart ^m_PlThreadStart;
+		Limelight_common_binding::PlDebugPrint ^m_PlDebugPrint;
 	};
 
 	public delegate void ClStageStarting(int stage);

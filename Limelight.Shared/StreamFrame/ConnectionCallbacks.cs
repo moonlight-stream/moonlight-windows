@@ -193,6 +193,17 @@
                 LimelightCommonRuntimeComponent.CompleteThreadStart();
             });
         }
+
+        public void PlDebugPrint(String message)
+        {
+            // Strip the newlines since we have to use WriteLine
+            if (message.EndsWith("\n"))
+            {
+                message = message.Substring(0, message.Length - 1);
+            }
+
+            Debug.WriteLine(message);
+        }
 #endregion
     }
 }
