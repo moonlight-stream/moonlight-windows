@@ -66,5 +66,15 @@ namespace Limelight
                 this.Frame.Navigate(typeof(MainPage), toAdd);
             }
         }
+
+        /// <summary>
+        /// Take the user back
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Back_AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            Frame.GoBack(); 
+        }
     }
 }

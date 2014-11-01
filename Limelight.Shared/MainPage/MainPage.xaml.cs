@@ -40,7 +40,6 @@
 
             this.NavigationCacheMode = NavigationCacheMode.Required;
             dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
-            LoadSettings();
 
             // Set up timer for mDNS polling
             mDnsTimer.Interval = TimeSpan.FromSeconds(MDNS_POLLING_INTERVAL);
@@ -127,16 +126,11 @@
 
             // Stop enumerating machines while we're trying to check pair state
             mDnsTimer.Stop();
-            SaveSettings();
 
             // Don't let the user mash the buttons
             // TODO use a spinner to avoid the appearance of the app being unresponsive
             PairButton.IsEnabled = false;
             StreamButton.IsEnabled = false;
-            _60fps_button.IsEnabled = false;
-            _30fps_button.IsEnabled = false;
-            _720p_button.IsEnabled = false;
-            _1080p_button.IsEnabled = false;
 
             selected = (Computer)computerPicker.SelectedItem;
 
@@ -153,11 +147,11 @@
                 byte[] aesRiIndex = PairingCryptoHelpers.GenerateRandomBytes(4);
                 byte[] aesIv = new byte[16];
                 Array.ConstrainedCopy(aesRiIndex, 0, aesIv, 0, aesRiIndex.Length);
-
+                SettingsPage s = new SettingsPage();
                 LimelightStreamConfiguration config = new LimelightStreamConfiguration(
-                    GetStreamWidth(),
-                    GetStreamHeight(),
-                    GetStreamFps(),
+                    s.GetStreamWidth(),
+                    s.GetStreamHeight(),
+                    s.GetStreamFps(),
                     5000, // FIXME: Scale by resolution
                     1024,
                     aesKey, aesIv);
@@ -173,10 +167,6 @@
             // User can use the buttons again
             PairButton.IsEnabled = true;
             StreamButton.IsEnabled = true;
-            _60fps_button.IsEnabled = true;
-            _30fps_button.IsEnabled = true;
-            _720p_button.IsEnabled = true;
-            _1080p_button.IsEnabled = true;
         }
 
         /// <summary>
@@ -196,8 +186,6 @@
             PairingManager p = new PairingManager(selected);
             // Stop polling timer while we're pairing
             mDnsTimer.Stop();
-
-            SaveSettings();
 
             await p.Pair(this.Dispatcher, selected);
 
@@ -310,54 +298,5 @@
 
         #endregion UI Elements
 
-        #region Stream Settings
-        /// <summary>
-        /// Get the width of the stream from the setting choice
-        /// </summary>
-        /// <returns></returns>
-        private int GetStreamWidth()
-        {
-            if (_720p_button.IsChecked.Value)
-            {
-                return 1280;
-            }
-            else
-            {
-                return 1920;
-            }
-        }
-
-        /// <summary>
-        /// Get height of the stream from the setting
-        /// </summary>
-        /// <returns>Stream height in pixels</returns>
-        private int GetStreamHeight()
-        {
-            if (_720p_button.IsChecked.Value)
-            {
-                return 720;
-            }
-            else
-            {
-                return 1080;
-            }
-        }
-
-        /// <summary>
-        /// Get Frames per Second from the setting
-        /// </summary>
-        /// <returns></returns>
-        private int GetStreamFps()
-        {
-            if (_60fps_button.IsChecked.Value)
-            {
-                return 60;
-            }
-            else
-            {
-                return 30;
-            }
-        }
     }
-        #endregion Stream Settings
 }

@@ -1,13 +1,13 @@
 ﻿namespace Limelight
 {
     using Limelight.Streaming;
-
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
     using Windows.Networking.Connectivity;
+    using Windows.Storage;
     using Windows.UI.Xaml.Controls;
     using Zeroconf;
 
@@ -147,6 +147,38 @@
         }
         #endregion Enumeration
 
+        #region Persistent paired computer list
+
+        /// <summary>
+        /// Once we freshly pair to a computer, save it
+        /// </summary>
+        /// <param name="c">Computer we've paired to</param>
+        public static void SaveComputer(Computer c)
+        {
+            var settings = ApplicationData.Current.RoamingSettings;
+            settings.Values["computerName"] = c.Name;
+            settings.Values["computerIP"] = c.IpAddress;
+        }
+
+        /// <summary>
+        /// Load the last computer we've paired to
+        /// </summary>
+        /// <returns>Last computer we've paired to or null if none</returns>
+        public static Computer LoadComputer()
+        {
+            var settings = ApplicationData.Current.RoamingSettings;
+
+            if (!settings.Values.ContainsKey("computerName") || !settings.Values.ContainsKey("computerIP"))
+            {
+                return null;
+            }
+            string name = settings.Values["computerName"] as string;
+            string ip = settings.Values["computerIP"] as string;
+            return new Computer(name, ip);
+        }
+
+        #endregion Persistent paired computer list
+
         #region Helpers
         /// <summary>
         /// True if internet is available, false otherwise. 
@@ -162,6 +194,7 @@
                             && internetProfile.GetNetworkConnectivityLevel() == NetworkConnectivityLevel.InternetAccess);
             }
         }
+
         #endregion Helpers
     }
 }
