@@ -15,6 +15,7 @@
     {
         Computer notFound = new Computer("No Computers Found", null);
         Computer noNetwork = new Computer("Network Unavailable", null);
+        List<Computer> addedPCs = new List<Computer>();
         #region Enumeration
         /// <summary>
         /// Uses mDNS to enumerate the machines on the network eligible to stream from
@@ -22,14 +23,15 @@
         /// <returns></returns>
         private async Task EnumerateEligibleMachines()
         {
-            computerList = new List<Computer>();
-
+            computerList = new List<Computer>(); 
             // Make a local copy of the computer list
             // The UI thread will populate the listbox with computerList whenever it pleases, so we don't want it to take the one we're modifying
             List<Computer> computerListLocal = new List<Computer>(computerList);
 
             // Ignore all computers we may have found in the past
             computerListLocal.Clear();
+            // Make sure we have the manually added PCs in here
+            computerListLocal.AddRange(addedPCs);
             Debug.WriteLine("Enumerating machines...");
 
             // If there's no network, save time and don't do the time-consuming mDNS 

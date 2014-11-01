@@ -55,8 +55,22 @@
         /// This parameter is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            // Add anything here to prepare page for display
+            // If we are coming from AddPc, then add a PC to the list
+            // HACK is there a way to get the name of the page you've come from? 
+            Computer toAdd; 
+            try
+            {
+                toAdd = (Computer)e.Parameter;
+
+            }
+            catch (Exception)
+            {
+                // If that up there didn't work, then we didn't come from AddPC
+                return; 
+            }
+            addedPCs.Add(toAdd);
         }
+
 
         /// <summary>
         /// When we leave the page, stop mDNS polling
@@ -238,6 +252,11 @@
             mDnsTimer.Start();
         }
 
+        /// <summary>
+        /// Quit Game Event Handler
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private async void QuitGame(object sender, RoutedEventArgs e)
         {
             try
@@ -261,6 +280,18 @@
                 SpinnerEnd();
             }
         }
+
+        /// <summary>
+        /// Add PC click
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Add_AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Navigate to the Add PC page
+            this.Frame.Navigate(typeof(AddPC));
+        }
+
         /// <summary>
         /// ListView Item selected event handler
         /// </summary>
@@ -310,7 +341,5 @@
             PairButton.IsEnabled = true;
             
         }
-
-
     }
 }
