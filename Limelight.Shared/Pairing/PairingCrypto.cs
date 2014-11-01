@@ -131,7 +131,7 @@
 
         private static X509Certificate ExtractPlainCert(XmlQuery q, String tag)
         {
-            String certHexString = q.XmlAttribute(tag);
+            String certHexString = q.ReadXmlAttribute(tag);
             byte[] certBytes = PairingCryptoHelpers.HexToBytes(certHexString);
             String certText = Encoding.UTF8.GetString(certBytes, 0, certBytes.Length);
 
@@ -157,7 +157,7 @@
             XmlQuery getServerCert = new XmlQuery(nv.BaseUrl + "/pair?uniqueid=" + uniqueId +
                 "&devicename=roth&updateState=1&phrase=getservercert&salt=" + BytesToHex(salt) + "&clientcert=" + BytesToHex(provider.GetPemCertBytes()));
             
-            if (!getServerCert.XmlAttribute("paired").Equals("1"))
+            if (!getServerCert.ReadXmlAttribute("paired").Equals("1"))
             {
                 Unpair(nv);
                 return false; 
@@ -174,13 +174,13 @@
 		    XmlQuery challengeResp = new XmlQuery(nv.BaseUrl + 
 				    "/pair?uniqueid="+uniqueId+"&devicename=roth&updateState=1&clientchallenge="+BytesToHex(encryptedChallenge));
             // If we're not paired, there's a problem. 
-		    if (!challengeResp.XmlAttribute("paired").Equals("1")) {
+		    if (!challengeResp.ReadXmlAttribute("paired").Equals("1")) {
                 Unpair(nv); 
 			    return false;
 		    }
 
             // Decode the server's response and subsequent challenge
-            byte[] encServerChallengeResponse = HexToBytes(challengeResp.XmlAttribute("challengeresponse"));
+            byte[] encServerChallengeResponse = HexToBytes(challengeResp.ReadXmlAttribute("challengeresponse"));
             byte[] decServerChallengeResponse = DecryptAes(encServerChallengeResponse, aesKey);
 
             byte[] serverResponse = new byte[20], serverChallenge = new byte[16];
@@ -199,14 +199,14 @@
             byte[] challengeRespEncrypted = EncryptAes(challengeRespHash, aesKey);
             XmlQuery secretResp = new XmlQuery(nv.BaseUrl +
                     "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&serverchallengeresp=" + BytesToHex(challengeRespEncrypted));
-            if (!secretResp.XmlAttribute("paired").Equals("1"))
+            if (!secretResp.ReadXmlAttribute("paired").Equals("1"))
             {
                 Unpair(nv); 
                 return false;
             }
 
             // Get the server's signed secret
-            byte[] serverSecretResp = HexToBytes(secretResp.XmlAttribute("pairingsecret"));
+            byte[] serverSecretResp = HexToBytes(secretResp.ReadXmlAttribute("pairingsecret"));
             byte[] serverSecret = new byte[16]; byte[] serverSignature = new byte[256]; 
             Array.Copy(serverSecretResp, 0, serverSecret, 0, 16);
             Array.Copy(serverSecretResp, 16, serverSignature, 0, 256);
@@ -234,7 +234,7 @@
             byte[] clientPairingSecret = concatBytes(clientSecret, SignData(provider.GetKeyPair(), clientSecret));
             XmlQuery clientSecretResp = new XmlQuery(nv.BaseUrl +
                     "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&clientpairingsecret=" + BytesToHex(clientPairingSecret));
-            if (!clientSecretResp.XmlAttribute("paired").Equals("1"))
+            if (!clientSecretResp.ReadXmlAttribute("paired").Equals("1"))
             {
                 Unpair(nv);
                 return false; 
@@ -243,7 +243,7 @@
             // Do the initial challenge (seems neccessary for us to show as paired)
             XmlQuery pairChallenge = new XmlQuery(nv.BaseUrl + "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&phrase=pairchallenge");
 
-            if (!pairChallenge.XmlAttribute("paired").Equals("1"))
+            if (!pairChallenge.ReadXmlAttribute("paired").Equals("1"))
             {
                 Unpair(nv);
                 return false; 

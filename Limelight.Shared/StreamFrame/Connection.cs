@@ -19,7 +19,7 @@
         private XmlQuery StartOrResumeApp(NvHttp nv, LimelightStreamConfiguration streamConfig)
         {
             XmlQuery serverInfo = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
-            string currentGameString = serverInfo.XmlAttribute("currentgame");
+            string currentGameString = serverInfo.ReadXmlAttribute("currentgame");
 
             byte[] aesIv = streamConfig.GetRiAesIv();
             int riKeyId =

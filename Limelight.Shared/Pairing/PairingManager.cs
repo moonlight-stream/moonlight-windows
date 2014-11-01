@@ -85,7 +85,7 @@
             }
 
             // Check if the device is paired by checking the XML attribute within the <paired> tag
-            if (String.Compare(pairState.XmlAttribute("PairStatus"), "1") != 0)
+            if (String.Compare(pairState.ReadXmlAttribute("PairStatus"), "1") != 0)
             {
                 Debug.WriteLine("Not paired");
                 return false;

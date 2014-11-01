@@ -51,35 +51,33 @@ namespace Limelight
         /// </summary>
         /// <param name="tag">Tag containing the desired attribute</param>
         /// <returns>The first attribute within the given tag</returns>
-        public string XmlAttribute(string tag)
+        public string ReadXmlAttribute(string tag)
         {
-            // TODO handle not found
-            var query = from c in rawXml.Descendants(tag) select c;
-            string attribute = query.FirstOrDefault().Value;
-            return attribute;
+            return ReadXmlAttribute(tag, rawXml);
         }
 
         /// <summary>
         /// Given an XElement and a tag, search within that element for the first attribute contained within the tag
         /// </summary>
         /// <param name="tag">XML tag</param>
-        /// <param name="element">XElement to search within</param>
-        /// <returns>The first attribute within the given tag in the XElement</returns>
-        public string XmlAttribute(string tag, XElement element)
+        /// <param name="element">XContainer to search within</param>
+        /// <returns>The first attribute within the given tag in the XContainer</returns>
+        public string ReadXmlAttribute(string tag, XContainer element)
         {
             if (element == null)
             {
-                return null; 
+                return null;
             }
+
             var query = from c in element.Descendants(tag) select c;
+
             // Not found 
             if (query == null)
             {
                 return null; 
             }
 
-            string attribute = query.FirstOrDefault().Value;
-            return attribute;
+            return query.FirstOrDefault().Value;
         }
 
         /// <summary>
@@ -96,9 +94,9 @@ namespace Limelight
 
             // Look for the one with the attribute we already know
             foreach (XElement x in query){
-                if (XmlAttribute(innerTag, x) == attribute)
+                if (ReadXmlAttribute(innerTag, x) == attribute)
                 {
-                    return XmlAttribute(tagToFind, x);
+                    return ReadXmlAttribute(tagToFind, x);
                 }
             }
             // Not found
@@ -132,7 +130,9 @@ namespace Limelight
                 catch (Exception e)
                 {
                     Debug.WriteLine(e.Message);
+                    return;
                 }
+
                 Debug.WriteLine(rawXmlString);
                 
                 // Up to the caller to deal with exceptions resulting here
