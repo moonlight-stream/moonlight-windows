@@ -187,7 +187,7 @@
         #region Platform Callbacks
         public void PlThreadStart()
         {
-            ThreadPool.RunAsync((workitem) =>
+            var unused = ThreadPool.RunAsync((workitem) =>
             {
                 // The thread will execute in the context of this worker
                 LimelightCommonRuntimeComponent.CompleteThreadStart();
