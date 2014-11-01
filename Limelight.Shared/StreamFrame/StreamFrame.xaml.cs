@@ -1,18 +1,11 @@
 ﻿namespace Limelight
 {
-    using Limelight_common_binding;
     using Limelight.Streaming;
+    using Limelight_common_binding;
     using System;
-    using System.Diagnostics;
-    using System.Linq;
     using System.Threading;
-    using System.Threading.Tasks;
     using Windows.Devices.Input;
     using Windows.Graphics.Display;
-    using Windows.Media.Core;
-    using Windows.Media.MediaProperties;
-    using Windows.Security.Cryptography;
-    using Windows.Security.Cryptography.Core;
     using Windows.UI.Core;
     using Windows.UI.Input;
     using Windows.UI.Xaml;
@@ -298,7 +291,6 @@
                 args.Handled = true;
             }
         }
-
-        #endregion
+        #endregion Keyboard Events
     } 
 }

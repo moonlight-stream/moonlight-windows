@@ -25,6 +25,7 @@ namespace Limelight
         public SettingsPage()
         {
             this.InitializeComponent();
+            LoadSettings();
 
 #if WINDOWS_PHONE_APP
             Windows.Phone.UI.Input.HardwareButtons.BackPressed += HardwareButtonsBackPressed;
@@ -40,10 +41,70 @@ namespace Limelight
         /// <param name="e"></param>
         private void HardwareButtonsBackPressed(object sender, Windows.Phone.UI.Input.BackPressedEventArgs e)
         {
+            SaveSettings(); 
             e.Handled = true;
             Frame.GoBack();
         }
 #endif
+        /// <summary>
+        /// Save settings when one navigates away from the page
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            SaveSettings();
+        }
+
         #endregion EventHandlers
+
+        #region Stream Settings
+        /// <summary>
+        /// Get the width of the stream from the setting choice
+        /// </summary>
+        /// <returns></returns>
+        internal int GetStreamWidth()
+        {
+            if (_720p_button.IsChecked.Value)
+            {
+                return 1280;
+            }
+            else
+            {
+                return 1920;
+            }
+        }
+
+        /// <summary>
+        /// Get height of the stream from the setting
+        /// </summary>
+        /// <returns>Stream height in pixels</returns>
+        internal int GetStreamHeight()
+        {
+            if (_720p_button.IsChecked.Value)
+            {
+                return 720;
+            }
+            else
+            {
+                return 1080;
+            }
+        }
+
+        /// <summary>
+        /// Get Frames per Second from the setting
+        /// </summary>
+        /// <returns></returns>
+        internal int GetStreamFps()
+        {
+            if (_60fps_button.IsChecked.Value)
+            {
+                return 60;
+            }
+            else
+            {
+                return 30;
+            }
+        }
+        #endregion Stream Settings
     }
 }

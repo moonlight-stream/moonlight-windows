@@ -15,6 +15,7 @@
     using Limelight.Streaming;
     using Limelight_common_binding;
     using Limelight.Utils;
+    using Windows.Storage;
 
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
@@ -40,7 +41,6 @@
 
             this.NavigationCacheMode = NavigationCacheMode.Required;
             dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
-            LoadSettings();
 
             // Set up timer for mDNS polling
             mDnsTimer.Interval = TimeSpan.FromSeconds(MDNS_POLLING_INTERVAL);
@@ -106,15 +106,6 @@
             await EnumerateEligibleMachines();
         }
 
-        /// <summary>
-        /// Take the user to the Settings Page
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Settings_AppBarButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Frame.Navigate(typeof(SettingsPage));
-        }
 
         /// <summary>
         /// Executed when the user presses "Start Streaming Steam!"
@@ -125,16 +116,11 @@
 
             // Stop enumerating machines while we're trying to check pair state
             mDnsTimer.Stop();
-            SaveSettings();
 
             // Don't let the user mash the buttons
             // TODO use a spinner to avoid the appearance of the app being unresponsive
             PairButton.IsEnabled = false;
             StreamButton.IsEnabled = false;
-            _60fps_button.IsEnabled = false;
-            _30fps_button.IsEnabled = false;
-            _720p_button.IsEnabled = false;
-            _1080p_button.IsEnabled = false;
 
             selected = (Computer)computerPicker.SelectedItem;
 
@@ -151,11 +137,11 @@
                 byte[] aesRiIndex = PairingCryptoHelpers.GenerateRandomBytes(4);
                 byte[] aesIv = new byte[16];
                 Array.ConstrainedCopy(aesRiIndex, 0, aesIv, 0, aesRiIndex.Length);
-
+                SettingsPage s = new SettingsPage(); 
                 LimelightStreamConfiguration config = new LimelightStreamConfiguration(
-                    GetStreamWidth(),
-                    GetStreamHeight(),
-                    GetStreamFps(),
+                    s.GetStreamWidth(),
+                    s.GetStreamHeight(),
+                    s.GetStreamFps(),
                     5000, // FIXME: Scale by resolution
                     1024,
                     aesKey, aesIv);
@@ -171,10 +157,6 @@
             // User can use the buttons again
             PairButton.IsEnabled = true;
             StreamButton.IsEnabled = true;
-            _60fps_button.IsEnabled = true;
-            _30fps_button.IsEnabled = true;
-            _720p_button.IsEnabled = true;
-            _1080p_button.IsEnabled = true;
         }
 
         /// <summary>
@@ -194,9 +176,7 @@
             PairingManager p = new PairingManager(selected);
             // Stop polling timer while we're pairing
             mDnsTimer.Stop();
-
-            SaveSettings();
-
+            
             Task.Run(() =>
             {
                 p.Pair(this.Dispatcher, selected);
@@ -272,6 +252,16 @@
             computerPicker.SelectedItem = e.ClickedItem;
         }
 
+        /// <summary>
+        /// Take the user to the Settings Page
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Settings_AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.Frame.Navigate(typeof(SettingsPage));
+        }
+
         #endregion Event Handlers  
 
         #region UI Elements
@@ -311,54 +301,37 @@
 
         #endregion UI Elements
 
-        #region Stream Settings
+
+        #region Persistent paired computer list
+
         /// <summary>
-        /// Get the width of the stream from the setting choice
+        /// Once we freshly pair to a computer, save it
         /// </summary>
-        /// <returns></returns>
-        private int GetStreamWidth()
+        /// <param name="c">Computer we've paired to</param>
+        public static void SaveComputer(Computer c)
         {
-            if (_720p_button.IsChecked.Value)
-            {
-                return 1280;
-            }
-            else
-            {
-                return 1920;
-            }
+            var settings = ApplicationData.Current.RoamingSettings;
+            settings.Values["computerName"] = c.Name;
+            settings.Values["computerIP"] = c.IpAddress;
         }
 
         /// <summary>
-        /// Get height of the stream from the setting
+        /// Load the last computer we've paired to
         /// </summary>
-        /// <returns>Stream height in pixels</returns>
-        private int GetStreamHeight()
+        /// <returns>Last computer we've paired to or null if none</returns>
+        public static Computer LoadComputer()
         {
-            if (_720p_button.IsChecked.Value)
+            var settings = ApplicationData.Current.RoamingSettings;
+
+            if (!settings.Values.ContainsKey("computerName") || !settings.Values.ContainsKey("computerIP"))
             {
-                return 720;
+                return null;
             }
-            else
-            {
-                return 1080;
-            }
+            string name = settings.Values["computerName"] as string;
+            string ip = settings.Values["computerIP"] as string;
+            return new Computer(name, ip);
         }
 
-        /// <summary>
-        /// Get Frames per Second from the setting
-        /// </summary>
-        /// <returns></returns>
-        private int GetStreamFps()
-        {
-            if (_60fps_button.IsChecked.Value)
-            {
-                return 60;
-            }
-            else
-            {
-                return 30;
-            }
-        }
+        #endregion Persistent paired computer list
     }
-        #endregion Stream Settings
 }

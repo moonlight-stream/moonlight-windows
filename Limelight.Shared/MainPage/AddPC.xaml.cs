@@ -63,9 +63,18 @@ namespace Limelight
             else
             {
                 Computer toAdd = new Computer(nickname_textbox.Text, ip_textbox.Text);                
-                this.Frame.Navigate(typeof(MainPage), toAdd);
-               
+                this.Frame.Navigate(typeof(MainPage), toAdd);               
             }
+        }
+
+        /// <summary>
+        /// Event handler for clicking the software back button
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Back_AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            Frame.GoBack();
         }
     }
 }
