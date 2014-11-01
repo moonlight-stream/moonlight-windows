@@ -77,8 +77,15 @@
 
             pairState = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
 
+            string pairStatus = await pairState.ReadXmlAttribute("PairStatus");
+            if (pairStatus == null)
+            {
+                // Request failed
+                return null;
+            }
+
             // Check if the device is paired by checking the XML attribute within the <paired> tag
-            if (String.Compare(await pairState.ReadXmlAttribute("PairStatus"), "1") != 0)
+            if (String.Compare(pairStatus, "1") != 0)
             {
                 Debug.WriteLine("Not paired");
                 return false;
