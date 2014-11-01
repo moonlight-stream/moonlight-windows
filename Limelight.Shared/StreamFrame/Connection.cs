@@ -16,13 +16,13 @@
         /// <summary>
         /// Create start HTTP request
         /// </summary>
-        private async Task<XmlQuery> StartOrResumeApp(NvHttp nv, LimelightStreamConfiguration streamConfig)
+        private async Task<bool> StartOrResumeApp(NvHttp nv, LimelightStreamConfiguration streamConfig)
         {
             XmlQuery serverInfo = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
             string currentGameString = await serverInfo.ReadXmlAttribute("currentgame");
             if (currentGameString == null)
             {
-                return null;
+                return false;
             }
 
             byte[] aesIv = streamConfig.GetRiAesIv();
@@ -38,16 +38,32 @@
             // Launch a new game if nothing is running
             if (currentGameString == null || currentGameString.Equals("0"))
             {
-                return new XmlQuery(nv.BaseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + context.appId +
+                XmlQuery x = new XmlQuery(nv.BaseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + context.appId +
                     "&mode=" + streamConfig.GetWidth() + "x" + streamConfig.GetHeight() + "x" + streamConfig.GetFps() +
                     "&additionalStates=1&sops=1" + // FIXME: make sops configurable
                     riConfigString);
+
+                string sessionStr = await x.ReadXmlAttribute("gamesession");
+                if (sessionStr == null || sessionStr.Equals("0"))
+                {
+                    return false;
+                }
+
+                return true;
             }
             else
             {
                 // A game was already running, so resume it
                 // FIXME: Quit and relaunch if it's not the game we came to start
-                return new XmlQuery(nv.BaseUrl + "/resume?uniqueid=" + nv.GetUniqueId() + riConfigString);
+                XmlQuery x = new XmlQuery(nv.BaseUrl + "/resume?uniqueid=" + nv.GetUniqueId() + riConfigString);
+
+                string resumeStr = await x.ReadXmlAttribute("resume");
+                if (resumeStr == null || resumeStr.Equals("0"))
+                {
+                    return false;
+                }
+
+                return true;
             }
         }
 
@@ -88,19 +104,9 @@
             ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
             LimelightPlatformCallbacks plCallbacks = new LimelightPlatformCallbacks(PlThreadStart, PlDebugPrint);
 
-            XmlQuery launchApp;
             // Launch Steam
             await SetStateText("Launching Steam");
-            try
-            {
-                launchApp = await StartOrResumeApp(nv, streamConfig);
-            }
-            catch (Exception)
-            {
-                launchApp = null;
-            }
-
-            if (launchApp == null)
+            if (await StartOrResumeApp(nv, streamConfig) == false)
             {
                 Debug.WriteLine("Can't find app");
                 stageFailureText = "Error launching App";

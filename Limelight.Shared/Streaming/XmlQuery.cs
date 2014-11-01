@@ -96,9 +96,12 @@ namespace Limelight
             return null; 
         }
 
-        public async Task Run()
+        public async Task<bool> Run()
         {
             await GetXml();
+
+            // Return true if query succeeded
+            return rawXml != null;
         }
 
         #endregion Public Methods
