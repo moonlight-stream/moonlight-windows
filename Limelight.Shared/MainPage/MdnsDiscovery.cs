@@ -1,6 +1,5 @@
 ﻿namespace Limelight
 {
-    using Limelight.Streaming;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
@@ -10,6 +9,8 @@
     using Windows.Storage;
     using Windows.UI.Xaml.Controls;
     using Zeroconf;
+
+    using Limelight.Streaming;
 
     public sealed partial class MainPage : Page
     {

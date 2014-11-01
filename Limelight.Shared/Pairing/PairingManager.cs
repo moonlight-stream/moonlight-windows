@@ -3,15 +3,10 @@
     using System;
     using System.Diagnostics;
     using System.Threading.Tasks;
-    using Windows.Security.Cryptography.Certificates;
-    using Windows.Security.Cryptography.Core;
-    using Windows.UI.Popups;
-    using Windows.UI.Xaml.Controls;
-    using Windows.Web.Http.Filters;
+    using Windows.UI.Core;
 
     using Limelight.Streaming;
     using Limelight.Utils;
-    using Windows.UI.Core;
 
     /// <summary>
     /// Performs pairing with the streaming machine
