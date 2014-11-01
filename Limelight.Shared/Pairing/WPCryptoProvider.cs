@@ -24,33 +24,31 @@
     /// <summary>
     /// Functions for signing and verifying data
     /// </summary>
-    public partial class Pairing
+    public class WPCryptoProvider
     {
-        private X509Certificate cert = null;
+        private X509Certificate cert;
         private AsymmetricCipherKeyPair keyPair; 
         private byte[] pemCertBytes;
 
-        /// <summary>
-        /// Get client X509 Certificate
-        /// </summary>
-        /// <returns>The client's X509 certificate </returns>
-        public X509Certificate getClientCertificate()
+        private static Object certLock = new Object();
+
+        private void InitializeCryptoProviderKeys()
         {
             // Use a lock here to ensure only one guy will be generating or loading
             // the certificate and key at a time
             lock (certLock)
             {
-                // Return a loaded cert if we have one
+                // Return if we have one loaded
                 if (cert != null)
                 {
-                    return cert;
+                    return;
                 }
 
                 // No loaded cert yet, let's see if we have one on disk
                 if (LoadCertKeyPair())
                 {
                     // Got one
-                    return cert;
+                    return;
                 }
 
                 // We don't have a cert yet - generate a new key pair
@@ -58,8 +56,29 @@
 
                 // Load the generated pair
                 LoadCertKeyPair();
-                return cert;
             }
+        }
+
+        /// <summary>
+        /// Get client X509 Certificate
+        /// </summary>
+        /// <returns>The client's X509 certificate </returns>
+        public X509Certificate GetClientCertificate()
+        {
+            InitializeCryptoProviderKeys();
+            return cert;
+        }
+
+        public byte[] GetPemCertBytes()
+        {
+            InitializeCryptoProviderKeys();
+            return pemCertBytes;
+        }
+
+        public AsymmetricCipherKeyPair GetKeyPair()
+        {
+            InitializeCryptoProviderKeys();
+            return keyPair;
         }
 
         /// <summary>
@@ -92,57 +111,11 @@
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.StackTrace);
+                Debug.WriteLine(ex.Message);
+                return;
             }
 
             Task.Run(async () => await SaveCertKeyPair()).Wait(); 
-        }
-
-        private X509Certificate extractPlainCert(XmlQuery q, String tag)
-        {
-            String certHexString = q.XmlAttribute(tag);
-            byte[] certBytes = HexToBytes(certHexString);
-            String certText = Encoding.UTF8.GetString(certBytes, 0, certBytes.Length);
-
-            PemReader certReader = new PemReader(new StringReader(certText));
-            return (X509Certificate)certReader.ReadObject();
-        }
-
-        #region Sign and Verify
-
-        /// <summary>
-        /// Verify signature
-        /// </summary>
-        /// <returns>Boolean indicating success</returns>
-        public bool VerifySignature(byte[] data, byte[] expectedSignature, X509Certificate cert)
-        {
-            /* Init alg */
-            ISigner signer = SignerUtilities.GetSigner("SHA256withRSA");
-
-            /* Populate key */
-            signer.Init(false, cert.GetPublicKey());
-
-            /* Calculate the signature and see if it matches */
-            signer.BlockUpdate(data, 0, data.Length);
-            return signer.VerifySignature(expectedSignature);
-        }
-
-        /// <summary>
-        /// Sign data using SHA256 with RSA
-        /// </summary>
-        /// <param name="data">The data to sign</param>
-        /// <param name="key">Private key to sign with</param>
-        /// <returns>The signature</returns>
-        private byte[] SignData(byte[] data)
-        {
-            ISigner sig = SignerUtilities.GetSigner("SHA256withRSA");
-            sig.Init(true, keyPair.Private);
-
-            /* Calc the signature */
-            sig.BlockUpdate(data, 0, data.Length);
-            byte[] signature = sig.GenerateSignature();
-
-            return signature;
         }
 
         private static AsymmetricCipherKeyPair GenerateKeys(int keySize)
@@ -153,7 +126,6 @@
             gen.Init(keyGenParam);
             return gen.GenerateKeyPair();
         }
-        #endregion Sign and Verify
 
         #region Cert Store
         private async Task AddToWinCertStore()

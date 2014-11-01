@@ -18,11 +18,8 @@ namespace Limelight
         public const int PORT = 47984; 
 	    public const int CONNECTION_TIMEOUT = 5000;
         public string BaseUrl { get; set; }
-        public string ServerIP { get; set; }
-        public XmlQuery ServerInfo { get; set; }
         private string hostname;
         private Regex IP = new Regex(@"^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
-          
 
         #endregion Class Variables
 
@@ -33,11 +30,8 @@ namespace Limelight
         /// <param name="hostnameString">Hostname or IP address of the streaming machine</param>
         public NvHttp(string hostnameString)
         {
-            if (string.IsNullOrWhiteSpace(hostnameString))
-            {
-                throw new ArgumentNullException("Invalid hostname");
-            }
-            this.hostname = hostnameString; 
+            this.hostname = hostnameString;
+            this.BaseUrl = "https://" + hostname + ":" + PORT; 
         }
         #endregion Constructor
 
@@ -54,13 +48,13 @@ namespace Limelight
             byte[] bytes = new byte[8];
             dataReader.ReadBytes(bytes);
 
-            return Pairing.bytesToHex(bytes);
+            return PairingCryptoHelpers.BytesToHex(bytes);
         }
 
         /// <summary>
         /// Finds the IP address of the streaming machine
         /// </summary>
-        public async Task ServerIPAddress()
+        public async Task<String> ResolveServerIPAddress()
         {
             Match ipAddr = null;
 
@@ -77,15 +71,13 @@ namespace Limelight
             // If the regex matched, we already have the IP string we need.
             if (ipAddr.Success)
             {
-                this.ServerIP = this.hostname;
+                return hostname;
             }
             // Else, we need to resolve the hostname. 
             else
             {
-                await ResolveHostName(this.hostname);
+                return await ResolveHostName(this.hostname);
             }
-
-            this.BaseUrl = "https://" + ServerIP + ":" + PORT; 
         }
         #endregion Getters
 
@@ -95,7 +87,7 @@ namespace Limelight
         /// Resolve the GEForce PC hostname to an IP Address
         /// </summary>
         /// <param name="hostName">Hostname to resolve</param>
-        private async Task ResolveHostName(String hostName)
+        private async Task<String> ResolveHostName(String hostName)
         {
             HostName serverHost = new HostName(hostName);
             StreamSocket clientSocket = new Windows.Networking.Sockets.StreamSocket();
@@ -106,13 +98,13 @@ namespace Limelight
                 await clientSocket.ConnectAsync(serverHost, "http");
 
             }
-                // TODO properly handle this exception
             catch (Exception e)
             {
-                Debug.WriteLine("Exception: " + e.Message);
+                Debug.WriteLine("ResolveHostName Exception: " + e.Message);
+                return null;
             }
 
-            this.ServerIP = clientSocket.Information.RemoteAddress.ToString();           
+            return clientSocket.Information.RemoteAddress.ToString();           
         }
         #endregion Hostname resolution
 

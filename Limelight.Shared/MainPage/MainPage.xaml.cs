@@ -10,6 +10,9 @@
     using Windows.UI.Xaml.Controls;
     using Windows.UI.Xaml.Navigation;
 
+    using Limelight.Streaming;
+    using Limelight_common_binding;
+
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
@@ -95,6 +98,42 @@
             //await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => computerPicker.ItemsSource = computerList);
         }
 
+        private int GetStreamWidth()
+        {
+            if (_720p_button.IsChecked.Value)
+            {
+                return 1280;
+            }
+            else
+            {
+                return 1920;
+            }
+        }
+
+        private int GetStreamHeight()
+        {
+            if (_720p_button.IsChecked.Value)
+            {
+                return 720;
+            }
+            else
+            {
+                return 1080;
+            }
+        }
+
+        private int GetStreamFps()
+        {
+            if (_60fps_button.IsChecked.Value)
+            {
+                return 60;
+            }
+            else
+            {
+                return 30;
+            }
+        }
+
         /// <summary>
         /// Executed when the user presses "Start Streaming Steam!"
         /// </summary>
@@ -126,7 +165,28 @@
             else
             {
                 status_text.Text = "Checking pair state...";
-                await StreamSetup(selected);
+
+                byte[] aesKey = PairingCryptoHelpers.GenerateRandomBytes(16);
+
+                // GameStream only uses 4 bytes of a 16 byte IV. Go figure.
+                byte[] aesRiIndex = PairingCryptoHelpers.GenerateRandomBytes(4);
+                byte[] aesIv = new byte[16];
+                Array.ConstrainedCopy(aesRiIndex, 0, aesIv, 0, aesRiIndex.Length);
+
+                LimelightStreamConfiguration config = new LimelightStreamConfiguration(
+                    GetStreamWidth(),
+                    GetStreamHeight(),
+                    GetStreamFps(),
+                    5000, // FIXME: Scale by resolution
+                    1024,
+                    aesKey, aesIv);
+
+                StreamContext context = await ConnectionManager.StartStreaming(selected, config);
+                if (context != null)
+                {
+                    this.Frame.Navigate(typeof(StreamFrame), context);
+                }
+
                 status_text.Text = "";
             }            
 
@@ -155,8 +215,7 @@
                 return; 
             }
 
-            nv = new NvHttp(selected.IpAddress);
-            Pairing p = new Pairing(nv);
+            PairingManager p = new PairingManager(selected);
             // Stop polling timer while we're pairing
             mDnsTimer.Stop();
 
@@ -188,28 +247,26 @@
         {
             // TODO need to make a UI element to display this text
             Task.Run(() => SpinnerBegin("Quitting...")).Wait();
-            // If we haven't used nv before, create it. 
-            if(nv == null){
-                try
-                {
-                    await SpinnerBegin("Quitting");
-                    Computer selected = (Computer)computerPicker.SelectedItem;
-                    nv = new NvHttp(selected.IpAddress);
-                    await nv.ServerIPAddress();
-                    
-                    XmlQuery quit = new XmlQuery(nv.BaseUrl + "/cancel?uniqueid=" + nv.GetUniqueId());
-                }
-                catch (Exception)
-                {
-                    SpinnerEnd(); 
-                    StreamSetupFailed("Unable to quit");
-                    return;
-                }
-                finally
-                {
-                    // Turn off the spinner
-                    SpinnerEnd(); 
-                }
+
+            try
+            {
+                await SpinnerBegin("Quitting");
+                Computer selected = (Computer)computerPicker.SelectedItem;
+                NvHttp nv = new NvHttp(selected.IpAddress);
+                XmlQuery quit = new XmlQuery(nv.BaseUrl + "/cancel?uniqueid=" + nv.GetUniqueId());
+            }
+            catch (Exception)
+            {
+                SpinnerEnd();
+                Debug.WriteLine("Quitting failed");
+                var dialog = new MessageDialog("Failed to quit", "Error");
+                dialog.ShowAsync();
+                return;
+            }
+            finally
+            {
+                // Turn off the spinner
+                SpinnerEnd();
             }
         }
 

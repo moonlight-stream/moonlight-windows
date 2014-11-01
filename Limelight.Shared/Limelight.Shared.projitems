@@ -18,15 +18,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)MainPage\Computer.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)MainPage\ConnectionManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\MdnsDiscovery.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)MainPage\NvHttp.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\SettingsManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)MainPage\XmlQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pairing\PairingCrypto.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pairing\PairingManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pairing\WPCryptoProvider.cs" />
@@ -39,6 +35,12 @@
       <DependentUpon>StreamFrame.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\KeyboardHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Streaming\Computer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Streaming\ConnectionManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Streaming\NvApp.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Streaming\NvHttp.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Streaming\StreamContext.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Streaming\XmlQuery.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="$(MSBuildThisFileDirectory)MainPage\MainPage.xaml">

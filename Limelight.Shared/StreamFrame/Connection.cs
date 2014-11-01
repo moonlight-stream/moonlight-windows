@@ -28,13 +28,13 @@
                 ((aesIv[2] << 8) & 0xFF00) |
                 (aesIv[3] & 0xFF));
             string riConfigString =
-                "&rikey=" + Pairing.bytesToHex(streamConfig.GetRiAesKey()) +
+                "&rikey=" + PairingCryptoHelpers.BytesToHex(streamConfig.GetRiAesKey()) +
                 "&rikeyid=" + riKeyId;
 
             // Launch a new game if nothing is running
             if (currentGameString == null || currentGameString.Equals("0"))
             {
-                return new XmlQuery(nv.BaseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + selected.steamID +
+                return new XmlQuery(nv.BaseUrl + "/launch?uniqueid=" + nv.GetUniqueId() + "&appid=" + context.appId +
                     "&mode=" + streamConfig.GetWidth() + "x" + streamConfig.GetHeight() + "x" + streamConfig.GetFps() +
                     "&additionalStates=1&sops=1" + // FIXME: make sops configurable
                     riConfigString);
@@ -56,7 +56,7 @@
             await SetStateText("Resolving hostname...");
             try
             {
-                nv = new NvHttp(selected.IpAddress);
+                nv = new NvHttp(context.computer.IpAddress);
             }
             catch (ArgumentNullException)
             {
@@ -65,9 +65,10 @@
                 return;
             }
 
+            String serverIp = null;
             try
             {
-                await nv.ServerIPAddress();
+                serverIp = await nv.ResolveServerIPAddress();
             }
             catch (Exception)
             {
@@ -102,7 +103,7 @@
             Debug.WriteLine("Starting connection");
 
             Regex r = new Regex(@"^(?<octet1>\d+).(?<octet2>\d+).(?<octet3>\d+).(?<octet4>\d+)");
-            Match m = r.Match(selected.IpAddress);
+            Match m = r.Match(serverIp);
 
             uint addr = (uint)(Convert.ToByte(m.Groups["octet4"].Value) << 24 |
                 Convert.ToByte(m.Groups["octet3"].Value) << 16 | 

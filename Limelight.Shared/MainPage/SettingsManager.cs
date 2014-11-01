@@ -1,5 +1,6 @@
 ﻿namespace Limelight
 {
+    using Limelight.Streaming;
     using Org.BouncyCastle.Crypto;
     using Org.BouncyCastle.OpenSsl;
     using Org.BouncyCastle.X509;

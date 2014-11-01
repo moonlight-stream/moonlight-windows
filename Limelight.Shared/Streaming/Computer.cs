@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using Zeroconf; 
 
-namespace Limelight
+namespace Limelight.Streaming
 {
     /// <summary>
     /// Computer object containing name and IP address
@@ -15,11 +13,6 @@ namespace Limelight
     {
         public string Name { get; set; }
         public string IpAddress { get; set; }
-        public int steamID { get; set; }
-
-        // Need to give these to the stream
-        public int fps { get; set; }
-        public int pixels { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Computer"/> class.
@@ -30,10 +23,8 @@ namespace Limelight
         {
             this.IpAddress = ipAddress;
             this.Name = name;
-            this.steamID = 0;
-            this.fps = 0;
-            this.pixels = 0; 
         }
+
         /// <summary>
         /// Computer information as a string
         /// </summary>
