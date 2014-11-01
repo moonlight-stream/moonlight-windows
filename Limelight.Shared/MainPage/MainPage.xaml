@@ -30,7 +30,7 @@
                 <RadioButton x:Name="_30fps_button" Content="30 FPS" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="fps" IsChecked="True" Margin="16,540,200,16"/>
                 <RadioButton x:Name="_1080p_button" Content="1080p (may increase lag)" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" Width="256" Margin="128,446,0,110"/>
                 <RadioButton x:Name="_720p_button" Content="720p" HorizontalAlignment="Center" VerticalAlignment="Center" GroupName="pixels" IsChecked="True" Margin="16,446,200,110"/>
-                <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top" Margin="17,12,40,508" FontSize="80" Height="94"/>
+                <TextBlock HorizontalAlignment="Left" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top"/>
                 <ListView x:Name="computerPicker" HorizontalAlignment="Center" Height="161" VerticalAlignment="Top" Width="294" Margin="49,106,41,0" Header="PC List" SelectionMode="Single" FontSize="24" BorderBrush="#FF6E6E6E" BorderThickness="2" IsItemClickEnabled="True" ItemClick="ItemSelected">
                     <ListView.ItemTemplate>
                         <DataTemplate>
@@ -42,7 +42,6 @@
                     <ListView.Items>
                         <x:String>Discovering PCs...</x:String>
                     </ListView.Items>
-
                 </ListView>
             </Grid>
         </Grid>

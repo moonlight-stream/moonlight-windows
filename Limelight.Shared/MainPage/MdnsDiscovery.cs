@@ -37,7 +37,7 @@
             // If there's no network, save time and don't do the time-consuming mDNS 
             if (!InternetAvailable)
             {
-                if (!computerListLocal.Contains(noNetwork))
+                if (computerListLocal.Count == 0 && !computerListLocal.Contains(noNetwork))
                 {
                     computerListLocal.Add(noNetwork);
                 }
