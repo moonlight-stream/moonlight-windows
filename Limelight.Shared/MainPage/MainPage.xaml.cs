@@ -14,6 +14,7 @@
 
     using Limelight.Streaming;
     using Limelight_common_binding;
+    using Limelight.Utils;
 
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
@@ -152,8 +153,7 @@
             // User hasn't selected a machine or selected a placeholder
             if (selected == null || String.IsNullOrWhiteSpace(selected.IpAddress))
             {
-                var dialog = new MessageDialog("No machine selected", "Streaming Failed");
-                await dialog.ShowAsync();
+                DialogUtils.DisplayDialog(this.Dispatcher, "No machine selected", "Streaming Failed");
             } 
             else
             {
@@ -172,7 +172,7 @@
                     1024,
                     aesKey, aesIv);
 
-                StreamContext context = await ConnectionManager.StartStreaming(selected, config);
+                StreamContext context = await ConnectionManager.StartStreaming(this.Dispatcher, selected, config);
                 if (context != null)
                 {
                     this.Frame.Navigate(typeof(StreamFrame), context);
@@ -199,14 +199,7 @@
             // User hasn't selected anything or selected the placeholder
             if (selected == null || selected.IpAddress == null)
             {
-                var dialog = new MessageDialog("No machine selected", "Pairing Failed");
-                await dialog.ShowAsync();
-                return; 
-            }
-            if (String.IsNullOrWhiteSpace(selected.IpAddress))
-            {
-                var dialog = new MessageDialog("Invalid IP address", "Pairing Failed");
-                await dialog.ShowAsync();
+                DialogUtils.DisplayDialog(this.Dispatcher, "No machine selected", "Pairing Failed");
                 return; 
             }
 
@@ -216,9 +209,12 @@
 
             SaveSettings();
 
-            await p.Pair(selected);
+            Task.Run(() =>
+            {
+                p.Pair(this.Dispatcher, selected);
 
-            mDnsTimer.Start();
+                mDnsTimer.Start();
+            });
         }
 
         /// <summary>
@@ -250,9 +246,7 @@
             catch (Exception ex)
             {
                 SpinnerEnd();
-                Debug.WriteLine("Quitting failed");
-                var dialog = new MessageDialog(ex.Message, "Quit Game Failed");
-                dialog.ShowAsync();
+                DialogUtils.DisplayDialog(this.Dispatcher, ex.Message, "Quit Game Failed");
                 return;
             }
             finally

@@ -10,6 +10,8 @@
     using Windows.Web.Http.Filters;
 
     using Limelight.Streaming;
+    using Limelight.Utils;
+    using Windows.UI.Core;
 
     /// <summary>
     /// Performs pairing with the streaming machine
@@ -30,7 +32,7 @@
         /// <summary>
         /// Pair with the hostname in the textbox
         /// </summary>
-        public async Task Pair(Computer c)
+        public async Task Pair(CoreDispatcher uiDispatcher, Computer c)
         {
             Debug.WriteLine("Pairing...");
 
@@ -38,21 +40,17 @@
             bool? pairState = await QueryPairState(); 
             if (pairState == true)
             {
-                var dialog = new MessageDialog("This device is already paired to the host PC", "Already Paired");
-                dialog.ShowAsync();
-                Debug.WriteLine("Already paired");
+                DialogUtils.DisplayDialog(uiDispatcher, "This device is already paired to the host PC", "Already Paired");
                 return;
             }
             // pairstate = null. We've encountered an error
             else if (!pairState.HasValue)
             {
-                var dialog = new MessageDialog("Failed to query pair state", "Pairing failed");
-                dialog.ShowAsync();
-                Debug.WriteLine("Query pair state failed");
+                DialogUtils.DisplayDialog(uiDispatcher, "Failed to query pair state", "Pairing failed");
                 return;
             }
 
-            bool challenge = await PairingCryptoHelpers.PerformPairingHandshake(new WPCryptoProvider(), nv, nv.GetUniqueId());
+            bool challenge = PairingCryptoHelpers.PerformPairingHandshake(uiDispatcher, new WPCryptoProvider(), nv, nv.GetUniqueId());
             if (!challenge)
             {
                 Debug.WriteLine("Challenges failed");
@@ -61,8 +59,9 @@
 
             // Otherwise, everything was successful
             MainPage.SaveComputer(c);
-            var successDialog = new MessageDialog("Pairing successful", "Success");
-            await successDialog.ShowAsync();
+
+            // FIXME: We can't have two dialogs open at once.
+            // DialogUtils.DisplayDialog(uiDispatcher, "Pairing successful", "Success");
         }
 
         #endregion Pairing
