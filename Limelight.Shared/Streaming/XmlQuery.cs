@@ -127,6 +127,9 @@ namespace Limelight
             filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Untrusted);
             filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.InvalidName);
 
+            // Allow the crypto provider to generate the cert if needed
+            await new WPCryptoProvider().InitializeCryptoProviderKeys();
+
             IEnumerable<Certificate> certificates = await CertificateStores.FindAllAsync(new CertificateQuery { FriendlyName = "Limelight-Client" });
             filter.ClientCertificate = certificates.Single();
 

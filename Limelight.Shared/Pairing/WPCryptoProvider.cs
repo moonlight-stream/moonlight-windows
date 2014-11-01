@@ -33,7 +33,7 @@
         private static Object certLock = new Object();
         private static Task keypairGenerationTask;
 
-        private async Task InitializeCryptoProviderKeys()
+        public async Task InitializeCryptoProviderKeys()
         {
             // Return if we have one loaded
             if (cert != null)
