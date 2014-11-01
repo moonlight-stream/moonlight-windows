@@ -106,40 +106,14 @@
             await EnumerateEligibleMachines();
         }
 
-        private int GetStreamWidth()
+        /// <summary>
+        /// Take the user to the Settings Page
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Settings_AppBarButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_720p_button.IsChecked.Value)
-            {
-                return 1280;
-            }
-            else
-            {
-                return 1920;
-            }
-        }
-
-        private int GetStreamHeight()
-        {
-            if (_720p_button.IsChecked.Value)
-            {
-                return 720;
-            }
-            else
-            {
-                return 1080;
-            }
-        }
-
-        private int GetStreamFps()
-        {
-            if (_60fps_button.IsChecked.Value)
-            {
-                return 60;
-            }
-            else
-            {
-                return 30;
-            }
+            this.Frame.Navigate(typeof(SettingsPage));
         }
 
         /// <summary>
@@ -298,9 +272,9 @@
             computerPicker.SelectedItem = e.ClickedItem;
         }
 
-
         #endregion Event Handlers  
 
+        #region UI Elements
         /// <summary>
         /// Start spinning the progress ring
         /// </summary>
@@ -332,8 +306,59 @@
 
             // Enable UI elements
             StreamButton.IsEnabled = true;
-            PairButton.IsEnabled = true;
-            
+            PairButton.IsEnabled = true;            
+        }
+
+        #endregion UI Elements
+
+        #region Stream Settings
+        /// <summary>
+        /// Get the width of the stream from the setting choice
+        /// </summary>
+        /// <returns></returns>
+        private int GetStreamWidth()
+        {
+            if (_720p_button.IsChecked.Value)
+            {
+                return 1280;
+            }
+            else
+            {
+                return 1920;
+            }
+        }
+
+        /// <summary>
+        /// Get height of the stream from the setting
+        /// </summary>
+        /// <returns>Stream height in pixels</returns>
+        private int GetStreamHeight()
+        {
+            if (_720p_button.IsChecked.Value)
+            {
+                return 720;
+            }
+            else
+            {
+                return 1080;
+            }
+        }
+
+        /// <summary>
+        /// Get Frames per Second from the setting
+        /// </summary>
+        /// <returns></returns>
+        private int GetStreamFps()
+        {
+            if (_60fps_button.IsChecked.Value)
+            {
+                return 60;
+            }
+            else
+            {
+                return 30;
+            }
         }
     }
+        #endregion Stream Settings
 }

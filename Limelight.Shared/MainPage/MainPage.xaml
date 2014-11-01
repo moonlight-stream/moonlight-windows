@@ -14,7 +14,7 @@
             <AppBarButton x:Name="quitButton" Icon="Cancel" Label="Quit Game" Click="QuitGame">
             </AppBarButton>
             <AppBarButton x:Name="Add_AppBarButton" Icon="Add" Label="Add PC" Click="Add_AppBarButton_Click"/>
-            <AppBarButton Icon="Setting" Label="Settings"/>
+            <AppBarButton Icon="Setting" Label="Settings" Click="Settings_AppBarButton_Click"/>
         </CommandBar>
     </Page.BottomAppBar>
     
