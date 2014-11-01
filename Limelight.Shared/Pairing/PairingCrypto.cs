@@ -1,10 +1,15 @@
 ﻿namespace Limelight
 {
+    using Org.BouncyCastle.Crypto;
+    using Org.BouncyCastle.OpenSsl;
     using Org.BouncyCastle.Pkcs;
+    using Org.BouncyCastle.Security;
     using Org.BouncyCastle.X509;
     using System;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Windows.Foundation;
@@ -17,9 +22,8 @@
     /// <summary>
     /// Cryptography used in pairing with the streaming machine
     /// </summary>
-    public partial class Pairing
+    public class PairingCryptoHelpers
     {
-        private Object certLock = new Object();
         private static char[] hexArray = "0123456789ABCDEF".ToCharArray();
 
         #region AES Encrypt/Decrypt
@@ -82,9 +86,58 @@
 
         #endregion AES Encrypt/Decrypt
 
-        #region Challenges
+        #region Sign and Verify
 
-        private async Task<bool> Challenges(string uniqueId)
+        /// <summary>
+        /// Verify signature
+        /// </summary>
+        /// <returns>Boolean indicating success</returns>
+        public static bool VerifySignature(byte[] data, byte[] expectedSignature, X509Certificate cert)
+        {
+            /* Init alg */
+            ISigner signer = SignerUtilities.GetSigner("SHA256withRSA");
+
+            /* Populate key */
+            signer.Init(false, cert.GetPublicKey());
+
+            /* Calculate the signature and see if it matches */
+            signer.BlockUpdate(data, 0, data.Length);
+            return signer.VerifySignature(expectedSignature);
+        }
+
+        /// <summary>
+        /// Sign data using SHA256 with RSA
+        /// </summary>
+        /// <param name="data">The data to sign</param>
+        /// <param name="key">Private key to sign with</param>
+        /// <returns>The signature</returns>
+        private static byte[] SignData(AsymmetricCipherKeyPair keyPair, byte[] data)
+        {
+            ISigner sig = SignerUtilities.GetSigner("SHA256withRSA");
+            sig.Init(true, keyPair.Private);
+
+            /* Calc the signature */
+            sig.BlockUpdate(data, 0, data.Length);
+            byte[] signature = sig.GenerateSignature();
+
+            return signature;
+        }
+
+        #endregion Sign and Verify
+
+        #region Pairing Handshake
+
+        private static X509Certificate ExtractPlainCert(XmlQuery q, String tag)
+        {
+            String certHexString = q.XmlAttribute(tag);
+            byte[] certBytes = PairingCryptoHelpers.HexToBytes(certHexString);
+            String certText = Encoding.UTF8.GetString(certBytes, 0, certBytes.Length);
+
+            PemReader certReader = new PemReader(new StringReader(certText));
+            return (X509Certificate)certReader.ReadObject();
+        }
+
+        public static async Task<bool> PerformPairingHandshake(WPCryptoProvider provider, NvHttp nv, string uniqueId)
         {
             // Generate a salt for hashing the PIN
             byte[] salt = GenerateRandomBytes(16);
@@ -93,14 +146,7 @@
             
             // Combine the salt and pin, then create an AES key from them
             byte[] saltAndPin = SaltPin(salt, pin);
-            aesKey = GenerateAesKey(saltAndPin);
-
-            if(!nv.ServerInfo.XmlAttribute("currentgame").Equals("0")){
-                // The server is busy - we can't stream to it
-                var busyDialog = new MessageDialog("Server is busy", "Pairing Failed");
-                await busyDialog.ShowAsync(); 
-                return false; 
-            }
+            CryptographicKey aesKey = GenerateAesKey(saltAndPin);
 
             // Send the salt and get the server cert
             var dialog = new MessageDialog("Enter the following PIN on the host PC: " + pin, "Enter PIN");
@@ -109,27 +155,27 @@
 
             // User will need to close dialog themselves
             XmlQuery getServerCert = new XmlQuery(nv.BaseUrl + "/pair?uniqueid=" + uniqueId +
-                "&devicename=roth&updateState=1&phrase=getservercert&salt=" + bytesToHex(salt) + "&clientcert=" + bytesToHex(pemCertBytes));
+                "&devicename=roth&updateState=1&phrase=getservercert&salt=" + BytesToHex(salt) + "&clientcert=" + BytesToHex(provider.GetPemCertBytes()));
             
             if (!getServerCert.XmlAttribute("paired").Equals("1"))
             {
-                Unpair();
+                Unpair(nv);
                 return false; 
             }
 
-            X509Certificate serverCert = extractPlainCert(getServerCert, "plaincert");
+            X509Certificate serverCert = ExtractPlainCert(getServerCert, "plaincert");
 
             // Generate a random challenge and encrypt it with our AES key
 		    byte[] randomChallenge = GenerateRandomBytes(16);
-            Debug.WriteLine("Client challenge: " + bytesToHex(randomChallenge));
+            Debug.WriteLine("Client challenge: " + BytesToHex(randomChallenge));
 		    byte[] encryptedChallenge = EncryptAes(randomChallenge, aesKey);
 
 		    // Send the encrypted challenge to the server
 		    XmlQuery challengeResp = new XmlQuery(nv.BaseUrl + 
-				    "/pair?uniqueid="+uniqueId+"&devicename=roth&updateState=1&clientchallenge="+bytesToHex(encryptedChallenge));
+				    "/pair?uniqueid="+uniqueId+"&devicename=roth&updateState=1&clientchallenge="+BytesToHex(encryptedChallenge));
             // If we're not paired, there's a problem. 
 		    if (!challengeResp.XmlAttribute("paired").Equals("1")) {
-                Unpair(); 
+                Unpair(nv); 
 			    return false;
 		    }
 
@@ -140,22 +186,22 @@
             byte[] serverResponse = new byte[20], serverChallenge = new byte[16];
             Array.Copy(decServerChallengeResponse, serverResponse, serverResponse.Length);
             Array.Copy(decServerChallengeResponse, 20, serverChallenge, 0, serverChallenge.Length);
-            Debug.WriteLine("serverResponse: " + bytesToHex(serverResponse));
-            Debug.WriteLine("server challenge: " + bytesToHex(serverChallenge));
+            Debug.WriteLine("serverResponse: " + BytesToHex(serverResponse));
+            Debug.WriteLine("server challenge: " + BytesToHex(serverChallenge));
 
             // Using another 16 bytes secret, compute a challenge response hash using the secret, our cert sig, and the challenge
             byte[] clientSecret = GenerateRandomBytes(16);
-            Debug.WriteLine("Client secret: " + bytesToHex(clientSecret));
-            Debug.WriteLine("Client sig: " + bytesToHex(cert.GetSignature()));
+            Debug.WriteLine("Client secret: " + BytesToHex(clientSecret));
+            Debug.WriteLine("Client sig: " + BytesToHex(provider.GetClientCertificate().GetSignature()));
 
-            byte[] challengeRespHash = ToSHA1Bytes(concatBytes(concatBytes(serverChallenge, cert.GetSignature()), clientSecret));
-            Debug.WriteLine("Challenge SHA 1: " + bytesToHex(challengeRespHash));
+            byte[] challengeRespHash = ToSHA1Bytes(concatBytes(concatBytes(serverChallenge, provider.GetClientCertificate().GetSignature()), clientSecret));
+            Debug.WriteLine("Challenge SHA 1: " + BytesToHex(challengeRespHash));
             byte[] challengeRespEncrypted = EncryptAes(challengeRespHash, aesKey);
             XmlQuery secretResp = new XmlQuery(nv.BaseUrl +
-                    "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&serverchallengeresp=" + bytesToHex(challengeRespEncrypted));
+                    "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&serverchallengeresp=" + BytesToHex(challengeRespEncrypted));
             if (!secretResp.XmlAttribute("paired").Equals("1"))
             {
-                Unpair(); 
+                Unpair(nv); 
                 return false;
             }
 
@@ -169,7 +215,7 @@
             if (!VerifySignature(serverSecret, serverSignature, serverCert))
             {
                 // Cancel the pairing process
-                Unpair(); 
+                Unpair(nv); 
                 // Looks like a MITM
                 return false;
             }
@@ -179,18 +225,18 @@
             if (!serverChallengeRespHash.SequenceEqual(serverResponse))
             {
                 // Cancel the pairing process
-                Unpair(); 
+                Unpair(nv); 
                 // Probably got the wrong PIN
                 return false;
             }
 
             // Send the server our signed secret
-            byte[] clientPairingSecret = concatBytes(clientSecret, SignData(clientSecret));
+            byte[] clientPairingSecret = concatBytes(clientSecret, SignData(provider.GetKeyPair(), clientSecret));
             XmlQuery clientSecretResp = new XmlQuery(nv.BaseUrl +
-                    "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&clientpairingsecret=" + bytesToHex(clientPairingSecret));
+                    "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&clientpairingsecret=" + BytesToHex(clientPairingSecret));
             if (!clientSecretResp.XmlAttribute("paired").Equals("1"))
             {
-                Unpair();
+                Unpair(nv);
                 return false; 
             }
 
@@ -199,7 +245,7 @@
 
             if (!pairChallenge.XmlAttribute("paired").Equals("1"))
             {
-                Unpair();
+                Unpair(nv);
                 return false; 
             }
             return true; 
@@ -208,7 +254,7 @@
         /// <summary>
         /// Unpair from the device
         /// </summary>
-        private void Unpair()
+        private static void Unpair(NvHttp nv)
         {
             XmlQuery unpair;
             try
@@ -228,7 +274,7 @@
             Array.Copy(b, 0, c, a.Length, b.Length);
             return c;
         }
-    #endregion Challenges
+        #endregion Pairing Handshake
 
         #region Helpers
         /// <summary>
@@ -249,7 +295,7 @@
         /// </summary>
         /// <param name="bytes">Byte array to convert</param>
         /// <returns>Resulting hexidecimal string</returns>
-        public static string bytesToHex(byte[] bytes)
+        public static string BytesToHex(byte[] bytes)
         {
             char[] hexChars = new char[bytes.Length * 2];
             for (int j = 0; j < bytes.Length; j++)
@@ -266,7 +312,7 @@
         /// </summary>
         /// <param name="hex">Hex string</param>
         /// <returns>Byte array of the hex string</returns>
-        private static byte[] HexToBytes(string hex)
+        public static byte[] HexToBytes(string hex)
         {
             return Enumerable.Range(0, hex.Length)
                              .Where(x => x % 2 == 0)
@@ -318,16 +364,16 @@
         /// </summary>
         /// <param name="data">The data to base the key on</param>
         /// <returns>The AES key</returns>
-        private CryptographicKey GenerateAesKey(byte[] data)
+        private static CryptographicKey GenerateAesKey(byte[] data)
         {
             CryptographicKey key;
             // Create an SymmetricKeyAlgorithmProvider object with AES ECB
             SymmetricKeyAlgorithmProvider Algorithm = SymmetricKeyAlgorithmProvider.OpenAlgorithm(SymmetricAlgorithmNames.AesEcb);
 
             byte[] truncatedSHA = new byte[16];
-            Debug.WriteLine("Salted pin: " + bytesToHex(data));
+            Debug.WriteLine("Salted pin: " + BytesToHex(data));
             Array.Copy(ToSHA1Bytes(data), truncatedSHA, 16);
-            Debug.WriteLine("AES key material: " + bytesToHex(truncatedSHA));
+            Debug.WriteLine("AES key material: " + BytesToHex(truncatedSHA));
             // Generate a symmetric key from our data
             IBuffer keyMaterial = CryptographicBuffer.CreateFromByteArray(truncatedSHA);
             try

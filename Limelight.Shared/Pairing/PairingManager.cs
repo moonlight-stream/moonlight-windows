@@ -9,21 +9,22 @@
     using Windows.UI.Xaml.Controls;
     using Windows.Web.Http.Filters;
 
+    using Limelight.Streaming;
+
     /// <summary>
     /// Performs pairing with the streaming machine
     /// </summary>
-    public partial class Pairing
+    public class PairingManager
     {
-        private CryptographicKey aesKey;
         private NvHttp nv;
 
         /// <summary>
         /// Constructor that sets nv 
         /// </summary>
         /// <param name="nv">The NvHttp Object</param>
-        public Pairing(NvHttp nv)
+        public PairingManager(Computer computer)
         {
-            this.nv = nv; 
+            this.nv = new NvHttp(computer.IpAddress); 
         }
         #region Pairing
         /// <summary>
@@ -31,32 +32,7 @@
         /// </summary>
         public async Task Pair(Computer c)
         {
-            Debug.WriteLine("Pairing ");
-            // Create NvHttp object with the user input as the URL
-            try
-            {
-                nv = new NvHttp(c.IpAddress);
-            }
-            catch (Exception)
-            {
-                var dialog = new MessageDialog("Invalid Hostname", "Pairing Failed");
-                dialog.ShowAsync();
-                return;
-            }
-            // Get the server IP address
-            try
-            {
-                await nv.ServerIPAddress();
-            }
-            catch (Exception e)
-            {
-                var dialog = new MessageDialog("Error resolving hostname " + e.Message , "Pairing Failed");
-                dialog.ShowAsync();
-                return;
-            }
-
-            // "Please don't do this ever, but it's only okay because Cameron said so" -Cameron Gutman            
-            getClientCertificate();
+            Debug.WriteLine("Pairing...");
 
             // Get the pair state.
             bool? pairState = await QueryPairState(); 
@@ -76,7 +52,7 @@
                 return;
             }
 
-            bool challenge = await Challenges(nv.GetUniqueId());
+            bool challenge = await PairingCryptoHelpers.PerformPairingHandshake(new WPCryptoProvider(), nv, nv.GetUniqueId());
             if (!challenge)
             {
                 Debug.WriteLine("Challenges failed");
@@ -106,10 +82,8 @@
             catch (Exception e)
             {
                 Debug.WriteLine("Failed to get pair state: " + e.Message);
-                
                 return null;
             }
-            nv.ServerInfo = pairState; 
 
             // Check if the device is paired by checking the XML attribute within the <paired> tag
             if (String.Compare(pairState.XmlAttribute("PairStatus"), "1") != 0)
@@ -117,6 +91,7 @@
                 Debug.WriteLine("Not paired");
                 return false;
             }
+
             // We're already paired if we get here!
             return true;
         }

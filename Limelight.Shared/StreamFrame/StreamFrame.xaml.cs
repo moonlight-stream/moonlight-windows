@@ -1,6 +1,7 @@
 ﻿namespace Limelight
 {
     using Limelight_common_binding;
+    using Limelight.Streaming;
     using System;
     using System.Diagnostics;
     using System.Linq;
@@ -23,9 +24,9 @@
         #region Class Variables
 
         /// <summary>
-        /// Selected computer passed from the main page
+        /// Context passed from the main page
         /// </summary>
-        Computer selected;
+        private StreamContext context;
 
         /// <summary>
         /// Connection stage identifiers
@@ -43,14 +44,6 @@
         private const int STAGE_AUDIO_STREAM_START = 9;
         private const int STAGE_INPUT_STREAM_START = 10;
         private const int STAGE_MAX = 11;
-
-        /// <summary>
-        /// Width and height of the frame from the video source
-        /// TODO Make these numbers less magic
-        /// </summary>
-        private int frameWidth = 1280;
-        private int frameHeight = 720;
-
 
         /// <summary>
         /// Mouse input
@@ -98,7 +91,7 @@
         {
             // We only want to stream in landscape
             DisplayInformation.AutoRotationPreferences = DisplayOrientations.Landscape;
-            selected = (Computer)e.Parameter;
+            context = (StreamContext)e.Parameter;
 
             Window.Current.CoreWindow.KeyDown += WindowKeyDownHandler;
             Window.Current.CoreWindow.KeyUp += WindowKeyUpHandler;
@@ -116,22 +109,10 @@
             // Hide the status bar
             //var statusBar = Windows.UI.ViewManagement.StatusBar.GetForCurrentView();
             //await statusBar.HideAsync(); 
-            
-            LimelightStreamConfiguration config;
 
-            byte[] aesKey = Pairing.GenerateRandomBytes(16);
+            InitializeMediaPlayer(context.streamConfig, AvStream);
 
-            // GameStream only uses 4 bytes of a 16 byte IV. Go figure.
-            byte[] aesRiIndex = Pairing.GenerateRandomBytes(4);
-            byte[] aesIv = new byte[16];
-            Array.ConstrainedCopy(aesRiIndex, 0, aesIv, 0, aesRiIndex.Length);
- 
-            config = new LimelightStreamConfiguration((int)(selected.pixels*(16.0/9.0)), selected.pixels,
-                selected.fps, 5000, 1024, aesKey, aesIv);
-
-            InitializeMediaPlayer(config, AvStream);
-
-            await StartConnection(config);
+            await StartConnection(context.streamConfig);
         }
         #endregion Navigation Events
 
