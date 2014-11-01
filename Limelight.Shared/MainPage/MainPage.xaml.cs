@@ -121,12 +121,13 @@
             _1080p_button.IsEnabled = false;
 
             selected = (Computer)computerPicker.SelectedItem;
-            // User hasn't selected a machine
-            if (selected == null)
+
+            // User hasn't selected a machine or selected a placeholder
+            if (selected == null || String.IsNullOrWhiteSpace(selected.IpAddress))
             {
                 var dialog = new MessageDialog("No machine selected", "Streaming Failed");
-                await dialog.ShowAsync(); 
-            }
+                await dialog.ShowAsync();
+            } 
             else
             {
                 await StreamSetup(selected);
@@ -147,8 +148,9 @@
         private async void PairButton_Click(object sender, RoutedEventArgs e)
         {
             Computer selected = (Computer)computerPicker.SelectedItem;
-            // User hasn't selected anything 
-            if (selected == null)
+
+            // User hasn't selected anything or selected the placeholder
+            if (selected == null || selected.IpAddress == null)
             {
                 var dialog = new MessageDialog("No machine selected", "Pairing Failed");
                 await dialog.ShowAsync();
@@ -160,6 +162,7 @@
                 await dialog.ShowAsync();
                 return; 
             }
+
             nv = new NvHttp(selected.IpAddress);
             Pairing p = new Pairing(nv);
             // Stop polling timer while we're pairing
