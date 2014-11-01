@@ -6,6 +6,11 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Icon="Save" Label="Save" Click="Save_AppBarButton_Click"/>
+        </CommandBar>
+    </Page.BottomAppBar>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <TextBlock HorizontalAlignment="Left" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top"/>

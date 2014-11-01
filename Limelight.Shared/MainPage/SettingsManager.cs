@@ -1,16 +1,5 @@
 ﻿namespace Limelight
 {
-    using Limelight.Streaming;
-    using Org.BouncyCastle.Crypto;
-    using Org.BouncyCastle.OpenSsl;
-    using Org.BouncyCastle.X509;
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Runtime.InteropServices.WindowsRuntime;
-    using System.Threading.Tasks;
-    using Windows.Security.Cryptography.Certificates;
     using Windows.Storage;
     using Windows.UI.Xaml.Controls;
 
