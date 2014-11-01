@@ -1,5 +1,6 @@
 ﻿namespace Limelight
 {
+    using Limelight.Utils;
     using Limelight_common_binding;
     using System;
     using System.Diagnostics;
@@ -147,15 +148,12 @@
             this.Waitgrid.Visibility = Visibility.Collapsed;
             this.currentStateText.Visibility = Visibility.Collapsed;
 
-            // Inform the user of the failure via a message dialog            
-            var dialog = new MessageDialog(stageFailureText, "Starting Connection Failed");
-            dialog.Commands.Add(new UICommand("ok", x =>
+            // Inform the user of the failure via a message dialog  
+            DialogUtils.DisplayDialog(this.Dispatcher, stageFailureText, "Starting Connection Failed", x =>
             {
                 Cleanup();
                 this.Frame.Navigate(typeof(MainPage));
-            }));
-
-            await dialog.ShowAsync();
+            });
         }
 
         /// <summary>
@@ -185,7 +183,6 @@
         /// </summary>
         private void Cleanup()
         {
-            // TODO will this be okay if we haven't started a connection? 
             LimelightCommonRuntimeComponent.StopConnection();
             hasMoved = false;
         }
