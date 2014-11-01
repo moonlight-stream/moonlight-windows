@@ -26,12 +26,6 @@
         private static List<Computer> computerList = new List<Computer>();
         private Computer selected = null;
         private CoreDispatcher dispatcher;
-        private SolidColorBrush color = new SolidColorBrush(Color.FromArgb(120, 0, 255, 0));
-        public SolidColorBrush ItemBackground
-        {
-            get { return color; }
-            set { color = value; }
-        }
         #endregion Class variables
 
         #region Constructor
@@ -58,13 +52,7 @@
         /// This parameter is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            // TODO: Prepare page for display here.
-
-            // TODO: If your application contains multiple pages, ensure that you are
-            // handling the hardware Back button by registering for the
-            // Windows.Phone.UI.Input.HardwareButtons.BackPressed event.
-            // If you are using the NavigationHelper provided by some templates,
-            // this event is handled for you.
+            // Add anything here to prepare page for display
         }
 
         /// <summary>

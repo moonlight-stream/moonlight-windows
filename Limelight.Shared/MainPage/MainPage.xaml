@@ -17,25 +17,7 @@
             <AppBarButton Icon="Setting" Label="Settings"/>
         </CommandBar>
     </Page.BottomAppBar>
-    <!-- Declare the shared flyout as a resource. -->
-    <Page.Resources>
-        <MenuFlyout x:Key="ImageMenuFlyout">
-            <MenuFlyout.MenuFlyoutPresenterStyle>
-                <Style TargetType="MenuFlyoutPresenter">
-                    <Setter Property="BorderBrush" Value="Green"/>
-                    <Setter Property="BorderThickness" Value="5"/>
-                </Style>
-            </MenuFlyout.MenuFlyoutPresenterStyle>
-            <MenuFlyoutItem Text="Stretch" IsEnabled="False"/>
-            <MenuFlyoutSeparator/>
-            <MenuFlyoutItem Text="Fill" Tag="Fill" 
-                        DataContext="{Binding}"/>
-            <MenuFlyoutItem Text="Uniform" Tag="Uniform" 
-                        DataContext="{Binding}" />
-            <MenuFlyoutItem Text="UniformToFill" Tag="UniformToFill" 
-                        DataContext="{Binding}"/>
-        </MenuFlyout>
-    </Page.Resources>
+    
     <ScrollViewer>
         <Grid x:Name="progressGrid">
             <ProgressRing x:Name="spinner" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="163,177,158,358" Height="79" Width="79"/>
