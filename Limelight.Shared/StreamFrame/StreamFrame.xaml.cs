@@ -126,15 +126,13 @@
             byte[] aesIv = new byte[16];
             Array.ConstrainedCopy(aesRiIndex, 0, aesIv, 0, aesRiIndex.Length);
  
-            config = new LimelightStreamConfiguration(selected.pixels*(16/9), selected.pixels,
+            config = new LimelightStreamConfiguration((int)(selected.pixels*(16.0/9.0)), selected.pixels,
                 selected.fps, 5000, 1024, aesKey, aesIv);
+
             InitializeMediaPlayer(config, AvStream);
 
-            //H264FileReaderHackery h = new H264FileReaderHackery();
-            //Task.Run(() => h.readFile(this));
-
             await StartConnection(config);
-        } 
+        }
         #endregion Navigation Events
 
         #region Mouse Events
