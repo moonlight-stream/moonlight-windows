@@ -55,6 +55,17 @@ namespace Limelight
             SaveSettings();
         }
 
+        /// <summary>
+        /// Save settings and return to the main page
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Save_AppBarButton_Click(object sender, RoutedEventArgs e)
+        {
+            SaveSettings();
+            Frame.GoBack();
+        }
+
         #endregion EventHandlers
 
         #region Stream Settings
