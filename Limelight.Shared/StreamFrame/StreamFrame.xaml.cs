@@ -145,7 +145,7 @@
         /// <param name="e"></param>
         private void HardwareButtonsBackPressed(object sender, Windows.Phone.UI.Input.BackPressedEventArgs e)
         {
-        // TODO tear down stream
+            LimelightCommonRuntimeComponent.StopConnection();
             e.Handled = true;
             Frame.GoBack();
         }
