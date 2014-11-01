@@ -16,6 +16,7 @@
         Computer notFound = new Computer("No Computers Found", null);
         Computer noNetwork = new Computer("Network Unavailable", null);
         List<Computer> addedPCs = new List<Computer>();
+
         #region Enumeration
         /// <summary>
         /// Uses mDNS to enumerate the machines on the network eligible to stream from
@@ -32,6 +33,7 @@
             computerListLocal.Clear();
             // Make sure we have the manually added PCs in here
             computerListLocal.AddRange(addedPCs);
+
             Debug.WriteLine("Enumerating machines...");
 
             // If there's no network, save time and don't do the time-consuming mDNS 
