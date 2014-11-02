@@ -26,9 +26,6 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\MdnsDiscovery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\SettingsManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)MainPage\SettingsPage.xaml.cs">
-      <DependentUpon>SettingsPage.xaml</DependentUpon>
-    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Pairing\PairingCrypto.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pairing\PairingManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pairing\WPCryptoProvider.cs" />
@@ -55,10 +52,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="$(MSBuildThisFileDirectory)MainPage\MainPage.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="$(MSBuildThisFileDirectory)MainPage\SettingsPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
