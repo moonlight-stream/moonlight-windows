@@ -42,7 +42,7 @@
             }
 
             // No loaded cert yet, let's see if we have one on disk
-            if (LoadCertKeyPair())
+            if (await LoadCertKeyPair())
             {
                 // Got one
                 return;
@@ -196,10 +196,11 @@
         /// Load the cert/key pair from memory
         /// </summary>
         /// <returns>Value indicating success</returns>
-        private bool LoadCertKeyPair()
+        private async Task<bool> LoadCertKeyPair()
         {
             var settings = ApplicationData.Current.RoamingSettings;
-            if (settings.Values.ContainsKey("cert") && settings.Values.ContainsKey("key"))
+            IEnumerable<Certificate> certificates = await CertificateStores.FindAllAsync(new CertificateQuery { FriendlyName = "Limelight-Client" });
+            if (settings.Values.ContainsKey("cert") && settings.Values.ContainsKey("key") && certificates.Count() > 0)
             {
                 string certStr = ApplicationData.Current.RoamingSettings.Values["cert"].ToString();
                 string keyStr = ApplicationData.Current.RoamingSettings.Values["key"].ToString();
