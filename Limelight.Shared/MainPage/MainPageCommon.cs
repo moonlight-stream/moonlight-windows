@@ -97,12 +97,6 @@
 
             // Stop enumerating machines while we're trying to check pair state
             mDnsTimer.Stop();
-
-            // Don't let the user mash the buttons
-            // TODO use a spinner to avoid the appearance of the app being unresponsive
-            PairButton.IsEnabled = false;
-            StreamButton.IsEnabled = false;
-
             selected = (Computer)computerPicker.SelectedItem;
 
             // User hasn't selected a machine or selected a placeholder
@@ -133,10 +127,6 @@
                     this.Frame.Navigate(typeof(StreamFrame), context);
                 }
             }
-
-            // User can use the buttons again
-            PairButton.IsEnabled = true;
-            StreamButton.IsEnabled = true;
         }
 
         /// <summary>
@@ -188,21 +178,14 @@
         {
             try
             {
-                await SpinnerBegin("Quitting");
                 Computer selected = (Computer)computerPicker.SelectedItem;
                 NvHttp nv = new NvHttp(selected.IpAddress);
                 XmlQuery quit = new XmlQuery(nv.BaseUrl + "/cancel?uniqueid=" + nv.GetUniqueId());
             }
             catch (Exception ex)
             {
-                SpinnerEnd();
                 DialogUtils.DisplayDialog(this.Dispatcher, ex.Message, "Quit Game Failed");
                 return;
-            }
-            finally
-            {
-                // Turn off the spinner
-                SpinnerEnd();
             }
         }
 
@@ -216,43 +199,6 @@
         }
 
         #endregion Event Handlers
-
-        #region UI Elements
-        /// <summary>
-        /// Start spinning the progress ring
-        /// </summary>
-        /// <param name="text">Text to display alongside the spinner</param>
-        private async Task SpinnerBegin(string text)
-        {
-            await dispatcher.RunAsync(CoreDispatcherPriority.High, new DispatchedHandler(() =>
-            {
-                // Darken background
-                uiGrid.Opacity = .5;
-
-                // Disable select UI elements
-                StreamButton.IsEnabled = false;
-                PairButton.IsEnabled = false;
-
-                // Show the spinner
-                spinner.IsActive = true;
-            }));
-
-        }
-
-        private void SpinnerEnd()
-        {
-            // Hide the spinner
-            spinner.IsActive = false;
-
-            // Return background to normal opacity
-            uiGrid.Opacity = 1;
-
-            // Enable UI elements
-            StreamButton.IsEnabled = true;
-            PairButton.IsEnabled = true;
-        }
-
-        #endregion UI Elements
 
     }
 }

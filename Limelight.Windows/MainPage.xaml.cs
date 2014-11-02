@@ -12,6 +12,7 @@
     using Limelight.Streaming;
     using Limelight.Utils;
     using Limelight_common_binding;
+    using Windows.UI.Xaml.Controls.Primitives;
 
     /// <summary>
     /// Main UI page code - each method calls common code

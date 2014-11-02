@@ -12,6 +12,7 @@
     using Limelight.Streaming;
     using Limelight.Utils;
     using Limelight_common_binding;
+    using Windows.UI.Xaml.Controls.Primitives;
 
     /// <summary>
     /// Main UI page code - each method calls common code
@@ -123,6 +124,11 @@
         {
             // HACK on Windows Phone clicking doesn't necessarily select the item
             computerPicker.SelectedItem = e.ClickedItem;
+        }
+
+        private void ShowFlyout(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
         }
 
         #endregion Event Handlers  

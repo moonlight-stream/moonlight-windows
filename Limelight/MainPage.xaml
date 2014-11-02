@@ -17,29 +17,28 @@
             <AppBarButton Icon="Setting" Label="Settings" Click="Settings_AppBarButton_Click"/>
         </CommandBar>
     </Page.BottomAppBar>
-    
+
     <ScrollViewer>
-        <Grid x:Name="progressGrid">
-            <ProgressRing x:Name="spinner" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="163,177,158,358" Height="79" Width="79"/>
-
-            <Grid x:Name="uiGrid">
-
-                <Button x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="49,262,41,270" FontWeight="Bold" FontSize="25" Click="StreamButton_Click" Width="294" Height="82"/>
-                <Button x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="49,351,41,183" FontWeight="Bold" FontSize="25" Click="PairButton_Click" Width="294" Height="80" />
-                <TextBlock HorizontalAlignment="Left" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top"/>
-                <ListView x:Name="computerPicker" HorizontalAlignment="Center" Height="161" VerticalAlignment="Top" Width="294" Margin="49,106,41,0" Header="PC List" SelectionMode="Single" FontSize="24" BorderBrush="#FF6E6E6E" BorderThickness="2" IsItemClickEnabled="True" ItemClick="ItemSelected">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <TextBlock Text="{Binding}" FontSize="18"></TextBlock>
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                    <ListView.Items>
-                        <x:String>Discovering PCs...</x:String>
-                    </ListView.Items>
-                </ListView>
-            </Grid>
-        </Grid>
+        <StackPanel>
+            <TextBlock x:Name="App_Title_Text" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Limelight" Margin="0,20" FontWeight="Normal"/>
+            <ListView x:Name="computerPicker" Height="484" Margin="0" Header="PC List" SelectionMode="Single" FontSize="24" BorderBrush="#FF6E6E6E" BorderThickness="0" IsItemClickEnabled="True" ItemClick="ItemSelected" VerticalAlignment="Top">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Tapped="ShowFlyout">
+                            <TextBlock Text="{Binding}" FontSize="20" />
+                            <FlyoutBase.AttachedFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="Pair with PC" Click="PairButton_Click" />
+                                    <MenuFlyoutItem Text="Stream from PC" Click="StreamButton_Click" />
+                                </MenuFlyout>
+                            </FlyoutBase.AttachedFlyout>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+                <ListView.Items>
+                    <x:String>Discovering PCs...</x:String>
+                </ListView.Items>
+            </ListView>
+        </StackPanel>
     </ScrollViewer>
 </Page>

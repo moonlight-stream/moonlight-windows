@@ -9,6 +9,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Loaded" RequestedTheme="Dark">
+    	<Page.Resources>
+    		<MenuFlyout x:Key="Selected_PC_Flyoud">
+    			<MenuFlyoutItem x:Name="Pair_Button" Text="Pair With PC"/>
+    			<MenuFlyoutItem x:Name="Stream_Button" Text="Stream from PC"/>
+    		</MenuFlyout>
+    	</Page.Resources>
     <Page.BottomAppBar>
         <CommandBar>
             <AppBarButton x:Name="quitButton" Icon="Cancel" Label="Quit Game" Click="QuitGame">
@@ -19,27 +25,27 @@
     </Page.BottomAppBar>
     
     <ScrollViewer>
-        <Grid x:Name="progressGrid">
-            <ProgressRing x:Name="spinner" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="163,177,158,358" Height="79" Width="79"/>
-
-            <Grid x:Name="uiGrid">
-
-                <Button x:Name="StreamButton" Content="Start Streaming Steam!" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="49,262,41,270" FontWeight="Bold" FontSize="25" Click="StreamButton_Click" Width="294" Height="82"/>
-                <Button x:Name="PairButton" Content="Pair with PC" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="49,351,41,183" FontWeight="Bold" FontSize="25" Click="PairButton_Click" Width="294" Height="80" />
-                <TextBlock HorizontalAlignment="Left" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top"/>
-                <ListView x:Name="computerPicker" HorizontalAlignment="Center" Height="161" VerticalAlignment="Top" Width="294" Margin="49,106,41,0" Header="PC List" SelectionMode="Single" FontSize="24" BorderBrush="#FF6E6E6E" BorderThickness="2" IsItemClickEnabled="True" ItemClick="ItemSelected">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <TextBlock Text="{Binding}" FontSize="18"></TextBlock>
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                    <ListView.Items>
-                        <x:String>Discovering PCs...</x:String>
-                    </ListView.Items>
-                </ListView>
-            </Grid>
-        </Grid>
+        <StackPanel>
+    		<TextBlock x:Name="App_Title_Text" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Limelight" Margin="0,20" FontWeight="Normal"/>
+    		<ListView x:Name="computerPicker" Margin="0" Header="PC List" SelectionMode="Single" FontSize="33.333" BorderBrush="#FF6E6E6E" BorderThickness="0" IsItemClickEnabled="True" ItemClick="ItemSelected" Height="1267" RenderTransformOrigin="0.5,0.5" UseLayoutRounding="False" d:LayoutRounding="Auto" >
+    			<ListView.RenderTransform>
+    				<CompositeTransform SkewY="-0.57" TranslateY="-6.99"/>
+    			</ListView.RenderTransform>
+    			<ListView.ItemTemplate>
+    				<DataTemplate>
+                        <Grid RightTapped="ShowFlyout">
+                            <TextBlock Text="{Binding}" FontSize="20" />
+                            <FlyoutBase.AttachedFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="Pair with PC" Click="PairButton_Click" />
+                                    <MenuFlyoutItem Text="Stream from PC" Click="StreamButton_Click" />
+                                </MenuFlyout>
+                            </FlyoutBase.AttachedFlyout>
+                        </Grid>
+                    </DataTemplate>
+    			</ListView.ItemTemplate>
+    			<x:String>Discovering PCs...</x:String>
+    		</ListView>
+    	</StackPanel>
     </ScrollViewer>
 </Page>
