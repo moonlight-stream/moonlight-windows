@@ -16,9 +16,8 @@
         {
             var settings = ApplicationData.Current.RoamingSettings;
 
-            // Save fps radio button state 
-            settings.Values["fps"] = _30fps_button.IsChecked;
-            settings.Values["pixels"] = _720p_button.IsChecked;
+            // Resolution/FPS box selection
+            settings.Values["resolution_fps"] = Resolution_FPS_Box.SelectedIndex; 
         }
 
         /// <summary>
@@ -28,28 +27,9 @@
         {
             var settings = ApplicationData.Current.RoamingSettings;
             // Load fps radio button state
-            if (settings.Values.ContainsKey("fps"))
+            if (settings.Values.ContainsKey("resolution_fps"))
             {
-                if ((bool)settings.Values["fps"])
-                {
-                    _30fps_button.IsChecked = true;
-                }
-                else
-                {
-                    _60fps_button.IsChecked = true;
-                }
-            }
-            // Load fps radio button state
-            if (ApplicationData.Current.RoamingSettings.Values.ContainsKey("pixels"))
-            {
-                if ((bool)settings.Values["pixels"])
-                {
-                    _720p_button.IsChecked = true;
-                }
-                else
-                {
-                    _1080p_button.IsChecked = true;
-                }
+                Resolution_FPS_Box.SelectedIndex = (int)settings.Values["resolution_fps"];
             }
         }
         #endregion Persistent UI Settings
