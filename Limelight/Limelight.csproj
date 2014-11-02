@@ -16,7 +16,7 @@
     <ProjectTypeGuids>{76F1466A-8B6D-4E39-A767-685A06062A39};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <AppxBundlePlatforms>arm</AppxBundlePlatforms>
-    <NuGetPackageImportStamp>06d2f95b</NuGetPackageImportStamp>
+    <NuGetPackageImportStamp>789f8e8b</NuGetPackageImportStamp>
     <AppxBundle>Auto</AppxBundle>
     <ExpressionBlendVersion>12.0.50624.0</ExpressionBlendVersion>
   </PropertyGroup>
@@ -102,6 +102,12 @@
     <Reference Include="crypto">
       <HintPath>..\packages\crypto.1.7.0.0\lib\portable-net40+sl50+win+WindowsPhoneApp81+wp80\crypto.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX">
+      <HintPath>$(SharpDXPackageBinDir)\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.XAudio2">
+      <HintPath>$(SharpDXPackageBinDir)\SharpDX.XAudio2.dll</HintPath>
+    </Reference>
     <Reference Include="Zeroconf, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Zeroconf.2.1.1\lib\portable-win81+wpa81\Zeroconf.dll</HintPath>
@@ -132,7 +138,9 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.ApplicationInsights.WindowsPhone.0.9.0-build06428\build\wpa81\Microsoft.ApplicationInsights.WindowsPhone.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.ApplicationInsights.WindowsPhone.0.9.0-build06428\build\wpa81\Microsoft.ApplicationInsights.WindowsPhone.targets'))" />
+    <Error Condition="!Exists('..\packages\SharpDX.2.6.3\build\SharpDX.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\SharpDX.2.6.3\build\SharpDX.targets'))" />
   </Target>
+  <Import Project="..\packages\SharpDX.2.6.3\build\SharpDX.targets" Condition="Exists('..\packages\SharpDX.2.6.3\build\SharpDX.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

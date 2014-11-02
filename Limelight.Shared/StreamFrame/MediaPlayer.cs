@@ -1,6 +1,8 @@
 ﻿namespace Limelight
 {
     using Limelight_common_binding;
+    using SharpDX.Multimedia;
+    using SharpDX.XAudio2;
     using System;
     using System.Diagnostics;
     using System.Linq;
@@ -15,9 +17,7 @@
     public sealed partial class StreamFrame : Page
     {
         #region Class Variables
-        private MediaStreamSource _mss = null;
-        private VideoStreamDescriptor _videoDesc = null;
-        private AudioStreamDescriptor _audioDesc = null;
+        private MediaStreamSource _videoMss = null;
         private AvStreamSource _streamSource;
 
         #endregion Class Variables
@@ -32,20 +32,20 @@
         {
             this._streamSource = streamSource;
 
-            _videoDesc = new VideoStreamDescriptor(VideoEncodingProperties.CreateH264());
-            _audioDesc = new AudioStreamDescriptor(AudioEncodingProperties.CreatePcm(48000, 2, 16));
+            _videoMss = new MediaStreamSource(new VideoStreamDescriptor(VideoEncodingProperties.CreateH264()));
+            _videoMss.BufferTime = TimeSpan.Zero;
+            _videoMss.CanSeek = false;
+            _videoMss.Duration = TimeSpan.Zero;
+            _videoMss.SampleRequested += _videoMss_SampleRequested;
 
-            _mss = new MediaStreamSource(_videoDesc, _audioDesc);
-            _mss.BufferTime = TimeSpan.Zero;
-            _mss.CanSeek = false;
-            _mss.Duration = TimeSpan.Zero;
-            _mss.SampleRequested += _mss_SampleRequested;
+            XAudio2 xaudio = new XAudio2();
+            MasteringVoice masteringVoice = new MasteringVoice(xaudio);
+
+            WaveFormat format = new WaveFormat(48000, 16, 2);
+
 
             // Set for low latency playback
             StreamDisplay.RealTimePlayback = true;
-
-            // Set the audio category to take advantage of hardware audio offload
-            StreamDisplay.AudioCategory = AudioCategory.ForegroundOnlyMedia;
 
             // Render on the full window to avoid extra compositing
             StreamDisplay.IsFullWindow = true;
@@ -56,25 +56,17 @@
             // Start playing right away
             StreamDisplay.AutoPlay = true;
 
-            StreamDisplay.SetMediaStreamSource(_mss);
+            StreamDisplay.SetMediaStreamSource(_videoMss);
+
+            AvStream.SetSourceVoice(new SourceVoice(xaudio, format));
         }
 
         /// <summary>
-        /// Media stream source sample requested callback
+        /// Video stream source sample requested callback
         /// </summary>
-        private void _mss_SampleRequested(MediaStreamSource sender, MediaStreamSourceSampleRequestedEventArgs args)
+        private void _videoMss_SampleRequested(MediaStreamSource sender, MediaStreamSourceSampleRequestedEventArgs args)
         {
-            // Determine which stream needs a sample
-            if (args.Request.StreamDescriptor == _videoDesc)
-            {
-                // Video
-                _streamSource.VideoSampleRequested(args);
-            }
-            else
-            {
-                // Audio
-                _streamSource.AudioSampleRequested(args);
-            }
+            _streamSource.VideoSampleRequested(args);
         }
         #endregion Media Player
     }
