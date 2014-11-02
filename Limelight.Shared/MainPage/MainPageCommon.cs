@@ -29,28 +29,13 @@
         private CoreDispatcher dispatcher;
         #endregion Class variables
 
-        #region Constructor
-        public MainPage()
-        {
-            this.InitializeComponent();
-
-
-            this.NavigationCacheMode = NavigationCacheMode.Required;
-            dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
-
-            // Set up timer for mDNS polling
-            mDnsTimer.Interval = TimeSpan.FromSeconds(MDNS_POLLING_INTERVAL);
-            mDnsTimer.Tick += OnTimerTick;
-        }
-        #endregion Constuctor
-
         #region Event Handlers
         /// <summary>
         /// Invoked when this page is about to be displayed in a Frame.
         /// </summary>
         /// <param name="e">Event data that describes how this page was reached.
         /// This parameter is typically used to configure the page.</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        private void OnNavigatedTo_Common(NavigationEventArgs e)
         {
             if (e.Parameter != null)
             {
@@ -69,11 +54,11 @@
                 addedPCs.Add(toAdd);
             }
         }
-        
+
         /// <summary>
         /// When we leave the page, stop mDNS polling
         /// </summary>
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        private void OnNavigatedFrom_Common()
         {
             Debug.WriteLine("Stopping mDNS");
             mDnsTimer.Stop();
@@ -82,41 +67,31 @@
         /// <summary>
         /// Once all the page elements are loaded, run mDNS discovery
         /// </summary>
-        private async void Loaded(object sender, object e)
+        private async Task Loaded_Common()
         {
             Debug.WriteLine("Loaded");
-            
+
             await EnumerateEligibleMachines();
 
             computerPicker.ItemsSource = computerList;
 
             // Start regularly polling for machines
-            mDnsTimer.Start();            
+            mDnsTimer.Start();
         }
 
         /// <summary>
         /// When the timer ticks, poll for machines with mDNS
         /// </summary>
-        private async void OnTimerTick(object sender, object e)
+        private async void OnTimerTick_Common()
         {
             Debug.WriteLine(computerPicker.SelectedIndex);
             await EnumerateEligibleMachines();
         }
 
         /// <summary>
-        /// Take the user to the Settings Page
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Settings_AppBarButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Frame.Navigate(typeof(SettingsPage));
-        }
-
-        /// <summary>
         /// Executed when the user presses "Start Streaming Steam!"
         /// </summary>
-        private async void StreamButton_Click(object sender, RoutedEventArgs e)
+        private async Task StreamButton_Click_Common()
         {
             Debug.WriteLine("Start Streaming button pressed");
 
@@ -134,7 +109,7 @@
             if (selected == null || String.IsNullOrWhiteSpace(selected.IpAddress))
             {
                 DialogUtils.DisplayDialog(this.Dispatcher, "No machine selected", "Streaming Failed");
-            } 
+            }
             else
             {
                 byte[] aesKey = PairingCryptoHelpers.GenerateRandomBytes(16);
@@ -157,8 +132,7 @@
                 {
                     this.Frame.Navigate(typeof(StreamFrame), context);
                 }
-
-            }            
+            }
 
             // User can use the buttons again
             PairButton.IsEnabled = true;
@@ -168,7 +142,7 @@
         /// <summary>
         /// Executed when the user presses "Pair"
         /// </summary>
-        private async void PairButton_Click(object sender, RoutedEventArgs e)
+        private async Task PairButton_Click_Common()
         {
             Computer selected = (Computer)computerPicker.SelectedItem;
 
@@ -176,7 +150,7 @@
             if (selected == null || selected.IpAddress == null)
             {
                 DialogUtils.DisplayDialog(this.Dispatcher, "No machine selected", "Pairing Failed");
-                return; 
+                return;
             }
 
             PairingManager p = new PairingManager(selected);
@@ -192,7 +166,7 @@
         /// When the computer picker is opened, stop the mDNS timer
         /// That way, the list box won't update while the user is picking one
         /// </summary>
-        private void PickerOpened(object sender, object e)
+        private void PickerOpened_Common()
         {
             mDnsTimer.Stop();
         }
@@ -200,7 +174,7 @@
         /// <summary>
         /// When the computer picker is closed, start the mDNS timer again. 
         /// </summary>
-        private void PickerClosed(object sender, object e)
+        private void PickerClosed_Common()
         {
             mDnsTimer.Start();
         }
@@ -210,7 +184,7 @@
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void QuitGame(object sender, RoutedEventArgs e)
+        private async Task QuitGame_Common()
         {
             try
             {
@@ -233,29 +207,15 @@
         }
 
         /// <summary>
-        /// Add PC click
+        /// Add PC clicked
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Add_AppBarButton_Click(object sender, RoutedEventArgs e)
+        private void Add_AppBarButton_Click_Common()
         {
             // Navigate to the Add PC page
             this.Frame.Navigate(typeof(AddPC));
         }
 
-        /// <summary>
-        /// ListView Item selected event handler
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void ItemSelected(object sender, ItemClickEventArgs e)
-        {
-            // HACK on Windows Phone, clicking the item does not automatically select it
-            // Revisit once Threshold APIs are released
-            computerPicker.SelectedItem = e.ClickedItem;
-        }
-
-        #endregion Event Handlers  
+        #endregion Event Handlers
 
         #region UI Elements
         /// <summary>
@@ -276,7 +236,7 @@
                 // Show the spinner
                 spinner.IsActive = true;
             }));
-          
+
         }
 
         private void SpinnerEnd()
@@ -289,7 +249,7 @@
 
             // Enable UI elements
             StreamButton.IsEnabled = true;
-            PairButton.IsEnabled = true;            
+            PairButton.IsEnabled = true;
         }
 
         #endregion UI Elements
