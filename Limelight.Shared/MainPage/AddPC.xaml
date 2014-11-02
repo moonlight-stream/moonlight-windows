@@ -8,14 +8,15 @@
     mc:Ignorable="d">
     <Page.BottomAppBar>
         <CommandBar>            
-            <AppBarButton Icon="Back" Label="Back" Click="Back_AppBarButton_Click"/>
+            <AppBarButton x:Name="Back_Button" Icon="Back" Label="Back" Click="Back_AppBarButton_Click"/>
+            <AppBarButton x:Name="Done_Button" Icon="Accept" Label="Add" Click="Add_Button_Click"/>
         </CommandBar>
     </Page.BottomAppBar>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     	<TextBlock HorizontalAlignment="Left" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top"/>
     	<TextBlock HorizontalAlignment="Center" Style="{StaticResource SubheaderTextBlockStyle}" TextWrapping="Wrap" Text="Manually Add PC" VerticalAlignment="Top" Margin="0,88,0,0"/>
-    	<TextBox x:Name="nickname_textbox" HorizontalAlignment="Center" Margin="66,168,66,0" TextWrapping="Wrap" VerticalAlignment="Top" PlaceholderText="Nickname" Height="40" Width="318"/>
-    	<TextBox x:Name="ip_textbox" HorizontalAlignment="Center" Margin="66,227,66,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="318" PlaceholderText="IP Address"/>
+    	<TextBox x:Name="nickname_textbox" Margin="66,168,66,0" TextWrapping="Wrap" VerticalAlignment="Top" PlaceholderText="Nickname"/>
+    	<TextBox x:Name="ip_textbox" Margin="66,227,66,0" TextWrapping="Wrap" VerticalAlignment="Top" PlaceholderText="IP Address" IsTextPredictionEnabled="False" InputScope="Url"/>
     	<Button x:Name="add_pc_button" Content="Add" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,310,0,0" Click="Add_Button_Click"/>
     </Grid>
 </Page>
