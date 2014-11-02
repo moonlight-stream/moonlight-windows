@@ -1,6 +1,9 @@
-﻿using System;
+﻿using SharpDX;
+using SharpDX.XAudio2;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,14 +19,11 @@ namespace Limelight
 
         private MediaStreamSourceSampleRequest pendingVideoRequest;
         private MediaStreamSourceSampleRequestDeferral pendingVideoDeferral;
-        private MediaStreamSourceSampleRequest pendingAudioRequest;
-        private MediaStreamSourceSampleRequestDeferral pendingAudioDeferral;
-        private Queue<MediaStreamSample> videoSampleQueue;
-        private Queue<MediaStreamSample> audioSampleQueue;
+        private MediaStreamSample pendingVideoSample;
+        private ManualResetEvent removedVideoSampleEvent = new ManualResetEvent(false);
         private object videoQueueLock;
-        private object audioQueueLock;
         private DateTime videoStart = new DateTime(0);
-        private DateTime audioStart = new DateTime(0);
+        private SourceVoice sourceVoice;
 
         #endregion Class Variables
 
@@ -33,13 +33,15 @@ namespace Limelight
         /// </summary>
         public AvStreamSource()
         {
-            this.videoSampleQueue = new Queue<MediaStreamSample>();
-            this.audioSampleQueue = new Queue<MediaStreamSample>();
             this.videoQueueLock = new object();
-            this.audioQueueLock = new object();
         }
         #endregion Constructor
 
+        public void SetSourceVoice(SourceVoice sourceVoice)
+        {
+            this.sourceVoice = sourceVoice;
+            sourceVoice.Start();
+        }
 
         private MediaStreamSample CreateVideoSample(byte[] buf)
         {
@@ -48,47 +50,19 @@ namespace Limelight
                 videoStart = DateTime.Now;
             }
 
-            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(buf.AsBuffer(),
+            // Marshal this buffer so we can safely queue it without worrying about
+            // reuse of the memory backing it
+            byte[] bufCopy = new byte[buf.Length];
+            Array.Copy(buf, bufCopy, buf.Length);
+
+            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(bufCopy.AsBuffer(),
                 DateTime.Now - videoStart);
-            sample.DecodeTimestamp = sample.Timestamp;
             sample.Duration = TimeSpan.Zero;
 
-            switch (buf[4])
+            if ((buf[4] & 0x1F) == 0x5)
             {
-                case 0x65:
-                    sample.KeyFrame = true;
-                    //Debug.WriteLine("I-frame");
-                    break;
-
-                case 0x67:
-                    //Debug.WriteLine("SPS");
-                    break;
-
-                case 0x68:
-                    //Debug.WriteLine("PPS");
-                    break;
-
-                case 0x61:
-                    break;
-
-                default:
-                    Debug.WriteLine("Unrecognized data: "+buf[4].ToString());
-                    break;
+                sample.KeyFrame = true;
             }
-
-            return sample;
-        }
-
-        private MediaStreamSample CreateAudioSample(byte[] buf)
-        {
-            if (audioStart.Ticks == 0)
-            {
-                audioStart = DateTime.Now;
-            }
-
-            MediaStreamSample sample = MediaStreamSample.CreateFromBuffer(buf.AsBuffer(),
-                DateTime.Now - audioStart);
-            sample.Duration = TimeSpan.FromMilliseconds(5);
 
             return sample;
         }
@@ -97,63 +71,78 @@ namespace Limelight
         {
             lock (videoQueueLock)
             {
-                pendingVideoRequest = args.Request;
-                pendingVideoDeferral = args.Request.GetDeferral();
+                if (pendingVideoSample != null)
+                {
+                    args.Request.Sample = pendingVideoSample;
+                    pendingVideoSample = null;
+                }
+                else
+                {
+                    pendingVideoRequest = args.Request;
+                    pendingVideoDeferral = args.Request.GetDeferral();
+                }
             }
-        }
 
-        public void AudioSampleRequested(MediaStreamSourceSampleRequestedEventArgs args)
-        {
-            lock (audioQueueLock)
-            {
-                pendingAudioRequest = args.Request;
-                pendingAudioDeferral = args.Request.GetDeferral();
-            }
+            removedVideoSampleEvent.Set();
         }
 
         public void EnqueueVideoSample(byte[] buf)
         {
-            // This loop puts back-pressure in the DU queue in
+            // This puts back-pressure in the DU queue in
             // common. It's needed so that we avoid our queue getting
             // too large.
-            for (;;)
-            {
-                lock (videoQueueLock)
-                {
-                    if (pendingVideoRequest == null)
-                    {
-                        continue;
-                    }
 
+            // Try to enqueue if there's space
+            lock (videoQueueLock)
+            {
+                // Attempt to satisfy a deferral first
+                if (pendingVideoRequest != null)
+                {
                     pendingVideoRequest.Sample = CreateVideoSample(buf);
                     pendingVideoDeferral.Complete();
 
                     pendingVideoRequest = null;
-                    break;
+                    pendingVideoDeferral = null;
+                    return;
+                }
+
+                // Now pend the sample if nothing is already waiting
+                if (pendingVideoSample == null)
+                {
+                    pendingVideoSample = CreateVideoSample(buf);
+                    return;
+                }
+            }
+
+            // Otherwise wait until there's space
+            for (;;)
+            {
+                removedVideoSampleEvent.WaitOne();
+
+                lock (videoQueueLock)
+                {
+                    if (pendingVideoSample == null)
+                    {
+                        pendingVideoSample = CreateVideoSample(buf);
+                        return;
+                    }
                 }
             }
         }
 
         public void EnqueueAudioSample(byte[] buf)
         {
-            // This loop puts back-pressure in the DU queue in
-            // common. It's needed so that we avoid our queue getting
-            // too large.
-            for (;;)
+            // Allocate a new buffer because ours will go away after this call
+            AudioBuffer buffer = new AudioBuffer(DataStream.Create<byte>(buf, true, false, 0, false));
+
+            try
             {
-                lock (audioQueueLock)
-                {
-                    if (pendingAudioRequest == null)
-                    {
-                        continue;
-                    }
-
-                    pendingAudioRequest.Sample = CreateAudioSample(buf);
-                    pendingAudioDeferral.Complete();
-
-                    pendingAudioRequest = null;
-                    break;
-                }
+                sourceVoice.SubmitSourceBuffer(buffer, null);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Audio exception");
+                Debug.WriteLine(e.Message);
             }
         }
     }
