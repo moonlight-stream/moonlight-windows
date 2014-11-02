@@ -10,6 +10,12 @@
     using Windows.UI.Xaml.Controls;
     public sealed partial class StreamFrame : Page
     {
+#if WINDOWS_APP
+        Limelight.Controllers.XInput xinput;
+#else
+        // TODO: Windows Phone
+#endif
+
         #region Decoder Renderer
         public void DrSetup(int width, int height, int redrawRate, int drFlags)
         {
@@ -167,6 +173,14 @@
             // Hide the cursor
             oldCursor = Window.Current.CoreWindow.PointerCursor;
             Window.Current.CoreWindow.PointerCursor = null;
+
+            // Start controller support code
+#if WINDOWS_APP
+            xinput = new Limelight.Controllers.XInput();
+            xinput.Start();
+#else
+            // TODO: Windows Phone
+#endif
         }
 
         /// <summary>
@@ -176,6 +190,13 @@
         public void ClConnectionTerminated(int errorCode)
         {
             Debug.WriteLine("Connection terminated: " + errorCode);
+
+            // Stop controller code
+#if WINDOWS_APP
+            xinput.Stop();
+#else
+            // TODO: Windows Phone
+#endif
 
             var unused = Task.Run(() =>
             {

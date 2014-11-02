@@ -18,6 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\XInput.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\AddPC.xaml.cs">
       <DependentUpon>AddPC.xaml</DependentUpon>
     </Compile>

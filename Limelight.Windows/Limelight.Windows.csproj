@@ -126,6 +126,9 @@
     <Reference Include="SharpDX.XAudio2">
       <HintPath>$(SharpDXPackageBinDir)\SharpDX.XAudio2.dll</HintPath>
     </Reference>
+    <Reference Include="SharpDX.XInput">
+      <HintPath>$(SharpDXPackageBinDir)\SharpDX.XInput.dll</HintPath>
+    </Reference>
     <Reference Include="Zeroconf">
       <HintPath>..\packages\Zeroconf.2.1.1\lib\portable-win81+wpa81\Zeroconf.dll</HintPath>
     </Reference>
