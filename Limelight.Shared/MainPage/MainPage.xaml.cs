@@ -69,8 +69,7 @@
                 addedPCs.Add(toAdd);
             }
         }
-
-
+        
         /// <summary>
         /// When we leave the page, stop mDNS polling
         /// </summary>

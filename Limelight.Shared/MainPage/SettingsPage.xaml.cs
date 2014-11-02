@@ -62,7 +62,7 @@ namespace Limelight
         /// <returns></returns>
         internal int GetStreamWidth()
         {
-            if (_720p_button.IsChecked.Value)
+            if (Resolution_FPS_Box.SelectedIndex == 0 || Resolution_FPS_Box.SelectedIndex == 1)
             {
                 return 1280;
             }
@@ -78,7 +78,7 @@ namespace Limelight
         /// <returns>Stream height in pixels</returns>
         internal int GetStreamHeight()
         {
-            if (_720p_button.IsChecked.Value)
+            if (Resolution_FPS_Box.SelectedIndex == 0 || Resolution_FPS_Box.SelectedIndex == 1)
             {
                 return 720;
             }
@@ -94,7 +94,7 @@ namespace Limelight
         /// <returns></returns>
         internal int GetStreamFps()
         {
-            if (_60fps_button.IsChecked.Value)
+            if (Resolution_FPS_Box.SelectedIndex == 1 || Resolution_FPS_Box.SelectedIndex == 3)
             {
                 return 60;
             }
