@@ -100,9 +100,9 @@
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private async void QuitGame(object sender, RoutedEventArgs e)
+        private void QuitGame(object sender, RoutedEventArgs e)
         {
-            await QuitGame_Common();
+            QuitGame_Common();
         }
 
         /// <summary>

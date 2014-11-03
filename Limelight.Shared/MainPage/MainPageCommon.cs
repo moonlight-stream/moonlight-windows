@@ -172,9 +172,7 @@
         /// <summary>
         /// Quit Game Event Handler
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private async Task QuitGame_Common()
+        private void QuitGame_Common()
         {
             try
             {
@@ -184,9 +182,13 @@
             }
             catch (Exception ex)
             {
-                DialogUtils.DisplayDialog(this.Dispatcher, ex.Message, "Quit Game Failed");
+                Debug.WriteLine(ex.Message);
+                DialogUtils.DisplayDialog(this.Dispatcher, "Unable to quit", "Quit Game Failed");
                 return;
             }
+
+            // TODO sometimes we didn't really quit a game because there's no game going in the first place
+            DialogUtils.DisplayDialog(this.Dispatcher, "Successfully Quit Game", "Quit Game");
         }
 
         /// <summary>
@@ -199,6 +201,5 @@
         }
 
         #endregion Event Handlers
-
     }
 }
