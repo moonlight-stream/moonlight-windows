@@ -45,7 +45,7 @@
                 return;
             }
 
-            bool challenge = await PairingCryptoHelpers.PerformPairingHandshake(uiDispatcher, new WPCryptoProvider(), nv, nv.GetUniqueId());
+            bool challenge = await PairingCryptoHelpers.PerformPairingHandshake(uiDispatcher, new WindowsCryptoProvider(), nv, nv.GetUniqueId());
             if (!challenge)
             {
                 Debug.WriteLine("Challenges failed");

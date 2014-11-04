@@ -139,7 +139,7 @@
             return (X509Certificate)certReader.ReadObject();
         }
 
-        public static async Task<bool> PerformPairingHandshake(CoreDispatcher uiDispatcher, WPCryptoProvider provider, NvHttp nv, string uniqueId)
+        public static async Task<bool> PerformPairingHandshake(CoreDispatcher uiDispatcher, WindowsCryptoProvider provider, NvHttp nv, string uniqueId)
         {
             string result;
 

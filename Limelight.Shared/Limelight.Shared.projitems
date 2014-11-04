@@ -27,7 +27,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)MainPage\SettingsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pairing\PairingCrypto.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Pairing\PairingManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Pairing\WPCryptoProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Pairing\WindowsCryptoProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\AvStreamSource.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\Connection.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)StreamFrame\ConnectionCallbacks.cs" />

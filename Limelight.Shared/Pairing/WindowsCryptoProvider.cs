@@ -14,7 +14,6 @@
     using System.IO;
     using System.Linq;
     using System.Runtime.InteropServices.WindowsRuntime;
-    using System.Text;
     using System.Threading.Tasks;
     using Windows.Security.Cryptography;
     using Windows.Security.Cryptography.Certificates;
@@ -24,7 +23,7 @@
     /// <summary>
     /// Functions for signing and verifying data
     /// </summary>
-    public class WPCryptoProvider
+    public class WindowsCryptoProvider
     {
         private X509Certificate cert;
         private AsymmetricCipherKeyPair keyPair; 
@@ -33,6 +32,9 @@
         private static Object certLock = new Object();
         private static Task keypairGenerationTask;
 
+        /// <summary>
+        /// Initialize keys for use in pairing
+        /// </summary>
         public async Task InitializeCryptoProviderKeys()
         {
             // Return if we have one loaded
@@ -82,6 +84,10 @@
             return pemCertBytes;
         }
 
+        /// <summary>
+        /// Get keypair
+        /// </summary>
+        /// <returns>The keypair </returns>
         public async Task<AsymmetricCipherKeyPair> GetKeyPair()
         {
             await InitializeCryptoProviderKeys();
@@ -125,6 +131,11 @@
             await SaveCertKeyPair();
         }
 
+        /// <summary>
+        /// Generate RSA keys to use in pairing crypto
+        /// </summary>
+        /// <param name="keySize">Key size in bits</param>
+        /// <returns>The generated RSA key pair</returns>
         private static AsymmetricCipherKeyPair GenerateKeys(int keySize)
         {
             var gen = new RsaKeyPairGenerator();
@@ -135,6 +146,10 @@
         }
 
         #region Cert Store
+
+        /// <summary>
+        /// Add a cert to the store
+        /// </summary>
         private async Task AddToWinCertStore()
         {
             Pkcs12Store store = new Pkcs12Store();
@@ -161,6 +176,10 @@
         #endregion Cert Store
 
         #region Persistent Crypto Settings
+
+        /// <summary>
+        /// Save the cert key pair to the device so it can be reused
+        /// </summary>
         private async Task SaveCertKeyPair()
         {
             var settings = ApplicationData.Current.RoamingSettings;
