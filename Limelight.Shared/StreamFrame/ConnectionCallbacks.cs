@@ -170,12 +170,12 @@
         /// </summary>
         public void ClConnectionStarted()
         {
+#if WINDOWS_APP
             // Hide the cursor
             oldCursor = Window.Current.CoreWindow.PointerCursor;
             Window.Current.CoreWindow.PointerCursor = null;
 
             // Start controller support code
-#if WINDOWS_APP
             xinput = new Limelight.Controllers.XInput();
             xinput.Start();
 #else
