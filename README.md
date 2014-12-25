@@ -1,4 +1,5 @@
 #Limelight
+##Limelight Windows development is on hold until WinRT supports real time streaming. We will provide any updates if this changes.
 
 Note: Limelight Windows is in development and is not considered stable. 
 
