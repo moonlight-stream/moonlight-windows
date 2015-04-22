@@ -1,12 +1,12 @@
-#Limelight
-####Limelight Windows development is on hold until WinRT supports real time streaming of raw h264. We will provide any updates if this changes. We're sorry for the inconvenience and hope that we can get this up and running as soon as possible.
+#Moonlight
+####Moonlight Windows development is on hold until WinRT supports real time streaming of raw h264. We will provide any updates if this changes. We're sorry for the inconvenience and hope that we can get this up and running as soon as possible.
 
-Note: Limelight Windows is in development and is not considered stable. 
+Note: Moonlight Windows is in development and is not considered stable. 
 
-Limelight is an open source implementation of NVIDIA's GameStream, as used by the NVIDIA Shield.
-We reverse-engineered the Shield streaming software, and created a version that can be run on any Windows or Windows Phone 8.1 device. Limelight Windows is built on the Windows Runtime (WinRT). 
+Moonlight is an open source implementation of NVIDIA's GameStream, as used by the NVIDIA Shield.
+We reverse-engineered the Shield streaming software, and created a version that can be run on any Windows or Windows Phone 8.1 device. Moonlight Windows is built on the Windows Runtime (WinRT). 
 
-Limelight will allow you to stream your full collection of games from your PC to your Windows or Windows Phone device,
+Moonlight will allow you to stream your full collection of games from your PC to your Windows or Windows Phone device,
 in your own home, or over the internet.
 
 ##Features
@@ -19,7 +19,7 @@ in your own home, or over the internet.
 
 ##Installation
 
-* Limelight Windows is in development and not yet available for free download in the Store. If you want to try it in the meantime, download the source and deploy the app to your phone. 
+* Moonlight Windows is in development and not yet available for free download in the Store. If you want to try it in the meantime, download the source and deploy the app to your phone. 
 * Download [GeForce Experience](http://www.geforce.com/geforce-experience) and install on your Windows PC
 
 ##Requirements
@@ -32,13 +32,13 @@ in your own home, or over the internet.
 * Turn on GameStream in the GFE settings
 * If you are connecting from outside the same network, turn on internet
   streaming
-* When on the same network as your PC, open Limelight and tap on your PC in the list and then tap "Pair With PC"
+* When on the same network as your PC, open Moonlight and tap on your PC in the list and then tap "Pair With PC"
 * Accept the pairing confirmation on your PC
 * Play games!
 
 ##Contribute 
 - Fork us and set up a solution in Visual Studio
-- Add [Limelight Common](https://github.com/limelight-stream/limelight-common-c) as a project in your solution
+- Add [Moonlight Common](https://github.com/moonlight-stream/moonlight-common-c) as a project in your solution
 - Write code
 - Send Pull Requests
 
@@ -48,5 +48,5 @@ in your own home, or over the internet.
 * [Cameron Gutman](https://github.com/cgutman)
 
 ##Other Official Versions:
-[Limelight](https://github.com/limelight-stream) also has an Android
+[Moonlight](https://github.com/moonlight-stream) also has an Android
 implementation, and versions for PC and iOS are currently in development.
