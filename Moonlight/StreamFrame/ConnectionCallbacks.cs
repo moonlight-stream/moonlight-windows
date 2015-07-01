@@ -201,36 +201,5 @@
             Debug.WriteLine("ClDisplayTransientMessage: " + message);
         }
 #endregion Connection Listener
-
-        #region Platform Callbacks
-        public void PlThreadStart()
-        {
-            var unused = ThreadPool.RunAsync((workitem) =>
-            {
-                try
-                {
-                    // The thread will execute in the context of this worker
-                    MoonlightCommonRuntimeComponent.CompleteThreadStart();
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine("Platform thread terminated");
-                    Debug.WriteLine(e.Message);
-                    Debug.WriteLine(e.StackTrace);
-                }
-            });
-        }
-
-        public void PlDebugPrint(String message)
-        {
-            // Strip the newlines since we have to use WriteLine
-            if (message.EndsWith("\n"))
-            {
-                message = message.Substring(0, message.Length - 1);
-            }
-
-            Debug.WriteLine(message);
-        }
-        #endregion
     }
 }

@@ -103,7 +103,6 @@
             MoonlightAudioRenderer arCallbacks = new MoonlightAudioRenderer(ArInit, ArCleanup, ArPlaySample);
             MoonlightConnectionListener clCallbacks = new MoonlightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
             ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
-            MoonlightPlatformCallbacks plCallbacks = new MoonlightPlatformCallbacks(PlThreadStart, PlDebugPrint);
 
             // Launch Steam
             await SetStateText("Launching Steam");
@@ -118,7 +117,7 @@
             // Call into Common to start the connection
             Debug.WriteLine("Starting connection");
 
-            MoonlightCommonRuntimeComponent.StartConnection(serverIp, streamConfig, clCallbacks, drCallbacks, arCallbacks, plCallbacks, 0);
+            MoonlightCommonRuntimeComponent.StartConnection(serverIp, streamConfig, clCallbacks, drCallbacks, arCallbacks, 4);
 
             if (stageFailureText != null)
             {

@@ -103,28 +103,6 @@ namespace Moonlight_common_binding
 		Moonlight_common_binding::ArPlaySample ^m_ArPlaySample;
 	};
 
-	public delegate void PlThreadStart(void);
-	public delegate void PlDebugPrint(Platform::String ^message);
-
-	public ref class MoonlightPlatformCallbacks sealed
-	{
-	public:
-		MoonlightPlatformCallbacks(PlThreadStart ^plThreadStart, PlDebugPrint ^plDebugPrint) :
-			m_PlThreadStart(plThreadStart), m_PlDebugPrint(plDebugPrint) {}
-
-		void ThreadStart(void) {
-			m_PlThreadStart();
-		}
-
-		void DebugPrint(Platform::String ^message) {
-			m_PlDebugPrint(message);
-		}
-
-	private:
-		Moonlight_common_binding::PlThreadStart ^m_PlThreadStart;
-		Moonlight_common_binding::PlDebugPrint ^m_PlDebugPrint;
-	};
-
 	public delegate void ClStageStarting(int stage);
 	public delegate void ClStageComplete(int stage);
 	public delegate void ClStageFailed(int stage, int errorCode);
@@ -221,7 +199,7 @@ namespace Moonlight_common_binding
 	public:
 		static int StartConnection(Platform::String^ host, MoonlightStreamConfiguration ^streamConfig,
 			MoonlightConnectionListener ^clCallbacks, MoonlightDecoderRenderer ^drCallbacks, MoonlightAudioRenderer ^arCallbacks,
-			MoonlightPlatformCallbacks ^plCallbacks, int serverMajorVersion);
+			int serverMajorVersion);
 
 		static void StopConnection(void);
 		static int SendMouseMoveEvent(short deltaX, short deltaY);
@@ -232,8 +210,5 @@ namespace Moonlight_common_binding
 		static int SendMultiControllerInput(short controllerNumber, short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX,
 			short leftStickY, short rightStickX, short rightStickY);
 		static int SendScrollEvent(short scrollClicks);
-
-		// Platform-specific code
-		static void CompleteThreadStart(void);
 	};
 }

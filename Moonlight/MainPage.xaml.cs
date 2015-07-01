@@ -126,6 +126,11 @@
             computerPicker.SelectedItem = e.ClickedItem;
         }
 
+        private void ShowFlyout(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
+        {
+            FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
+        }
+
         #endregion Event Handlers  
     }
 }

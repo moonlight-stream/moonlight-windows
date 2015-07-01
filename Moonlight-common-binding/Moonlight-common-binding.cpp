@@ -25,7 +25,6 @@ using namespace Platform;
 static MoonlightDecoderRenderer ^s_DrCallbacks;
 static MoonlightAudioRenderer ^s_ArCallbacks;
 static MoonlightConnectionListener ^s_ClCallbacks;
-static MoonlightPlatformCallbacks ^s_PlCallbacks;
 
 #define INITIAL_FRAME_BUFFER_SIZE 1048576
 static int s_FrameBufferSize;
@@ -131,28 +130,14 @@ void ClShimDisplayTransientMessage(char *message) {
 	s_ClCallbacks->DisplayTransientMessage(messageString);
 }
 
-void PlShimThreadStart(void) {
-	s_PlCallbacks->ThreadStart();
-}
-
-void PlShimDebugPrint(char *string) {
-	std::string stdStr = std::string(string);
-	std::wstring wStr = std::wstring(stdStr.begin(), stdStr.end());
-	const wchar_t* wChar = wStr.c_str();
-	Platform::String^ messageString = ref new Platform::String(wChar);
-
-	s_PlCallbacks->DebugPrint(messageString);
-}
-
 int MoonlightCommonRuntimeComponent::StartConnection(Platform::String^ host, MoonlightStreamConfiguration ^streamConfig,
 	MoonlightConnectionListener ^clCallbacks, MoonlightDecoderRenderer ^drCallbacks, MoonlightAudioRenderer ^arCallbacks,
-	MoonlightPlatformCallbacks ^plCallbacks, int serverMajorVersion)
+	int serverMajorVersion)
 {
 	STREAM_CONFIGURATION config;
 	DECODER_RENDERER_CALLBACKS drShimCallbacks;
 	AUDIO_RENDERER_CALLBACKS arShimCallbacks;
 	CONNECTION_LISTENER_CALLBACKS clShimCallbacks;
-	PLATFORM_CALLBACKS plShimCallbacks;
 
 	config.width = streamConfig->GetWidth();
 	config.height = streamConfig->GetHeight();
@@ -166,7 +151,6 @@ int MoonlightCommonRuntimeComponent::StartConnection(Platform::String^ host, Moo
 	s_ClCallbacks = clCallbacks;
 	s_DrCallbacks = drCallbacks;
 	s_ArCallbacks = arCallbacks;
-	s_PlCallbacks = plCallbacks;
 
 	drShimCallbacks.setup = DrShimSetup;
 	drShimCallbacks.cleanup = DrShimCleanup;
@@ -184,13 +168,10 @@ int MoonlightCommonRuntimeComponent::StartConnection(Platform::String^ host, Moo
 	clShimCallbacks.displayMessage = ClShimDisplayMessage;
 	clShimCallbacks.displayTransientMessage = ClShimDisplayTransientMessage;
 
-	plShimCallbacks.threadStart = PlShimThreadStart;
-	plShimCallbacks.debugPrint = PlShimDebugPrint;
-
 	std::wstring hostW(host->Begin());
 	std::string hostA(hostW.begin(), hostW.end());
 	return LiStartConnection(hostA.c_str(), &config, &clShimCallbacks,
-		&drShimCallbacks, &arShimCallbacks, &plShimCallbacks, NULL, 0, serverMajorVersion);
+		&drShimCallbacks, &arShimCallbacks, NULL, 0, serverMajorVersion);
 }
 
 void MoonlightCommonRuntimeComponent::StopConnection(void) {
@@ -221,8 +202,4 @@ int MoonlightCommonRuntimeComponent::SendMultiControllerInput(short controllerNu
 
 int MoonlightCommonRuntimeComponent::SendScrollEvent(short scrollClicks) {
 	return LiSendScrollEvent((signed char) scrollClicks);
-}
-
-void MoonlightCommonRuntimeComponent::CompleteThreadStart() {
-	LiCompleteThreadStart();
 }
