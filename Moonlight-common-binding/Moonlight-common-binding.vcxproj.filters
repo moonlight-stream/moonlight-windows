@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>6b53023a-e925-4533-9e00-ecd64143dd18</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tga;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Common-C">
+      <UniqueIdentifier>{07450eed-699f-4e20-a3dc-35eafbb825b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OpenAES">
+      <UniqueIdentifier>{d402312b-2749-46a9-83d8-acaf24b272d5}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Moonlight-common-binding.cpp" />
+    <ClCompile Include="..\moonlight-common-c\limelight-common\AudioStream.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\ByteBuffer.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\Connection.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\ControlStream.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\FakeCallbacks.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\InputStream.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\LinkedBlockingQueue.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\Misc.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\Platform.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\PlatformSockets.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\RtpReorderQueue.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\RtspConnection.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\RtspParser.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\SdpGenerator.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\VideoDepacketizer.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\VideoStream.c">
+      <Filter>Common-C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\OpenAES\oaes_base64.c">
+      <Filter>OpenAES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\moonlight-common-c\limelight-common\OpenAES\oaes_lib.c">
+      <Filter>OpenAES</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Moonlight-common-binding.hpp" />
+    <ClInclude Include="..\moonlight-common-c\limelight-common\ByteBuffer.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\Input.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\Limelight.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\Limelight-internal.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\LinkedBlockingQueue.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\Platform.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\PlatformSockets.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\PlatformThreads.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\RtpReorderQueue.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\Rtsp.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\Video.h">
+      <Filter>Common-C</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\OpenAES\oaes_base64.h">
+      <Filter>OpenAES</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\OpenAES\oaes_common.h">
+      <Filter>OpenAES</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\OpenAES\oaes_config.h">
+      <Filter>OpenAES</Filter>
+    </ClInclude>
+    <ClInclude Include="..\moonlight-common-c\limelight-common\OpenAES\oaes_lib.h">
+      <Filter>OpenAES</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
