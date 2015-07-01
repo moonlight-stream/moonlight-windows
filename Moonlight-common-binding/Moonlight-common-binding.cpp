@@ -1,5 +1,4 @@
 ﻿/* Binding between the main Moonlight app and Common */
-#if 0
 #include "Moonlight-common-binding.hpp"
 
 #include <stdlib.h>
@@ -9,10 +8,10 @@
 #include <Objbase.h> 
 #include <string>
 
+#include <opus.h>
+
 // Tell the linker to link using these libraries
 #pragma comment(lib, "ws2_32.lib")
-
-#include <opus.h>
 #pragma comment(lib, "opus.lib")
 #pragma comment(lib, "celt.lib")
 #pragma comment(lib, "silk_common.lib")
@@ -64,7 +63,7 @@ int DrShimSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
 		entry = entry->next;
 	}
 
-	s_DrCallbacks->SubmitDecodeUnit(Platform::ArrayReference<byte>((byte*)s_FrameBuffer, decodeUnit->fullLength));
+	return s_DrCallbacks->SubmitDecodeUnit(Platform::ArrayReference<byte>((byte*)s_FrameBuffer, decodeUnit->fullLength));
 }
 
 #define MAX_OUTPUT_SHORTS_PER_CHANNEL 240
@@ -145,9 +144,9 @@ void PlShimDebugPrint(char *string) {
 	s_PlCallbacks->DebugPrint(messageString);
 }
 
-int MoonlightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, MoonlightStreamConfiguration ^streamConfig,
+int MoonlightCommonRuntimeComponent::StartConnection(Platform::String^ host, MoonlightStreamConfiguration ^streamConfig,
 	MoonlightConnectionListener ^clCallbacks, MoonlightDecoderRenderer ^drCallbacks, MoonlightAudioRenderer ^arCallbacks,
-	MoonlightPlatformCallbacks ^plCallbacks)
+	MoonlightPlatformCallbacks ^plCallbacks, int serverMajorVersion)
 {
 	STREAM_CONFIGURATION config;
 	DECODER_RENDERER_CALLBACKS drShimCallbacks;
@@ -188,8 +187,10 @@ int MoonlightCommonRuntimeComponent::StartConnection(unsigned int hostAddress, M
 	plShimCallbacks.threadStart = PlShimThreadStart;
 	plShimCallbacks.debugPrint = PlShimDebugPrint;
 
-	return LiStartConnection(hostAddress, &config, &clShimCallbacks,
-		&drShimCallbacks, &arShimCallbacks, &plShimCallbacks, NULL, 0);
+	std::wstring hostW(host->Begin());
+	std::string hostA(hostW.begin(), hostW.end());
+	return LiStartConnection(hostA.c_str(), &config, &clShimCallbacks,
+		&drShimCallbacks, &arShimCallbacks, &plShimCallbacks, NULL, 0, serverMajorVersion);
 }
 
 void MoonlightCommonRuntimeComponent::StopConnection(void) {
@@ -213,13 +214,15 @@ int MoonlightCommonRuntimeComponent::SendControllerInput(short buttonFlags, byte
 	return LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
 }
 
-int MoonlightCommonRuntimeComponent::SendMultiControllerInput(short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX,
+int MoonlightCommonRuntimeComponent::SendMultiControllerInput(short controllerNumber, short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX,
 	short leftStickY, short rightStickX, short rightStickY) {
-	return LiSendMultiControllerEvent(buttonFlags, leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
+	return LiSendMultiControllerEvent(controllerNumber, buttonFlags, leftTrigger, rightTrigger, leftStickX, leftStickY, rightStickX, rightStickY);
+}
+
+int MoonlightCommonRuntimeComponent::SendScrollEvent(short scrollClicks) {
+	return LiSendScrollEvent((signed char) scrollClicks);
 }
 
 void MoonlightCommonRuntimeComponent::CompleteThreadStart() {
 	LiCompleteThreadStart();
 }
-
-#endif

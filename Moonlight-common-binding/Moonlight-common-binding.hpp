@@ -1,5 +1,4 @@
 ﻿#pragma once
-#if 0
 #include <Limelight.h>
 #include <string.h>
 
@@ -67,8 +66,8 @@ namespace Moonlight_common_binding
 		void Cleanup(void) {
 			m_DrCleanup();
 		}
-		void SubmitDecodeUnit(const Platform::Array<byte> ^dataArray) {
-			m_DrSubmitDecodeUnit(dataArray);
+		int SubmitDecodeUnit(const Platform::Array<byte> ^dataArray) {
+			return m_DrSubmitDecodeUnit(dataArray);
 		}
 
 	private:
@@ -220,9 +219,9 @@ namespace Moonlight_common_binding
 	public ref class MoonlightCommonRuntimeComponent sealed
 	{
 	public:
-		static int StartConnection(unsigned int hostAddress, MoonlightStreamConfiguration ^streamConfig,
+		static int StartConnection(Platform::String^ host, MoonlightStreamConfiguration ^streamConfig,
 			MoonlightConnectionListener ^clCallbacks, MoonlightDecoderRenderer ^drCallbacks, MoonlightAudioRenderer ^arCallbacks,
-			MoonlightPlatformCallbacks ^plCallbacks);
+			MoonlightPlatformCallbacks ^plCallbacks, int serverMajorVersion);
 
 		static void StopConnection(void);
 		static int SendMouseMoveEvent(short deltaX, short deltaY);
@@ -230,10 +229,11 @@ namespace Moonlight_common_binding
 		static int SendKeyboardEvent(short keyCode, unsigned char keyAction, unsigned char modifiers);
 		static int SendControllerInput(short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX, 
 			short leftStickY, short rightStickX, short rightStickY);
+		static int SendMultiControllerInput(short controllerNumber, short buttonFlags, byte leftTrigger, byte rightTrigger, short leftStickX,
+			short leftStickY, short rightStickX, short rightStickY);
+		static int SendScrollEvent(short scrollClicks);
 
 		// Platform-specific code
 		static void CompleteThreadStart(void);
 	};
 }
-
-#endif
