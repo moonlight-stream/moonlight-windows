@@ -28,7 +28,7 @@
         /// Initialize the media element for playback
         /// </summary>
         /// <param name="streamConfig">Object containing stream configuration details</param>
-        void InitializeMediaPlayer(LimelightStreamConfiguration streamConfig, AvStreamSource streamSource)
+        void InitializeMediaPlayer(MoonlightStreamConfiguration streamConfig, AvStreamSource streamSource)
         {
             this._streamSource = streamSource;
 

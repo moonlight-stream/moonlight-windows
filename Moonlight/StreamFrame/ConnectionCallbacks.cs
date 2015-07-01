@@ -22,24 +22,15 @@
 
         }
 
-        public void DrStart()
+        public void DrCleanup()
         {
 
         }
 
-        public void DrStop()
-        {
-
-        }
-
-        public void DrRelease()
-        {
-
-        }
-
-        public void DrSubmitDecodeUnit(byte[] data)
+        public int DrSubmitDecodeUnit(byte[] data)
         {
             AvStream.EnqueueVideoSample(data);
+            return 0;
         }
 #endregion Decoder Renderer
 
@@ -49,17 +40,7 @@
 
         }
 
-        public void ArStart()
-        {
-
-        }
-
-        public void ArStop()
-        {
-
-        }
-
-        public void ArRelease()
+        public void ArCleanup()
         {
 
         }
@@ -201,7 +182,7 @@
             var unused = Task.Run(() =>
             {
                 // This needs to be done on a separate thread
-                LimelightCommonRuntimeComponent.StopConnection();
+                MoonlightCommonRuntimeComponent.StopConnection();
             });
 
             DialogUtils.DisplayDialog(this.Dispatcher, "Connection terminated unexpectedly", "Connection Terminated", (command) =>
@@ -229,7 +210,7 @@
                 try
                 {
                     // The thread will execute in the context of this worker
-                    LimelightCommonRuntimeComponent.CompleteThreadStart();
+                    MoonlightCommonRuntimeComponent.CompleteThreadStart();
                 }
                 catch (Exception e)
                 {

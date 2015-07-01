@@ -17,7 +17,7 @@
         /// <summary>
         /// Create start HTTP request
         /// </summary>
-        private async Task<bool> StartOrResumeApp(NvHttp nv, LimelightStreamConfiguration streamConfig)
+        private async Task<bool> StartOrResumeApp(NvHttp nv, MoonlightStreamConfiguration streamConfig)
         {
             XmlQuery serverInfo = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
             string currentGameString = await serverInfo.ReadXmlAttribute("currentgame");
@@ -71,7 +71,7 @@
         /// <summary>
         /// Starts the connection by calling into Limelight Common
         /// </summary>
-        private async Task StartConnection(LimelightStreamConfiguration streamConfig)
+        private async Task StartConnection(MoonlightStreamConfiguration streamConfig)
         {
             NvHttp nv = null;
             await SetStateText("Resolving hostname...");
@@ -99,11 +99,11 @@
             }
 
             // Set up callbacks
-            LimelightDecoderRenderer drCallbacks = new LimelightDecoderRenderer(DrSetup, DrStart, DrStop, DrRelease, DrSubmitDecodeUnit);
-            LimelightAudioRenderer arCallbacks = new LimelightAudioRenderer(ArInit, ArStart, ArStop, ArRelease, ArPlaySample);
-            LimelightConnectionListener clCallbacks = new LimelightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
+            MoonlightDecoderRenderer drCallbacks = new MoonlightDecoderRenderer(DrSetup, DrCleanup, DrSubmitDecodeUnit);
+            MoonlightAudioRenderer arCallbacks = new MoonlightAudioRenderer(ArInit, ArCleanup, ArPlaySample);
+            MoonlightConnectionListener clCallbacks = new MoonlightConnectionListener(ClStageStarting, ClStageComplete, ClStageFailed,
             ClConnectionStarted, ClConnectionTerminated, ClDisplayMessage, ClDisplayTransientMessage);
-            LimelightPlatformCallbacks plCallbacks = new LimelightPlatformCallbacks(PlThreadStart, PlDebugPrint);
+            MoonlightPlatformCallbacks plCallbacks = new MoonlightPlatformCallbacks(PlThreadStart, PlDebugPrint);
 
             // Launch Steam
             await SetStateText("Launching Steam");
@@ -118,14 +118,7 @@
             // Call into Common to start the connection
             Debug.WriteLine("Starting connection");
 
-            Regex r = new Regex(@"^(?<octet1>\d+).(?<octet2>\d+).(?<octet3>\d+).(?<octet4>\d+)");
-            Match m = r.Match(serverIp);
-
-            uint addr = (uint)(Convert.ToByte(m.Groups["octet4"].Value) << 24 |
-                Convert.ToByte(m.Groups["octet3"].Value) << 16 | 
-                Convert.ToByte(m.Groups["octet2"].Value) << 8 |
-                Convert.ToByte(m.Groups["octet1"].Value));
-            LimelightCommonRuntimeComponent.StartConnection(addr, streamConfig, clCallbacks, drCallbacks, arCallbacks, plCallbacks);
+            MoonlightCommonRuntimeComponent.StartConnection(serverIp, streamConfig, clCallbacks, drCallbacks, arCallbacks, plCallbacks, 0);
 
             if (stageFailureText != null)
             {
@@ -183,7 +176,7 @@
         /// </summary>
         private void Cleanup()
         {
-            LimelightCommonRuntimeComponent.StopConnection();
+            MoonlightCommonRuntimeComponent.StopConnection();
             hasMoved = false;
         }
         #endregion Helper methods

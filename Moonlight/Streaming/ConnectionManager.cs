@@ -17,7 +17,7 @@
         /// <summary>
         /// When the user presses "Start Streaming Steam", first check that they are paired
         /// </summary>
-        public static async Task<StreamContext> StartStreaming(CoreDispatcher uiDispatcher, Computer computer, LimelightStreamConfiguration streamConfig)
+        public static async Task<StreamContext> StartStreaming(CoreDispatcher uiDispatcher, Computer computer, MoonlightStreamConfiguration streamConfig)
         {
             PairingManager p = new PairingManager(computer); 
 

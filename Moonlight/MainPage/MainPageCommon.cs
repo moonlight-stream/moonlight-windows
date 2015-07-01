@@ -113,7 +113,7 @@
                 byte[] aesIv = new byte[16];
                 Array.ConstrainedCopy(aesRiIndex, 0, aesIv, 0, aesRiIndex.Length);
                 SettingsPage s = new SettingsPage();
-                LimelightStreamConfiguration config = new LimelightStreamConfiguration(
+                MoonlightStreamConfiguration config = new MoonlightStreamConfiguration(
                     s.GetStreamWidth(),
                     s.GetStreamHeight(),
                     s.GetStreamFps(),

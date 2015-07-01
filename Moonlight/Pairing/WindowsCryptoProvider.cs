@@ -1,4 +1,4 @@
-﻿namespace Limelight
+﻿namespace Moonlight
 {
     using Org.BouncyCastle.Asn1.X509;
     using Org.BouncyCastle.Crypto;

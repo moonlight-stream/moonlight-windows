@@ -1,12 +1,12 @@
-﻿namespace Limelight
+﻿namespace Moonlight
 {
     using System;
     using System.Diagnostics;
     using System.Threading.Tasks;
     using Windows.UI.Core;
 
-    using Limelight.Streaming;
-    using Limelight.Utils;
+    using Moonlight.Streaming;
+    using Moonlight.Utils;
 
     /// <summary>
     /// Performs pairing with the streaming machine

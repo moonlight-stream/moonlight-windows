@@ -1,6 +1,6 @@
-﻿namespace Limelight
+﻿namespace Moonlight
 {
-    using Limelight.Utils;
+    using Moonlight.Utils;
     using Org.BouncyCastle.Crypto;
     using Org.BouncyCastle.OpenSsl;
     using Org.BouncyCastle.Pkcs;

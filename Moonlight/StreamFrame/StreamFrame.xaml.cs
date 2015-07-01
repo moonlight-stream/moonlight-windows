@@ -185,17 +185,17 @@
                 int deltaButtons = mouseButtonFlag ^ GetButtonFlags(ptrPt);
                 if ((deltaButtons & MOUSE_BUTTON_LEFT) != 0)
                 {
-                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press,
+                    MoonlightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press,
                         (int)MouseButton.Left);
                 }
                 if ((deltaButtons & MOUSE_BUTTON_MIDDLE) != 0)
                 {
-                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press,
+                    MoonlightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press,
                         (int)MouseButton.Middle);
                 }
                 if ((deltaButtons & MOUSE_BUTTON_RIGHT) != 0)
                 {
-                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press,
+                    MoonlightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press,
                         (int)MouseButton.Right);
                 }
                 mouseButtonFlag = GetButtonFlags(ptrPt);
@@ -223,7 +223,7 @@
                 if (!hasMoved)
                 {
                     // We haven't moved so send a click
-                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, (int)MouseButton.Left);
+                    MoonlightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Press, (int)MouseButton.Left);
 
                     // Sleep here because some games do input detection by polling
                     using (EventWaitHandle tmpEvent = new ManualResetEvent(false))
@@ -232,7 +232,7 @@
                     }
 
                     // Raise the mouse button
-                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release, (int)MouseButton.Left);
+                    MoonlightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release, (int)MouseButton.Left);
                 }
             }
             else
@@ -241,17 +241,17 @@
                 int deltaButtons = mouseButtonFlag ^ GetButtonFlags(ptrPt);
                 if ((deltaButtons & MOUSE_BUTTON_LEFT) != 0)
                 {
-                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release,
+                    MoonlightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release,
                         (int)MouseButton.Left);
                 }
                 if ((deltaButtons & MOUSE_BUTTON_MIDDLE) != 0)
                 {
-                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release,
+                    MoonlightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release,
                         (int)MouseButton.Middle);
                 }
                 if ((deltaButtons & MOUSE_BUTTON_RIGHT) != 0)
                 {
-                    LimelightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release,
+                    MoonlightCommonRuntimeComponent.SendMouseButtonEvent((byte)MouseButtonAction.Release,
                         (int)MouseButton.Right);
                 }
                 mouseButtonFlag = GetButtonFlags(ptrPt);
@@ -278,7 +278,7 @@
                     short xToSend = (short)(eventX - lastX);
                     short yToSend = (short)(eventY - lastY);
                     // Send the values to the streaming PC so it can register mouse movement
-                    LimelightCommonRuntimeComponent.SendMouseMoveEvent(xToSend, yToSend);
+                    MoonlightCommonRuntimeComponent.SendMouseMoveEvent(xToSend, yToSend);
 
                     lastX = eventX;
                     lastY = eventY;
@@ -291,7 +291,7 @@
 
         private void RelativeMouseMoved(MouseDevice device, MouseEventArgs e)
         {
-            LimelightCommonRuntimeComponent.SendMouseMoveEvent((short)e.MouseDelta.X, (short)e.MouseDelta.Y);
+            MoonlightCommonRuntimeComponent.SendMouseMoveEvent((short)e.MouseDelta.X, (short)e.MouseDelta.Y);
         }
 
         #endregion Mouse Events
@@ -303,7 +303,7 @@
             short key = KeyboardHelper.TranslateVirtualKey(args.VirtualKey);
             if (key != 0)
             {
-                LimelightCommonRuntimeComponent.SendKeyboardEvent(key, (byte)KeyAction.Down,
+                MoonlightCommonRuntimeComponent.SendKeyboardEvent(key, (byte)KeyAction.Down,
                     KeyboardHelper.GetModifierFlags());
 
                 args.Handled = true;
@@ -315,7 +315,7 @@
             short key = KeyboardHelper.TranslateVirtualKey(args.VirtualKey);
             if (key != 0)
             {
-                LimelightCommonRuntimeComponent.SendKeyboardEvent(key, (byte)KeyAction.Up,
+                MoonlightCommonRuntimeComponent.SendKeyboardEvent(key, (byte)KeyAction.Up,
                     KeyboardHelper.GetModifierFlags());
 
                 args.Handled = true;
