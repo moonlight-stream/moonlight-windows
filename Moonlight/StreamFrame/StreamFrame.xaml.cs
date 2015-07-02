@@ -98,9 +98,7 @@
             Window.Current.CoreWindow.KeyUp += WindowKeyUpHandler;
 
             // Add a callback for relative mouse movements
-            #if WINDOWS_APP
             MouseDevice.GetForCurrentView().MouseMoved += RelativeMouseMoved;
-            #endif
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
