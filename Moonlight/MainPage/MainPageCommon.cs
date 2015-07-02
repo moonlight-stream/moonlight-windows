@@ -118,7 +118,7 @@
                     s.GetStreamWidth(),
                     s.GetStreamHeight(),
                     s.GetStreamFps(),
-                    5000, // FIXME: Scale by resolution
+                    10000, // FIXME: Scale by resolution
                     1024,
                     aesKey, aesIv);
 
