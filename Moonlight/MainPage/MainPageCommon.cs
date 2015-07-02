@@ -172,23 +172,34 @@
         /// <summary>
         /// Quit Game Event Handler
         /// </summary>
-        private void QuitGame_Common()
+        private async Task QuitGame_Common()
         {
+            Computer selected = (Computer)computerPicker.SelectedItem;
+
+            // User hasn't selected anything or selected the placeholder
+            if (selected == null || selected.IpAddress == null)
+            {
+                DialogUtils.DisplayDialog(this.Dispatcher, "No machine selected", "Quit Failed");
+                return;
+            }
+
             try
             {
-                Computer selected = (Computer)computerPicker.SelectedItem;
                 NvHttp nv = new NvHttp(selected.IpAddress);
                 XmlQuery quit = new XmlQuery(nv.BaseUrl + "/cancel?uniqueid=" + nv.GetUniqueId());
+                string cancelled = await quit.ReadXmlAttribute("cancel");
+                if (cancelled == "1")
+                {
+                    DialogUtils.DisplayDialog(this.Dispatcher, "Successfully Quit Game", "Quit Game");
+                    return;
+                }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
-                DialogUtils.DisplayDialog(this.Dispatcher, "Unable to quit", "Quit Game Failed");
-                return;
             }
 
-            // TODO sometimes we didn't really quit a game because there's no game going in the first place
-            DialogUtils.DisplayDialog(this.Dispatcher, "Successfully Quit Game", "Quit Game");
+            DialogUtils.DisplayDialog(this.Dispatcher, "Unable to quit", "Quit Game");
         }
 
         /// <summary>
