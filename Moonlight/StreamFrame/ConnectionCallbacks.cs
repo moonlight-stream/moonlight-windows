@@ -10,11 +10,7 @@
     using Windows.UI.Xaml.Controls;
     public sealed partial class StreamFrame : Page
     {
-#if WINDOWS_APP
-        Moonlight.Controllers.XInput xinput;
-#else
-        // TODO: Windows Phone
-#endif
+        Moonlight.Controllers.XInput controllers;
 
         #region Decoder Renderer
         public void DrSetup(int width, int height, int redrawRate, int drFlags)
@@ -151,17 +147,13 @@
         /// </summary>
         public void ClConnectionStarted()
         {
-#if WINDOWS_APP
             // Hide the cursor
             oldCursor = Window.Current.CoreWindow.PointerCursor;
             Window.Current.CoreWindow.PointerCursor = null;
 
             // Start controller support code
-            xinput = new Limelight.Controllers.XInput();
-            xinput.Start();
-#else
-            // TODO: Windows Phone
-#endif
+            controllers = new Moonlight.Controllers.XInput();
+            controllers.Start();
         }
 
         /// <summary>
@@ -173,11 +165,7 @@
             Debug.WriteLine("Connection terminated: " + errorCode);
 
             // Stop controller code
-#if WINDOWS_APP
-            xinput.Stop();
-#else
-            // TODO: Windows Phone
-#endif
+            controllers.Stop();
 
             var unused = Task.Run(() =>
             {
