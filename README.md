@@ -1,5 +1,8 @@
 #Moonlight
-####Moonlight Windows development is on hold until WinRT supports real time streaming of raw h264. We will provide any updates if this changes. We're sorry for the inconvenience and hope that we can get this up and running as soon as possible.
+
+####Update 7/1/2015: Development is happening again with the release of the new Windows 10 APIs. We don't know yet where the project will land, but we're working to bring game streaming to your Windows devices! 
+
+####Moonlight Windows development is on hold until Windows apps support real time streaming of raw h264. We will provide any updates if this changes. We're sorry for the inconvenience and hope that we can get this up and running as soon as possible.
 
 Note: Moonlight Windows is in development and is not considered stable. 
 
