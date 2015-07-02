@@ -33,7 +33,7 @@
     			</ListView.RenderTransform>
     			<ListView.ItemTemplate>
     				<DataTemplate>
-                        <Grid RightTapped="ShowFlyout">
+                        <Grid Tapped="ShowFlyout">
                             <TextBlock Text="{Binding}" FontSize="20" />
                             <FlyoutBase.AttachedFlyout>
                                 <MenuFlyout>

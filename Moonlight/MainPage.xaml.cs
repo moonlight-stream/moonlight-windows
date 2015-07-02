@@ -126,7 +126,7 @@
             computerPicker.SelectedItem = e.ClickedItem;
         }
 
-        private void ShowFlyout(object sender, Windows.UI.Xaml.Input.RightTappedRoutedEventArgs e)
+        private void ShowFlyout(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
         {
             FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
         }
