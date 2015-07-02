@@ -79,7 +79,7 @@
         }
 
         /// <summary>
-        /// Starts the connection by calling into Limelight Common
+        /// Starts the connection by calling into Moonlight Common
         /// </summary>
         private async Task StartConnection(MoonlightStreamConfiguration streamConfig)
         {

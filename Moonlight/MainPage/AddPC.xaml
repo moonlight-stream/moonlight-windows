@@ -13,7 +13,7 @@
         </CommandBar>
     </Page.BottomAppBar>
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    	<TextBlock HorizontalAlignment="Left" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Limelight" VerticalAlignment="Top"/>
+    	<TextBlock HorizontalAlignment="Left" Style="{StaticResource HeaderTextBlockStyle}" TextWrapping="Wrap" Text="Moonlight" VerticalAlignment="Top"/>
     	<TextBlock HorizontalAlignment="Center" Style="{StaticResource SubheaderTextBlockStyle}" TextWrapping="Wrap" Text="Manually Add PC" VerticalAlignment="Top" Margin="0,88,0,0"/>
     	<TextBox x:Name="nickname_textbox" Margin="66,168,66,0" TextWrapping="Wrap" VerticalAlignment="Top" PlaceholderText="Nickname"/>
     	<TextBox x:Name="ip_textbox" Margin="66,227,66,0" TextWrapping="Wrap" VerticalAlignment="Top" PlaceholderText="IP Address" IsTextPredictionEnabled="False" InputScope="Url"/>
