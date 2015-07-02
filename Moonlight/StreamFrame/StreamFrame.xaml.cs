@@ -168,6 +168,22 @@
         }
 
         /// <summary>
+        /// Send mouse wheel event to the streaming PC
+        /// </summary>
+        private void MouseWheel(object sender, PointerRoutedEventArgs e)
+        {
+            Pointer ptr = e.Pointer;
+            PointerPoint ptrPt = e.GetCurrentPoint(StreamDisplay);
+            PointerPointProperties props = ptrPt.Properties;
+
+            // GameStream only supports vertical scrolling for now
+            if (!props.IsHorizontalMouseWheel)
+            {
+                MoonlightCommonRuntimeComponent.SendScrollEvent((short) (props.MouseWheelDelta / 120));
+            }
+        }
+
+        /// <summary>
         /// Send mouse down event to the streaming PC
         /// </summary>
         private void MouseDown(object sender, PointerRoutedEventArgs e)
