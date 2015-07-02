@@ -17,10 +17,7 @@ namespace Moonlight
     {
         #region Class Variables
 
-        private MediaStreamSourceSampleRequest pendingVideoRequest;
-        private MediaStreamSourceSampleRequestDeferral pendingVideoDeferral;
         private MediaStreamSample pendingVideoSample;
-        private ManualResetEvent removedVideoSampleEvent = new ManualResetEvent(false);
         private object videoQueueLock;
         private DateTime videoStart = new DateTime(0);
         private SourceVoice sourceVoice;
@@ -59,6 +56,11 @@ namespace Moonlight
                 DateTime.Now - videoStart);
             sample.Duration = TimeSpan.Zero;
 
+            // HACK: Marking all frames as keyframes seems
+            // to keep the decoder from dying after the first
+            // few seconds.
+            sample.KeyFrame = true;
+
             if ((buf[4] & 0x1F) == 0x5)
             {
                 sample.KeyFrame = true;
@@ -75,15 +77,13 @@ namespace Moonlight
                 {
                     args.Request.Sample = pendingVideoSample;
                     pendingVideoSample = null;
-                }
-                else
-                {
-                    pendingVideoRequest = args.Request;
-                    pendingVideoDeferral = args.Request.GetDeferral();
+                    return;
                 }
             }
 
-            removedVideoSampleEvent.Set();
+            // If we don't have any sample right now, we just return an empty sample. This tells the decoder
+            // that we're still alive here. Doing a sample deferral seems to cause serious lag issues.
+            args.Request.Sample = MediaStreamSample.CreateFromBuffer(new byte[0].AsBuffer(), TimeSpan.Zero);
         }
 
         public void EnqueueVideoSample(byte[] buf)
@@ -92,38 +92,16 @@ namespace Moonlight
             // common. It's needed so that we avoid our queue getting
             // too large.
 
-            // Try to enqueue if there's space
-            lock (videoQueueLock)
-            {
-                // Attempt to satisfy a deferral first
-                if (pendingVideoRequest != null)
-                {
-                    pendingVideoRequest.Sample = CreateVideoSample(buf);
-                    pendingVideoDeferral.Complete();
+            MediaStreamSample sample = CreateVideoSample(buf);
 
-                    pendingVideoRequest = null;
-                    pendingVideoDeferral = null;
-                    return;
-                }
-
-                // Now pend the sample if nothing is already waiting
-                if (pendingVideoSample == null)
-                {
-                    pendingVideoSample = CreateVideoSample(buf);
-                    return;
-                }
-            }
-
-            // Otherwise wait until there's space
+            // Wait until there's space to queue
             for (;;)
             {
-                removedVideoSampleEvent.WaitOne();
-
                 lock (videoQueueLock)
                 {
                     if (pendingVideoSample == null)
                     {
-                        pendingVideoSample = CreateVideoSample(buf);
+                        pendingVideoSample = sample;
                         return;
                     }
                 }
@@ -133,7 +111,7 @@ namespace Moonlight
         public void EnqueueAudioSample(byte[] buf)
         {
             // Allocate a new buffer because ours will go away after this call
-            AudioBuffer buffer = new AudioBuffer(DataStream.Create<byte>(buf, true, false, 0, false));
+            AudioBuffer buffer = new AudioBuffer(DataStream.Create<byte>(buf, true, false));
 
             try
             {
