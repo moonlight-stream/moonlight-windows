@@ -19,7 +19,7 @@ namespace Moonlight.Controllers
             while (!stopPolling)
             {
                 // Wait before collecting new data
-                await Task.Delay(25);
+                await Task.Delay(10);
 
                 // Read input from all controllers
                 foreach (Controller controller in controllers)
