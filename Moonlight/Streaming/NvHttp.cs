@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Networking.Sockets;
+using Windows.Storage;
 using Windows.System.Profile;
 
 namespace Moonlight
@@ -42,12 +43,18 @@ namespace Moonlight
         /// <returns>Unique ID for the device</returns>
         public String GetUniqueId()
         {
-            var token = HardwareIdentification.GetPackageSpecificToken(null);
-            var hardwareId = token.Id;
-            var dataReader = Windows.Storage.Streams.DataReader.FromBuffer(hardwareId);
+            var settings = ApplicationData.Current.RoamingSettings;
+            byte[] bytes;
 
-            byte[] bytes = new byte[8];
-            dataReader.ReadBytes(bytes);
+            if (settings.Values.ContainsKey("uniqueid"))
+            {
+                bytes = (byte[])settings.Values["uniqueid"];
+            }
+            else
+            {
+                bytes = PairingCryptoHelpers.GenerateRandomBytes(8);
+                settings.Values["uniqueid"] = bytes;
+            }
 
             return PairingCryptoHelpers.BytesToHex(bytes);
         }
