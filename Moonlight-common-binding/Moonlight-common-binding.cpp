@@ -36,6 +36,7 @@ void DrShimSetup(int width, int height, int redrawRate, void* context, int drFla
 }
 void DrShimCleanup(void) {
 	free(s_FrameBuffer);
+	s_FrameBufferSize = 0;
 	s_DrCallbacks->Cleanup();
 }
 int DrShimSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
