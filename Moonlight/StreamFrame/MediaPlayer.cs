@@ -39,10 +39,8 @@
             _videoMss.SampleRequested += _videoMss_SampleRequested;
 
             XAudio2 xaudio = new XAudio2();
-            MasteringVoice masteringVoice = new MasteringVoice(xaudio);
-
+            MasteringVoice masteringVoice = new MasteringVoice(xaudio, 2, 48000);
             WaveFormat format = new WaveFormat(48000, 16, 2);
-
 
             // Set for low latency playback
             StreamDisplay.RealTimePlayback = true;
