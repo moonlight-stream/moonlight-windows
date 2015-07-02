@@ -68,11 +68,6 @@
         {
             InitializeComponent();
 
-            // Register back button for use in phone
-#if WINDOWS_PHONE_APP
-            Windows.Phone.UI.Input.HardwareButtons.BackPressed += HardwareButtonsBackPressed;
-#endif
-
             // Audio/video stream source init
             AvStream = new AvStreamSource();
 
@@ -99,6 +94,18 @@
 
             // Add a callback for relative mouse movements
             MouseDevice.GetForCurrentView().MouseMoved += RelativeMouseMoved;
+
+            // Set the back button up to return to the main page
+            SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
+            SystemNavigationManager.GetForCurrentView().BackRequested += (s, a) =>
+            {
+                MoonlightCommonRuntimeComponent.StopConnection();
+                if (Frame.CanGoBack)
+                {
+                    Frame.GoBack();
+                    a.Handled = true;
+                }
+            };
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -130,19 +137,6 @@
             await StartConnection(context.streamConfig);
         }
 
-#if WINDOWS_PHONE_APP
-        /// <summary>
-        /// If Windows Phone, go backwards and quit the stream instead of quitting the app
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void HardwareButtonsBackPressed(object sender, Windows.Phone.UI.Input.BackPressedEventArgs e)
-        {
-            LimelightCommonRuntimeComponent.StopConnection();
-            e.Handled = true;
-            Frame.GoBack();
-        }
-#endif
         #endregion Navigation Events
 
         #region Mouse Events
