@@ -12,6 +12,8 @@
     using Windows.UI.Xaml.Controls;
     public sealed partial class StreamFrame : Page
     {
+        private int serverMajorVersion;
+
         #region Connection
 
         /// <summary>
@@ -25,6 +27,14 @@
             {
                 return false;
             }
+
+            string versionString = await serverInfo.ReadXmlAttribute("appversion");
+            if (versionString == null)
+            {
+                return false;
+            }
+
+            serverMajorVersion = Convert.ToInt32(versionString.Substring(0, 1));
 
             byte[] aesIv = streamConfig.GetRiAesIv();
             int riKeyId =
@@ -117,7 +127,7 @@
             // Call into Common to start the connection
             Debug.WriteLine("Starting connection");
 
-            MoonlightCommonRuntimeComponent.StartConnection(serverIp, streamConfig, clCallbacks, drCallbacks, arCallbacks, 4);
+            MoonlightCommonRuntimeComponent.StartConnection(serverIp, streamConfig, clCallbacks, drCallbacks, arCallbacks, serverMajorVersion);
 
             if (stageFailureText != null)
             {
