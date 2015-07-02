@@ -95,8 +95,6 @@
         {
             Debug.WriteLine("Start Streaming button pressed");
 
-            // Stop enumerating machines while we're trying to check pair state
-            mDnsTimer.Stop();
             selected = (Computer)computerPicker.SelectedItem;
 
             // User hasn't selected a machine or selected a placeholder
@@ -106,6 +104,9 @@
             }
             else
             {
+                // Stop enumerating machines while we're trying to check pair state
+                mDnsTimer.Stop();
+
                 byte[] aesKey = PairingCryptoHelpers.GenerateRandomBytes(16);
 
                 // GameStream only uses 4 bytes of a 16 byte IV. Go figure.
