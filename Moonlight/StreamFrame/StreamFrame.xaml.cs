@@ -122,7 +122,7 @@
         /// <summary>
         /// Event handler for page loaded event
         /// </summary>
-        private async void Loaded(object sender, RoutedEventArgs e)
+        private async void StreamFrame_Loaded(object sender, RoutedEventArgs e)
         {
             StreamDisplay.Visibility = Visibility.Visible;
             Waitgrid.Visibility = Visibility.Collapsed;

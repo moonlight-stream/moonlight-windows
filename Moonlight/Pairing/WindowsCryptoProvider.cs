@@ -65,7 +65,7 @@
             keypairGenerationTask = null;
 
             // Load the generated pair
-            LoadCertKeyPair();
+            await LoadCertKeyPair();
         }
 
         /// <summary>

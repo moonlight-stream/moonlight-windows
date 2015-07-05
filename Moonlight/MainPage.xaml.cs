@@ -55,7 +55,7 @@
         /// <summary>
         /// Once all the page elements are loaded, run mDNS discovery
         /// </summary>
-        private async void Loaded(object sender, object e)
+        private async void MainPage_Loaded(object sender, object e)
         {
             await Loaded_Common();    
         }

@@ -144,7 +144,7 @@
         /// <summary>
         /// Runs if starting the connection failed
         /// </summary>
-        private async void ConnectionFailed()
+        private void ConnectionFailed()
         {
             // Stop showing the wait UI
             this.Waitgrid.Visibility = Visibility.Collapsed;
