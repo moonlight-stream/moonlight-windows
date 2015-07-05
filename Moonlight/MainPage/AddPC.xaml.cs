@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -30,23 +31,17 @@ namespace Moonlight
         {
             this.InitializeComponent();
 
-#if WINDOWS_PHONE_APP
-            Windows.Phone.UI.Input.HardwareButtons.BackPressed += HardwareButtonsBackPressed;
-#endif
+            // Set the back button up to return to the main page
+            SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
+            SystemNavigationManager.GetForCurrentView().BackRequested += (s, a) =>
+            {
+                if (Frame.CanGoBack)
+                {
+                    Frame.GoBack();
+                    a.Handled = true;
+                }
+            };
         }
-
-#if WINDOWS_PHONE_APP
-        /// <summary>
-        /// If Windows Phone, go backwards instead of quitting the app
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void HardwareButtonsBackPressed(object sender, Windows.Phone.UI.Input.BackPressedEventArgs e)
-        {
-            e.Handled = true;
-            Frame.GoBack();
-        }
-#endif
 
         /// <summary>
         /// Event handler for clicking the add PC manually button

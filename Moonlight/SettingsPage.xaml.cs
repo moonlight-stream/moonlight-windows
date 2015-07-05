@@ -1,4 +1,5 @@
-﻿using Windows.UI.Xaml;
+﻿using Windows.UI.Core;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
@@ -13,17 +14,20 @@ namespace Moonlight
         {
             this.InitializeComponent();
             LoadSettings();
+
+            // Set the back button up to return to the main page
+            SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
+            SystemNavigationManager.GetForCurrentView().BackRequested += (s, a) =>
+            {
+                if (Frame.CanGoBack)
+                {
+                    Frame.GoBack();
+                    a.Handled = true;
+                }
+            };
         }
 
         #region EventHandlers
-        /// <summary>
-        /// Save settings when one navigates away from the page
-        /// </summary>
-        /// <param name="e"></param>
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
-        {
-            SaveSettings();
-        }
 
         /// <summary>
         /// Save settings and return to the main page
