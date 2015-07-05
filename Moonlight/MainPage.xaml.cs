@@ -98,9 +98,7 @@
         /// <summary>
         /// Quit Game Event Handler
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private async void QuitGame(object sender, RoutedEventArgs e)
+        private async void QuitButton_Click(object sender, RoutedEventArgs e)
         {
             await QuitGame_Common();
         }

@@ -9,16 +9,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Loaded="Loaded" RequestedTheme="Dark">
-    	<Page.Resources>
-    		<MenuFlyout x:Key="Selected_PC_Flyoud">
-    			<MenuFlyoutItem x:Name="Pair_Button" Text="Pair With PC"/>
-    			<MenuFlyoutItem x:Name="Stream_Button" Text="Stream from PC"/>
-    		</MenuFlyout>
-    	</Page.Resources>
+
     <Page.BottomAppBar>
         <CommandBar>
-            <AppBarButton x:Name="quitButton" Icon="Cancel" Label="Quit Game" Click="QuitGame">
-            </AppBarButton>
             <AppBarButton x:Name="Add_AppBarButton" Icon="Add" Label="Add PC" Click="Add_AppBarButton_Click"/>
             <AppBarButton Icon="Setting" Label="Settings" Click="Settings_AppBarButton_Click"/>
         </CommandBar>
@@ -39,6 +32,7 @@
                                 <MenuFlyout>
                                     <MenuFlyoutItem Text="Pair with PC" Click="PairButton_Click" />
                                     <MenuFlyoutItem Text="Stream from PC" Click="StreamButton_Click" />
+                                    <MenuFlyoutItem Text="Quit Game" Click="QuitButton_Click" />
                                 </MenuFlyout>
                             </FlyoutBase.AttachedFlyout>
                         </Grid>
