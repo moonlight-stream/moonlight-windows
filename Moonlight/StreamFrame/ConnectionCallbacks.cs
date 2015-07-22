@@ -164,8 +164,11 @@
         {
             Debug.WriteLine("Connection terminated: " + errorCode);
 
-            // Stop controller code
-            controllers.Stop();
+            if (controllers != null)
+            {
+                // Stop controller code
+                controllers.Stop();
+            }
 
             var unused = Task.Run(() =>
             {
