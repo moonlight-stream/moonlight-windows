@@ -66,7 +66,7 @@
             // App list query went well - try to get the app ID
             try
             {
-                appIdStr = await appList.SearchAttribute("App", "AppTitle", app, "ID");
+                appIdStr = await appList.SearchElement("App", "AppTitle", app, "ID");
                 Debug.WriteLine(appIdStr);
                 if (appIdStr == null)
                 {

@@ -22,13 +22,13 @@
         private async Task<bool> StartOrResumeApp(NvHttp nv, MoonlightStreamConfiguration streamConfig)
         {
             XmlQuery serverInfo = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
-            string currentGameString = await serverInfo.ReadXmlAttribute("currentgame");
+            string currentGameString = await serverInfo.ReadXmlElement("currentgame");
             if (currentGameString == null)
             {
                 return false;
             }
 
-            string versionString = await serverInfo.ReadXmlAttribute("appversion");
+            string versionString = await serverInfo.ReadXmlElement("appversion");
             if (versionString == null)
             {
                 return false;
@@ -54,7 +54,7 @@
                     "&additionalStates=1&sops=1" + // FIXME: make sops configurable
                     riConfigString);
 
-                string sessionStr = await x.ReadXmlAttribute("gamesession");
+                string sessionStr = await x.ReadXmlElement("gamesession");
                 if (sessionStr == null || sessionStr.Equals("0"))
                 {
                     return false;
@@ -68,7 +68,7 @@
                 // FIXME: Quit and relaunch if it's not the game we came to start
                 XmlQuery x = new XmlQuery(nv.BaseUrl + "/resume?uniqueid=" + nv.GetUniqueId() + riConfigString);
 
-                string resumeStr = await x.ReadXmlAttribute("resume");
+                string resumeStr = await x.ReadXmlElement("resume");
                 if (resumeStr == null || resumeStr.Equals("0"))
                 {
                     return false;

@@ -72,7 +72,19 @@
 
             pairState = new XmlQuery(nv.BaseUrl + "/serverinfo?uniqueid=" + nv.GetUniqueId());
 
-            string pairStatus = await pairState.ReadXmlAttribute("PairStatus");
+            string statusCode = await pairState.ReadXmlRootAttribute("status_code");
+            if (statusCode == null)
+            {
+                return null;
+            }
+
+            // Status code 401 means we're not paired
+            if (Convert.ToInt32(statusCode) == 401)
+            {
+                return false;
+            }
+
+            string pairStatus = await pairState.ReadXmlElement("PairStatus");
             if (pairStatus == null)
             {
                 // Request failed

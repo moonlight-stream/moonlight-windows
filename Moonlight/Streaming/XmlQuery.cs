@@ -34,16 +34,29 @@ namespace Moonlight
         }
 
         /// <summary>
-        /// Given a tag, return the first XML attribute contained in this tag as a string
+        /// Given a tag, return the first XML element contained in this tag as a string
         /// </summary>
         /// <param name="tag">Tag containing the desired attribute</param>
         /// <returns>The first attribute within the given tag</returns>
-        public async Task<string> ReadXmlAttribute(string tag)
+        public async Task<string> ReadXmlElement(string tag)
         {
             // Do the query if we haven't yet
             await GetXml();
 
-            return ReadXmlAttribute(tag, rawXml);
+            return ReadXmlElement(tag, rawXml);
+        }
+
+        /// <summary>
+        /// Given an attribute name, return the first XML attribute as a string
+        /// </summary>
+        /// <param name="tag">Tag containing the desired attribute</param>
+        /// <returns>The first attribute within the given tag</returns>
+        public async Task<string> ReadXmlRootAttribute(string tag)
+        {
+            // Do the query if we haven't yet
+            await GetXml();
+
+            return ReadXmlRootAttribute(tag, rawXml);
         }
 
         /// <summary>
@@ -52,22 +65,54 @@ namespace Moonlight
         /// <param name="tag">XML tag</param>
         /// <param name="element">XContainer to search within</param>
         /// <returns>The first attribute within the given tag in the XContainer</returns>
-        public string ReadXmlAttribute(string tag, XContainer element)
+        private string ReadXmlElement(string tag, XContainer element)
         {
             if (element == null)
             {
                 return null;
             }
 
-            var query = from c in element.Descendants(tag) select c;
+            var descendants = element.Descendants(tag);
 
             // Not found 
-            if (query == null)
+            if (descendants == null || descendants.Count() == 0)
             {
                 return null; 
             }
 
-            return query.FirstOrDefault().Value;
+            return descendants.First().Value;
+        }
+
+        /// <summary>
+        /// Given an XElement and an attribute, search within that element for the first attribute.
+        /// </summary>
+        /// <param name="tag">XML tag</param>
+        /// <param name="element">XContainer to search within</param>
+        /// <returns>The first attribute within the given tag in the XContainer</returns>
+        private string ReadXmlRootAttribute(string attribute, XContainer element)
+        {
+            if (element == null)
+            {
+                return null;
+            }
+
+            var root = element.Element("root");
+
+            // Not found 
+            if (root == null)
+            {
+                return null;
+            }
+
+            var attrib = root.Attribute(attribute);
+            
+            // Not found
+            if (attrib == null)
+            {
+                return null;
+            }
+
+            return attrib.Value;
         }
 
         /// <summary>
@@ -77,19 +122,19 @@ namespace Moonlight
         /// <param name="attribute">Known attribute</param>
         /// <param name="tagToFind">Tag from within we want to find an attribute</param>
         /// <returns>The found attribute</returns>
-        public async Task<string> SearchAttribute(string outerTag, string innerTag, string attribute, string tagToFind)
+        public async Task<string> SearchElement(string outerTag, string innerTag, string attribute, string tagToFind)
         {
             // Do the query if we haven't yet
             await GetXml();
 
             // Get all elements with specified tag
-            var query = from c in rawXml.Descendants(outerTag) select c;
+            var query = rawXml.Descendants(outerTag);
 
             // Look for the one with the attribute we already know
             foreach (XElement x in query){
-                if (ReadXmlAttribute(innerTag, x) == attribute)
+                if (ReadXmlElement(innerTag, x) == attribute)
                 {
-                    return ReadXmlAttribute(tagToFind, x);
+                    return ReadXmlElement(tagToFind, x);
                 }
             }
             // Not found

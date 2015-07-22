@@ -184,11 +184,18 @@
                 return;
             }
 
+            PairingManager p = new PairingManager(selected);
+            if (await p.QueryPairState() != true)
+            {
+                DialogUtils.DisplayDialog(this.Dispatcher, "Device not paired", "Quit Failed");
+                return;
+            }
+
             try
             {
                 NvHttp nv = new NvHttp(selected.IpAddress);
                 XmlQuery quit = new XmlQuery(nv.BaseUrl + "/cancel?uniqueid=" + nv.GetUniqueId());
-                string cancelled = await quit.ReadXmlAttribute("cancel");
+                string cancelled = await quit.ReadXmlElement("cancel");
                 if (cancelled == "1")
                 {
                     DialogUtils.DisplayDialog(this.Dispatcher, "Successfully Quit Game", "Quit Game");

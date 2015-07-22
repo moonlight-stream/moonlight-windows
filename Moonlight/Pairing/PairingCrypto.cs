@@ -131,7 +131,7 @@
 
         private static async Task<X509Certificate> ExtractPlainCert(XmlQuery q, String tag)
         {
-            String certHexString = await q.ReadXmlAttribute(tag);
+            String certHexString = await q.ReadXmlElement(tag);
             byte[] certBytes = PairingCryptoHelpers.HexToBytes(certHexString);
             String certText = Encoding.UTF8.GetString(certBytes, 0, certBytes.Length);
 
@@ -158,7 +158,7 @@
             // User will need to close dialog themselves
             XmlQuery getServerCert = new XmlQuery(nv.BaseUrl + "/pair?uniqueid=" + uniqueId +
                 "&devicename=roth&updateState=1&phrase=getservercert&salt=" + BytesToHex(salt) + "&clientcert=" + BytesToHex(await provider.GetPemCertBytes()));
-            result = await getServerCert.ReadXmlAttribute("paired");
+            result = await getServerCert.ReadXmlElement("paired");
             if (result == null || !result.Equals("1"))
             {
                 await Unpair(nv);
@@ -176,14 +176,14 @@
 		    XmlQuery challengeResp = new XmlQuery(nv.BaseUrl + 
 				    "/pair?uniqueid="+uniqueId+"&devicename=roth&updateState=1&clientchallenge="+BytesToHex(encryptedChallenge));
             // If we're not paired, there's a problem. 
-            result = await challengeResp.ReadXmlAttribute("paired");
+            result = await challengeResp.ReadXmlElement("paired");
 		    if (result == null || !result.Equals("1")) {
                 await Unpair(nv); 
 			    return false;
 		    }
 
             // Decode the server's response and subsequent challenge
-            byte[] encServerChallengeResponse = HexToBytes(await challengeResp.ReadXmlAttribute("challengeresponse"));
+            byte[] encServerChallengeResponse = HexToBytes(await challengeResp.ReadXmlElement("challengeresponse"));
             byte[] decServerChallengeResponse = DecryptAes(encServerChallengeResponse, aesKey);
 
             byte[] serverResponse = new byte[20], serverChallenge = new byte[16];
@@ -202,7 +202,7 @@
             byte[] challengeRespEncrypted = EncryptAes(challengeRespHash, aesKey);
             XmlQuery secretResp = new XmlQuery(nv.BaseUrl +
                     "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&serverchallengeresp=" + BytesToHex(challengeRespEncrypted));
-            result = await secretResp.ReadXmlAttribute("paired");
+            result = await secretResp.ReadXmlElement("paired");
             if (result == null || !result.Equals("1"))
             {
                 await Unpair(nv); 
@@ -210,7 +210,7 @@
             }
 
             // Get the server's signed secret
-            byte[] serverSecretResp = HexToBytes(await secretResp.ReadXmlAttribute("pairingsecret"));
+            byte[] serverSecretResp = HexToBytes(await secretResp.ReadXmlElement("pairingsecret"));
             byte[] serverSecret = new byte[16]; byte[] serverSignature = new byte[256]; 
             Array.Copy(serverSecretResp, 0, serverSecret, 0, 16);
             Array.Copy(serverSecretResp, 16, serverSignature, 0, 256);
@@ -238,7 +238,7 @@
             byte[] clientPairingSecret = concatBytes(clientSecret, SignData(await provider.GetKeyPair(), clientSecret));
             XmlQuery clientSecretResp = new XmlQuery(nv.BaseUrl +
                     "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&clientpairingsecret=" + BytesToHex(clientPairingSecret));
-            result = await clientSecretResp.ReadXmlAttribute("paired");
+            result = await clientSecretResp.ReadXmlElement("paired");
             if (result == null || !result.Equals("1"))
             {
                 await Unpair(nv);
@@ -248,7 +248,7 @@
             // Do the initial challenge (seems neccessary for us to show as paired)
             XmlQuery pairChallenge = new XmlQuery(nv.BaseUrl + "/pair?uniqueid=" + uniqueId + "&devicename=roth&updateState=1&phrase=pairchallenge");
 
-            result = await pairChallenge.ReadXmlAttribute("paired");
+            result = await pairChallenge.ReadXmlElement("paired");
             if (result == null || !result.Equals("1"))
             {
                 await Unpair(nv);
