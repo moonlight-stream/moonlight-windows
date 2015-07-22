@@ -69,6 +69,9 @@ namespace Moonlight
                 Window.Current.Content = rootFrame;
             }
 
+            Windows.UI.Core.SystemNavigationManager.GetForCurrentView().BackRequested += App_BackRequested;
+            rootFrame.Navigated += RootFrame_Navigated;
+
             if (rootFrame.Content == null)
             {
                 // When the navigation stack isn't restored navigate to the first page,
@@ -76,8 +79,37 @@ namespace Moonlight
                 // parameter
                 rootFrame.Navigate(typeof(MainPage), null);
             }
+
             // Ensure the current window is active
             Window.Current.Activate();
+        }
+
+        private void RootFrame_Navigated(object sender, NavigationEventArgs e)
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+
+            // Note, on device families that have no title bar, setting AppViewBackButtonVisibility can safely execute 
+            // but it will have no effect. Such device families provide back button UI for you.
+            if (rootFrame.CanGoBack)
+            {
+                Windows.UI.Core.SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility =
+                    Windows.UI.Core.AppViewBackButtonVisibility.Visible;
+            }
+            else
+            {
+                Windows.UI.Core.SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility =
+                    Windows.UI.Core.AppViewBackButtonVisibility.Collapsed;
+            }
+        }
+
+        private void App_BackRequested(object sender, Windows.UI.Core.BackRequestedEventArgs e)
+        {
+            Frame rootFrame = Window.Current.Content as Frame;
+
+            if (rootFrame.CanGoBack)
+            {
+                rootFrame.GoBack();
+            }
         }
 
         /// <summary>

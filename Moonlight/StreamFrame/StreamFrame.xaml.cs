@@ -95,18 +95,6 @@
 
             // Add a callback for relative mouse movements
             MouseDevice.GetForCurrentView().MouseMoved += RelativeMouseMoved;
-
-            // Set the back button up to return to the main page
-            SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
-            SystemNavigationManager.GetForCurrentView().BackRequested += (s, a) =>
-            {
-                MoonlightCommonRuntimeComponent.StopConnection();
-                if (Frame.CanGoBack)
-                {
-                    Frame.GoBack();
-                    a.Handled = true;
-                }
-            };
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)

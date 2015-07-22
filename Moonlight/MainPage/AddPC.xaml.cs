@@ -30,17 +30,6 @@ namespace Moonlight
         public AddPC()
         {
             this.InitializeComponent();
-
-            // Set the back button up to return to the main page
-            SystemNavigationManager.GetForCurrentView().AppViewBackButtonVisibility = AppViewBackButtonVisibility.Visible;
-            SystemNavigationManager.GetForCurrentView().BackRequested += (s, a) =>
-            {
-                if (Frame.CanGoBack)
-                {
-                    Frame.GoBack();
-                    a.Handled = true;
-                }
-            };
         }
 
         /// <summary>
