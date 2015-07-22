@@ -102,6 +102,8 @@
             base.OnNavigatedFrom(e);
 
             ReleaseMouse();
+
+            MoonlightCommonRuntimeComponent.StopConnection();
         }
 
         private void CaptureMouse()
