@@ -49,6 +49,7 @@
         private const int MOUSE_BUTTON_MIDDLE = 0x2;
         private const int MOUSE_BUTTON_RIGHT = 0x4;
         private CoreCursor oldCursor;
+        private bool capturingMouse;
 
         /// <summary>
         /// Gets and sets the custom AV source
@@ -112,11 +113,27 @@
         {
             base.OnNavigatedFrom(e);
 
+            ReleaseMouse();
+        }
+
+        private void CaptureMouse()
+        {
+            // Hide the cursor
+            oldCursor = Window.Current.CoreWindow.PointerCursor;
+            Window.Current.CoreWindow.PointerCursor = null;
+
+            capturingMouse = true;
+        }
+
+        private void ReleaseMouse()
+        {
             // Restore the cursor
             if (oldCursor != null)
             {
                 Window.Current.CoreWindow.PointerCursor = oldCursor;
             }
+
+            capturingMouse = false;
         }
         
         /// <summary>
@@ -299,6 +316,11 @@
 
         private void RelativeMouseMoved(MouseDevice device, MouseEventArgs e)
         {
+            if (!capturingMouse)
+            {
+                return;
+            }
+
             MoonlightCommonRuntimeComponent.SendMouseMoveEvent((short)e.MouseDelta.X, (short)e.MouseDelta.Y);
         }
 
@@ -308,6 +330,20 @@
 
         private void WindowKeyDownHandler(CoreWindow sender, KeyEventArgs args)
         {
+            // Watch for Ctrl+Alt+Shift to toggle mouse binding
+            if ((KeyboardHelper.GetModifierFlags() & (byte)(Modifier.ModifierShift | Modifier.ModifierAlt | Modifier.ModifierCtrl)) ==
+                (byte)(Modifier.ModifierShift | Modifier.ModifierAlt | Modifier.ModifierCtrl))
+            {
+                if (capturingMouse)
+                {
+                    ReleaseMouse();
+                }
+                else
+                {
+                    CaptureMouse();
+                }
+            }
+
             short key = KeyboardHelper.TranslateVirtualKey(args.VirtualKey);
             if (key != 0)
             {

@@ -147,9 +147,8 @@
         /// </summary>
         public void ClConnectionStarted()
         {
-            // Hide the cursor
-            oldCursor = Window.Current.CoreWindow.PointerCursor;
-            Window.Current.CoreWindow.PointerCursor = null;
+            // Capture the mouse
+            CaptureMouse();
 
             // Start controller support code
             controllers = new Moonlight.Controllers.XInput();
