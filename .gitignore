@@ -12,6 +12,7 @@
 *.spl
 *.srum
 *.rej
+*/project.lock.json
 
 # Build results
 
@@ -104,8 +105,7 @@ publish/
 *.pubxml
 
 # NuGet Packages Directory
-## TODO: If you have NuGet Package Restore enabled, uncomment the next line
-#packages/
+packages/
 
 # Windows Azure Build Output
 csx
@@ -159,18 +159,3 @@ $RECYCLE.BIN/
 
 # Other
 *.sap
-Limelight/Toolkit.Content/ApplicationBar.Add.png
-packages/Zeroconf.2.0.0/Zeroconf.2.0.0.nupkg
-packages/Zeroconf.2.0.0/lib/net45/Zeroconf.Platform.xml
-packages/Zeroconf.2.0.0/lib/net45/Zeroconf.xml
-packages/Zeroconf.2.0.0/lib/portable-net45+wp8+win8/Zeroconf.xml
-packages/Zeroconf.2.0.0/lib/win8/Zeroconf.Platform.pri
-packages/Zeroconf.2.0.0/lib/win8/Zeroconf.Platform.xml
-packages/Zeroconf.2.0.0/lib/win8/Zeroconf.xml
-packages/Zeroconf.2.0.0/lib/wp8/Zeroconf.Platform.xml
-packages/Zeroconf.2.0.0/lib/wp8/Zeroconf.xml
-Limelight/README_FIRST.txt
-packages/Zeroconf.2.1.0/
-packages/
-Limelight.Windows/Assets/
-Limelight/Design/projectGuides.guides
