@@ -52,6 +52,7 @@ int DrShimSubmitDecodeUnit(PDECODE_UNIT decodeUnit) {
 	}
 
 	if (s_FrameBuffer == NULL) {
+        s_FrameBufferSize = 0;
 		return DR_NEED_IDR;
 	}
 
