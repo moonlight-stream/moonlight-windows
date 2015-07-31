@@ -19,6 +19,7 @@ namespace Moonlight
 
         private MediaStreamSample pendingVideoSample;
         private object videoQueueLock;
+        private AutoResetEvent queueEmpty = new AutoResetEvent(true);
         private DateTime videoStart = new DateTime(0);
         private SourceVoice sourceVoice;
 
@@ -77,6 +78,7 @@ namespace Moonlight
                 {
                     args.Request.Sample = pendingVideoSample;
                     pendingVideoSample = null;
+                    queueEmpty.Set();
                     return;
                 }
             }
@@ -95,16 +97,12 @@ namespace Moonlight
             MediaStreamSample sample = CreateVideoSample(buf);
 
             // Wait until there's space to queue
-            for (;;)
+            queueEmpty.WaitOne();
+
+            lock (videoQueueLock)
             {
-                lock (videoQueueLock)
-                {
-                    if (pendingVideoSample == null)
-                    {
-                        pendingVideoSample = sample;
-                        return;
-                    }
-                }
+                Debug.Assert(pendingVideoSample == null);
+                pendingVideoSample = sample;
             }
         }
 
