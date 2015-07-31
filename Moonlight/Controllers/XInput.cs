@@ -14,7 +14,7 @@ namespace Moonlight.Controllers
 
         private async Task PollControllerWorker()
         {
-            int lastPacketNumber = -1;
+            int[] lastPacketNumber = new int[4];
 
             while (!stopPolling)
             {
@@ -24,14 +24,16 @@ namespace Moonlight.Controllers
                 // Read input from all controllers
                 foreach (Controller controller in controllers)
                 {
+                    short controllerIndex = (short)controller.UserIndex;
+
                     // Don't do anything if no controller is connected
                     if (controller.IsConnected == false)
                     {
-                        if (lastPacketNumber != -1)
+                        if (lastPacketNumber[controllerIndex] != 0)
                         {
                             // Set all inputs back to zero
-                            MoonlightCommonRuntimeComponent.SendControllerInput((short)controller.UserIndex, 0, 0, 0, 0, 0, 0);
-                            lastPacketNumber = -1;
+                            MoonlightCommonRuntimeComponent.SendControllerInput(controllerIndex, 0, 0, 0, 0, 0, 0);
+                            lastPacketNumber[controllerIndex] = 0;
                         }
 
                         // Not connected
@@ -40,9 +42,13 @@ namespace Moonlight.Controllers
 
                     // Snapshot the state
                     State state = controller.GetState();
-                    if (state.PacketNumber != lastPacketNumber)
+                    if (state.PacketNumber != lastPacketNumber[controllerIndex])
                     {
                         int buttonFlags = 0;
+
+                        // Remember the packet number so we don't have to do extra work
+                        // if the controller state doesn't change
+                        lastPacketNumber[controllerIndex] = state.PacketNumber;
 
                         // Convert XInput constants to our button flags
                         if ((state.Gamepad.Buttons & GamepadButtonFlags.DPadUp) != 0)
@@ -104,7 +110,7 @@ namespace Moonlight.Controllers
 
                         // Send the controller input packet
                         MoonlightCommonRuntimeComponent.SendMultiControllerInput(
-                            (short)controller.UserIndex,
+                            controllerIndex,
                             (short)buttonFlags,
                             state.Gamepad.LeftTrigger,
                             state.Gamepad.RightTrigger,
