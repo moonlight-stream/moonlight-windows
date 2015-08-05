@@ -22,6 +22,7 @@ namespace Moonlight
         private AutoResetEvent queueEmpty = new AutoResetEvent(true);
         private DateTime videoStart = new DateTime(0);
         private SourceVoice sourceVoice;
+        private bool stopping;
 
         #endregion Class Variables
 
@@ -38,7 +39,19 @@ namespace Moonlight
         public void SetSourceVoice(SourceVoice sourceVoice)
         {
             this.sourceVoice = sourceVoice;
+        }
+
+        public void Start()
+        {
             sourceVoice.Start();
+            stopping = false;
+        }
+
+        public void Stop()
+        {
+            // Wake up a thread blocked on the packet queue
+            stopping = true;
+            queueEmpty.Set();
         }
 
         private MediaStreamSample CreateVideoSample(byte[] buf)
@@ -96,8 +109,20 @@ namespace Moonlight
 
             MediaStreamSample sample = CreateVideoSample(buf);
 
+            // Check if stopped before waiting
+            if (stopping)
+            {
+                return;
+            }
+
             // Wait until there's space to queue
             queueEmpty.WaitOne();
+
+            // We may have been stopped while waiting
+            if (stopping)
+            {
+                return;
+            }
 
             lock (videoQueueLock)
             {

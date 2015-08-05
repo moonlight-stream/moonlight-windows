@@ -103,6 +103,8 @@
 
             ReleaseMouse();
 
+            StopMediaPlayer();
+
             MoonlightCommonRuntimeComponent.StopConnection();
         }
 
@@ -140,6 +142,8 @@
             //await statusBar.HideAsync(); 
 
             InitializeMediaPlayer(context.streamConfig, AvStream);
+
+            StartMediaPlayer();
 
             await StartConnection(context.streamConfig);
         }

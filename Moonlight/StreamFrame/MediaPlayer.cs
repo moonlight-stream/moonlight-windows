@@ -51,12 +51,20 @@
             // Disable built-in transport controls
             StreamDisplay.AreTransportControlsEnabled = false;
 
-            // Start playing right away
-            StreamDisplay.AutoPlay = true;
-
             StreamDisplay.SetMediaStreamSource(_videoMss);
-
             AvStream.SetSourceVoice(new SourceVoice(xaudio, format));
+        }
+
+        private void StartMediaPlayer()
+        {
+            AvStream.Start();
+            StreamDisplay.Play();
+        }
+
+        private void StopMediaPlayer()
+        {
+            AvStream.Stop();
+            StreamDisplay.Stop();
         }
 
         /// <summary>
