@@ -32,7 +32,14 @@
         {
             this._streamSource = streamSource;
 
-            _videoMss = new MediaStreamSource(new VideoStreamDescriptor(VideoEncodingProperties.CreateH264()));
+            // This code is based upon the MS FFmpegInterop project on GitHub
+            VideoEncodingProperties videoProps = VideoEncodingProperties.CreateH264();
+            videoProps.ProfileId = H264ProfileIds.High;
+            videoProps.Width = (uint)streamConfig.GetWidth();
+            videoProps.Height = (uint)streamConfig.GetHeight();
+            videoProps.Bitrate = (uint)streamConfig.GetBitrate();
+
+            _videoMss = new MediaStreamSource(new VideoStreamDescriptor(videoProps));
             _videoMss.BufferTime = TimeSpan.Zero;
             _videoMss.CanSeek = false;
             _videoMss.Duration = TimeSpan.Zero;
