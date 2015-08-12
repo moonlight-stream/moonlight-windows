@@ -1,6 +1,11 @@
 ﻿{
   "dependencies": {
-    "Microsoft.NETCore.UniversalWindowsPlatform": "5.0.0"
+    "Microsoft.NETCore.UniversalWindowsPlatform": "5.0.0",
+    "Portable.BouncyCastle": "1.7.0.2",
+    "SharpDX.MediaFoundation": "3.0.0-alpha02",
+    "SharpDX.XAudio2": "3.0.0-alpha02",
+    "SharpDX.XInput": "3.0.0-alpha02",
+    "Zeroconf": "2.3.3"
   },
   "frameworks": {
     "uap10.0": {}
