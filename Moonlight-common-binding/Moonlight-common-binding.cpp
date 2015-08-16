@@ -141,7 +141,7 @@ int MoonlightCommonRuntimeComponent::StartConnection(Platform::String^ host, Moo
 	AUDIO_RENDERER_CALLBACKS arShimCallbacks;
 	CONNECTION_LISTENER_CALLBACKS clShimCallbacks;
 
-	memset(&config, 0, sizeof(config));
+    LiInitializeStreamConfiguration(&config);
 	config.width = streamConfig->GetWidth();
 	config.height = streamConfig->GetHeight();
 	config.fps = streamConfig->GetFps();
@@ -155,17 +155,17 @@ int MoonlightCommonRuntimeComponent::StartConnection(Platform::String^ host, Moo
 	s_DrCallbacks = drCallbacks;
 	s_ArCallbacks = arCallbacks;
 
-	memset(&drShimCallbacks, 0, sizeof(drShimCallbacks));
+    LiInitializeVideoCallbacks(&drShimCallbacks);
 	drShimCallbacks.setup = DrShimSetup;
 	drShimCallbacks.cleanup = DrShimCleanup;
 	drShimCallbacks.submitDecodeUnit = DrShimSubmitDecodeUnit;
 
-	memset(&arShimCallbacks, 0, sizeof(arShimCallbacks));
+    LiInitializeAudioCallbacks(&arShimCallbacks);
 	arShimCallbacks.init = ArShimInit;
 	arShimCallbacks.cleanup = ArShimCleanup;
 	arShimCallbacks.decodeAndPlaySample = ArShimDecodeAndPlaySample;
 
-	memset(&clShimCallbacks, 0, sizeof(clShimCallbacks));
+    LiInitializeConnectionCallbacks(&clShimCallbacks);
 	clShimCallbacks.stageStarting = ClShimStageStarting;
 	clShimCallbacks.stageComplete = ClShimStageComplete;
 	clShimCallbacks.stageFailed = ClShimStageFailed;
