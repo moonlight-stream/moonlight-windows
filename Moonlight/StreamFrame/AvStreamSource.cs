@@ -1,15 +1,10 @@
 ﻿using SharpDX;
 using SharpDX.XAudio2;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading;
-using System.Threading.Tasks;
 using Windows.Media.Core;
-using Windows.Storage;
-using Windows.Storage.Streams;
 
 namespace Moonlight
 {
@@ -17,24 +12,11 @@ namespace Moonlight
     {
         #region Class Variables
 
-        private MediaStreamSample pendingVideoSample;
-        private object videoQueueLock;
-        private AutoResetEvent queueEmpty = new AutoResetEvent(true);
+        private BlockingCollection<byte[]> pendingSamples = new BlockingCollection<byte[]>(1);
         private DateTime videoStart = new DateTime(0);
         private SourceVoice sourceVoice;
-        private bool stopping;
 
         #endregion Class Variables
-
-        #region Constructor
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AvStreamSource"/> class. 
-        /// </summary>
-        public AvStreamSource()
-        {
-            this.videoQueueLock = new object();
-        }
-        #endregion Constructor
 
         public void SetSourceVoice(SourceVoice sourceVoice)
         {
@@ -44,14 +26,15 @@ namespace Moonlight
         public void Start()
         {
             sourceVoice.Start();
-            stopping = false;
         }
 
         public void Stop()
         {
-            // Wake up a thread blocked on the packet queue
-            stopping = true;
-            queueEmpty.Set();
+            // Wake up the sample requested thread
+            pendingSamples.Add(null);
+
+            // Wake up the enqueue thread
+            pendingSamples.CompleteAdding();
         }
 
         private MediaStreamSample CreateVideoSample(byte[] buf)
@@ -85,20 +68,17 @@ namespace Moonlight
 
         public void VideoSampleRequested(MediaStreamSourceSampleRequestedEventArgs args)
         {
-            lock (videoQueueLock)
+            // Block until a sample is available from the queue
+            byte[] sample = pendingSamples.Take();
+
+            if (sample == null)
             {
-                if (pendingVideoSample != null)
-                {
-                    args.Request.Sample = pendingVideoSample;
-                    pendingVideoSample = null;
-                    queueEmpty.Set();
-                    return;
-                }
+                // This wakeup was for termination
+                return;
             }
 
-            // If we don't have any sample right now, we just return an empty sample. This tells the decoder
-            // that we're still alive here. Doing a sample deferral seems to cause serious lag issues.
-            args.Request.Sample = MediaStreamSample.CreateFromBuffer(new byte[0].AsBuffer(), TimeSpan.Zero);
+            // Return the sample
+            args.Request.Sample = CreateVideoSample(sample);
         }
 
         public void EnqueueVideoSample(byte[] buf)
@@ -107,27 +87,22 @@ namespace Moonlight
             // common. It's needed so that we avoid our queue getting
             // too large.
 
-            MediaStreamSample sample = CreateVideoSample(buf);
-
-            // Check if stopped before waiting
-            if (stopping)
+            // On stop, the queue is "completed" so no more adds are accepted
+            if (pendingSamples.IsAddingCompleted)
             {
                 return;
             }
 
-            // Wait until there's space to queue
-            queueEmpty.WaitOne();
-
-            // We may have been stopped while waiting
-            if (stopping)
+            // Try to queue the sample
+            try
             {
-                return;
+                pendingSamples.Add(buf);
             }
-
-            lock (videoQueueLock)
+            catch (InvalidOperationException)
             {
-                Debug.Assert(pendingVideoSample == null);
-                pendingVideoSample = sample;
+                // There's still a race where we can only see that adds are completed
+                // when the add actually happens.
+                return;
             }
         }
 
